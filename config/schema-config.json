@@ -1,0 +1,364 @@
+{
+  "version": "1.0.0",
+  "description": "PowerShell & SQLite 職員データ管理システム スキーマ設定",
+  "tables": {
+    "staff_info": {
+      "description": "職員情報テーブル",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "constraints": "PRIMARY KEY AUTOINCREMENT",
+          "csv_include": false,
+          "description": "内部ID"
+        },
+        {
+          "name": "employee_id",
+          "type": "TEXT",
+          "constraints": "NOT NULL UNIQUE",
+          "csv_include": true,
+          "required": true,
+          "description": "職員ID"
+        },
+        {
+          "name": "card_number",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "カード番号"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "氏名"
+        },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "部署"
+        },
+        {
+          "name": "position",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "役職"
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "メールアドレス"
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "電話番号"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "入社日"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "constraints": "DEFAULT CURRENT_TIMESTAMP",
+          "csv_include": false,
+          "description": "作成日時"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "constraints": "DEFAULT CURRENT_TIMESTAMP",
+          "csv_include": false,
+          "description": "更新日時"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_staff_info_employee_id",
+          "columns": ["employee_id"]
+        }
+      ]
+    },
+    "staff_master": {
+      "description": "職員マスタテーブル",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "constraints": "PRIMARY KEY AUTOINCREMENT",
+          "csv_include": false,
+          "description": "内部ID"
+        },
+        {
+          "name": "employee_id",
+          "type": "TEXT",
+          "constraints": "NOT NULL UNIQUE",
+          "csv_include": true,
+          "required": true,
+          "description": "職員ID"
+        },
+        {
+          "name": "card_number",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "カード番号"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "氏名"
+        },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "部署"
+        },
+        {
+          "name": "position",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "役職"
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "メールアドレス"
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "電話番号"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "入社日"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "constraints": "DEFAULT CURRENT_TIMESTAMP",
+          "csv_include": false,
+          "description": "作成日時"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "constraints": "DEFAULT CURRENT_TIMESTAMP",
+          "csv_include": false,
+          "description": "更新日時"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_staff_master_employee_id",
+          "columns": ["employee_id"]
+        }
+      ]
+    },
+    "sync_result": {
+      "description": "同期結果テーブル",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "constraints": "PRIMARY KEY AUTOINCREMENT",
+          "csv_include": false,
+          "description": "内部ID"
+        },
+        {
+          "name": "employee_id",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "職員ID"
+        },
+        {
+          "name": "card_number",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "カード番号"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "氏名"
+        },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "部署"
+        },
+        {
+          "name": "position",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "役職"
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "メールアドレス"
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "電話番号"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "入社日"
+        },
+        {
+          "name": "sync_action",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "同期アクション (ADD, UPDATE, DELETE, KEEP)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "constraints": "DEFAULT CURRENT_TIMESTAMP",
+          "csv_include": false,
+          "description": "作成日時"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_sync_result_employee_id",
+          "columns": ["employee_id"]
+        }
+      ]
+    }
+  },
+  "sync_rules": {
+    "comparison_columns": [
+      "card_number",
+      "name", 
+      "department",
+      "position",
+      "email",
+      "phone",
+      "hire_date"
+    ],
+    "key_column": "employee_id"
+  },
+  "file_paths": {
+    "description": "ファイルパス設定",
+    "staff_info_file_path": "./test-data/current-staff-info.csv",
+    "staff_master_file_path": "./test-data/master-staff-data.csv",
+    "output_file_path": "./test-data/sync-result.csv",
+    "staff_info_history_directory": "./data/staff-info/",
+    "staff_master_history_directory": "./data/staff-master/",
+    "output_history_directory": "./data/output/",
+    "timezone": "Asia/Tokyo"
+  },
+  "logging": {
+    "description": "ログ設定",
+    "enabled": true,
+    "log_directory": "./logs/",
+    "log_file_name": "staff-management.log",
+    "max_file_size_mb": 10,
+    "max_files": 5,
+    "levels": ["Info", "Warning", "Error", "Success"]
+  },
+  "data_filters": {
+    "staff_info": {
+      "enabled": true,
+      "description": "職員情報データのフィルタリング設定",
+      "rules": [
+        {
+          "field": "employee_id",
+          "type": "exclude_pattern",
+          "pattern": "^Z.*",
+          "description": "Z始まりの職員番号を除外"
+        },
+        {
+          "field": "employee_id", 
+          "type": "exclude_pattern",
+          "pattern": "^Y.*",
+          "description": "Y始まりの職員番号を除外"
+        }
+      ]
+    },
+    "staff_master": {
+      "enabled": true,
+      "description": "職員マスタデータのフィルタリング設定",
+      "rules": [
+        {
+          "field": "employee_id",
+          "type": "exclude_pattern", 
+          "pattern": "^Z.*",
+          "description": "Z始まりの職員番号を除外"
+        },
+        {
+          "field": "employee_id",
+          "type": "exclude_pattern",
+          "pattern": "^Y.*", 
+          "description": "Y始まりの職員番号を除外"
+        }
+      ]
+    }
+  }
+}

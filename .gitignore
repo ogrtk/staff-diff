@@ -1,0 +1,69 @@
+# データベースファイル
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+
+# ログファイル
+logs/
+*.log
+
+# データ履歴ファイル（自動生成）
+data/staff-info/*.csv
+data/staff-master/*.csv
+data/output/*.csv
+
+# 一時ファイル・キャッシュ
+*.tmp
+*.temp
+.cache/
+
+# PowerShell実行ファイル
+*.exe
+
+# 機密情報を含む可能性のある設定ファイル
+config/production-*.json
+config/secrets.json
+config/*.secret.*
+
+# Node.js（もし使用している場合）
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS固有ファイル
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# エディタ・IDE
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+
+# バックアップファイル
+*.bak
+*.backup
+*.old
+
+# 圧縮ファイル
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
+# 個人用設定ファイル
+config/personal-*.json
+config/local-*.json

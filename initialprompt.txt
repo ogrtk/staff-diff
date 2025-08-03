@@ -1,0 +1,598 @@
+# PowerShell & SQLite 職員データ管理システム 全体作成プロンプト
+
+このプロンプトを使用して、PowerShellとSQLiteを使用した次世代職員データ管理システムを一回で完全に作成してください。
+
+## システム概要
+
+**外部ファイル処理 + 履歴保存アーキテクチャ**により、任意の場所にあるCSVファイルを処理し、data配下に自動履歴保存する職員データ管理・同期・出力システムを作成します。
+
+**設定ベースアーキテクチャ**により保守性を向上し、**単一ファイルパス指定**による柔軟な運用を実現します。
+
+## 核心的な仕様
+
+### 1. 単一ファイルパス指定システム
+- 外部に配置された単一のCSVファイルを直接パス指定で処理
+- data配下は処理対象ではなく履歴保存専用
+- パラメータまたは設定ファイルでファイルパスを管理
+- ファイルパス解決優先順位: パラメータ → 設定ファイル
+
+### 2. 履歴保存機能
+- 処理時に入力ファイルを自動的にdata配下にコピー保存
+- 日本時間（Asia/Tokyo）でのタイムスタンプ付きファイル名
+- 形式: 元ファイル名_YYYYMMDD_HHMMSS.csv
+- 出力結果も指定パス + 履歴保存のデュアル出力
+
+### 3. 設定ベースアーキテクチャ
+- config/schema-config.json による一元管理
+- テーブル定義、同期ルール、フィルタリング設定、ファイルパス設定を統合
+- 動的SQL生成、動的CSV処理、設定検証機能
+
+### 4. データフィルタリング機能
+- Z始まり・Y始まりの職員番号を除外（設定可能）
+- 正規表現パターンでの柔軟な除外/包含
+- テーブル別個別設定
+- 詳細ログと統計情報表示
+
+### 5. 同期処理
+- ADD: 職員情報にあり、マスタにない
+- UPDATE: 両方にあるが内容が異なる（職員情報を優先）
+- DELETE: マスタにあり、職員情報にない
+- KEEP: 両方にあり、内容が同じ
+
+## 必要なファイル構成
+
+```
+ps-sqlite/
+├── config/
+│   └── schema-config.json    # スキーマ・フィルタリング・ファイルパス設定
+├── scripts/
+│   ├── main.ps1             # メインスクリプト
+│   ├── common-utils.ps1     # 共通ユーティリティ
+│   ├── database.ps1         # データベース操作
+│   ├── csv-utils.ps1        # CSV処理
+│   └── sync-data.ps1        # データ同期処理
+├── data/                    # 履歴保存ディレクトリ（自動生成）
+│   ├── staff-info/          # 職員情報履歴
+│   ├── staff-master/        # 職員マスタ履歴
+│   └── output/              # 同期結果履歴
+├── database/                # SQLiteデータベース
+│   └── staff.db             # メインデータベース
+├── test-data/               # テスト用データ
+│   ├── current-staff-info.csv
+│   ├── master-staff-data.csv
+│   └── sync-result.csv
+├── samples/                 # サンプルデータ
+│   ├── sample-staff-info.csv
+│   └── sample-staff-master.csv
+├── CLAUDE.md                # 技術仕様
+├── README.md                # 使用方法
+└── run.bat                  # Windows実行バッチ
+```
+
+## schema-config.json 設定ファイル仕様
+
+```json
+{
+  "version": "1.0.0",
+  "description": "PowerShell & SQLite 職員データ管理システム スキーマ設定",
+  "file_paths": {
+    "description": "ファイルパス設定",
+    "staff_info_file_path": "",
+    "staff_master_file_path": "",
+    "output_file_path": "",
+    "staff_info_history_directory": "./data/staff-info/",
+    "staff_master_history_directory": "./data/staff-master/",
+    "output_history_directory": "./data/output/",
+    "timezone": "Asia/Tokyo"
+  },
+  "tables": {
+    "staff_info": {
+      "description": "職員情報テーブル",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "constraints": "PRIMARY KEY AUTOINCREMENT",
+          "csv_include": false,
+          "description": "内部ID"
+        },
+        {
+          "name": "employee_id",
+          "type": "TEXT",
+          "constraints": "NOT NULL UNIQUE",
+          "csv_include": true,
+          "required": true,
+          "description": "職員ID"
+        },
+        {
+          "name": "card_number",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "カード番号"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "氏名"
+        },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "部署"
+        },
+        {
+          "name": "position",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "役職"
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "メールアドレス"
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "電話番号"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "入社日"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "constraints": "DEFAULT CURRENT_TIMESTAMP",
+          "csv_include": false,
+          "description": "作成日時"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "constraints": "DEFAULT CURRENT_TIMESTAMP",
+          "csv_include": false,
+          "description": "更新日時"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_staff_info_employee_id",
+          "columns": ["employee_id"]
+        }
+      ]
+    },
+    "staff_master": {
+      "description": "職員マスタテーブル",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "constraints": "PRIMARY KEY AUTOINCREMENT",
+          "csv_include": false,
+          "description": "内部ID"
+        },
+        {
+          "name": "employee_id",
+          "type": "TEXT",
+          "constraints": "NOT NULL UNIQUE",
+          "csv_include": true,
+          "required": true,
+          "description": "職員ID"
+        },
+        {
+          "name": "card_number",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "カード番号"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "氏名"
+        },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "部署"
+        },
+        {
+          "name": "position",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "役職"
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "メールアドレス"
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "電話番号"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "入社日"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "constraints": "DEFAULT CURRENT_TIMESTAMP",
+          "csv_include": false,
+          "description": "作成日時"
+        },
+        {
+          "name": "updated_at",
+          "type": "DATETIME",
+          "constraints": "DEFAULT CURRENT_TIMESTAMP",
+          "csv_include": false,
+          "description": "更新日時"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_staff_master_employee_id",
+          "columns": ["employee_id"]
+        }
+      ]
+    },
+    "sync_result": {
+      "description": "同期結果テーブル",
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "constraints": "PRIMARY KEY AUTOINCREMENT",
+          "csv_include": false,
+          "description": "内部ID"
+        },
+        {
+          "name": "employee_id",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "職員ID"
+        },
+        {
+          "name": "card_number",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "カード番号"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "氏名"
+        },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "部署"
+        },
+        {
+          "name": "position",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "役職"
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "メールアドレス"
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "電話番号"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "入社日"
+        },
+        {
+          "name": "sync_action",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "同期アクション (ADD, UPDATE, DELETE, KEEP)"
+        },
+        {
+          "name": "created_at",
+          "type": "DATETIME",
+          "constraints": "DEFAULT CURRENT_TIMESTAMP",
+          "csv_include": false,
+          "description": "作成日時"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_sync_result_employee_id",
+          "columns": ["employee_id"]
+        }
+      ]
+    }
+  },
+  "sync_rules": {
+    "comparison_columns": [
+      "card_number",
+      "name", 
+      "department",
+      "position",
+      "email",
+      "phone",
+      "hire_date"
+    ],
+    "key_column": "employee_id"
+  },
+  "data_filters": {
+    "staff_info": {
+      "enabled": true,
+      "description": "職員情報データのフィルタリング設定",
+      "rules": [
+        {
+          "field": "employee_id",
+          "type": "exclude_pattern",
+          "pattern": "^Z.*",
+          "description": "Z始まりの職員番号を除外"
+        },
+        {
+          "field": "employee_id", 
+          "type": "exclude_pattern",
+          "pattern": "^Y.*",
+          "description": "Y始まりの職員番号を除外"
+        }
+      ]
+    },
+    "staff_master": {
+      "enabled": true,
+      "description": "職員マスタデータのフィルタリング設定",
+      "rules": [
+        {
+          "field": "employee_id",
+          "type": "exclude_pattern", 
+          "pattern": "^Z.*",
+          "description": "Z始まりの職員番号を除外"
+        },
+        {
+          "field": "employee_id",
+          "type": "exclude_pattern",
+          "pattern": "^Y.*", 
+          "description": "Y始まりの職員番号を除外"
+        }
+      ]
+    }
+  }
+}
+```
+
+## main.ps1 パラメータ仕様
+
+```powershell
+param(
+    [string]$StaffInfoFilePath = "",      # 職員情報ファイルパス
+    [string]$StaffMasterFilePath = "",    # 職員マスタファイルパス
+    [string]$OutputFilePath = "",         # 出力ファイルパス
+    [string]$DatabasePath = ""            # データベースパス
+)
+```
+
+## 実行フロー
+
+1. **設定検証**: schema-config.json の整合性チェック
+2. **ファイルパス解決**: パラメータまたは設定ファイルからファイルパスを解決
+3. **データベースの動的初期化**: 設定からテーブル・インデックス・トリガーを生成
+4. **職員情報CSVの処理**:
+   - 外部パスからファイル読み込み
+   - data/staff-info/配下に日本時間タイムスタンプ付きで履歴保存
+   - データフィルタリング適用
+   - SQLiteデータベースに格納
+5. **職員マスタデータCSVの処理**:
+   - 外部パスからファイル読み込み
+   - data/staff-master/配下に日本時間タイムスタンプ付きで履歴保存
+   - データフィルタリング適用
+   - SQLiteデータベースに格納
+6. **データ比較・同期処理**: 動的SQL生成による処理
+7. **データ整合性チェック**: 重複レコード等の検証
+8. **デュアル出力**:
+   - 指定された外部パスへの出力
+   - data/output/配下への日本時間タイムスタンプ付き履歴保存
+9. **統計・レポート表示**: フィルタリング・同期結果の表示
+
+## テスト用サンプルデータ
+
+### test-data/current-staff-info.csv
+```csv
+employee_id,card_number,name,department,position,email,phone,hire_date
+E001,C00001,田中太郎,総務部,主任,tanaka@company.com,03-1234-5678,2020-04-01
+E002,C00002,佐藤花子,営業部,係長,sato@company.com,03-2345-6789,2019-07-15
+E003,C00003,鈴木一郎,開発部,エンジニア,suzuki@company.com,03-3456-7890,2021-10-01
+E004,C00004,山田次郎,人事部,課長,yamada@company.com,03-4567-8901,2018-01-10
+E005,C00005,高橋三郎,経理部,主任,takahashi@company.com,03-5678-9012,2020-12-01
+E006,C00006,渡辺四郎,営業部,営業,watanabe@company.com,03-6789-0123,2022-03-15
+E007,C00007,伊藤五郎,開発部,シニアエンジニア,ito@company.com,03-7890-1234,2017-09-01
+Z999,C00999,テストユーザー,テスト部,テスト,test@company.com,03-0000-0000,2023-01-01
+```
+
+### test-data/master-staff-data.csv
+```csv
+employee_id,card_number,name,department,position,email,phone,hire_date
+E001,C00001,田中太郎,総務部,課長,tanaka@company.com,03-1234-5678,2020-04-01
+E002,C00002,佐藤花子,営業部,係長,sato@company.com,03-2345-6789,2019-07-15
+E003,C00003,鈴木一郎,開発部,エンジニア,suzuki@company.com,03-3456-7890,2021-10-01
+E008,C00008,中村六郎,経理部,部長,nakamura@company.com,03-8901-2345,2015-04-01
+E009,C00009,小林七子,総務部,事務,kobayashi@company.com,03-9012-3456,2021-08-01
+Y888,C00888,退職者,退職,退職,retired@company.com,00-0000-0000,2020-01-01
+```
+
+## 重要な実装要件
+
+### PowerShell実装要件
+1. **UTF-8エンコーディング対応**: CSV読み書きでBOM付きUTF-8も対応
+2. **エラーハンドリング**: try-catch文での例外処理
+3. **日本時間処理**: .NET TimeZoneInfo を使用したAsia/Tokyo対応
+4. **ファイルシステム操作**: Copy-Item、Test-Path、New-Item等の使用
+5. **JSON処理**: ConvertFrom-Json での設定ファイル読み込み
+6. **動的SQL生成**: 設定ファイルからのSQL文自動生成
+7. **パラメータ処理**: param文での柔軟なパラメータ処理
+
+### SQLite実装要件
+1. **sqlite3コマンドライン優先**: 利用可能な場合は高速処理
+2. **PowerShell代替処理**: sqlite3が無い場合の代替実装
+3. **トランザクション処理**: データ整合性の確保
+4. **インデックス活用**: employee_idでのインデックス使用
+5. **動的テーブル作成**: 設定からのCREATE TABLE文生成
+
+### ログ・エラー処理要件
+1. **統一ログシステム**: Write-SystemLog関数でレベル別ログ
+2. **日本時間タイムスタンプ**: ログ出力時の正確な時刻記録
+3. **詳細エラー情報**: スタックトレース付きエラー表示
+4. **処理統計**: フィルタリング・同期結果の件数表示
+5. **設定検証**: 起動時の設定ファイル整合性チェック
+
+### ファイル処理要件
+1. **履歴ファイル命名**: 元ファイル名_YYYYMMDD_HHMMSS.csv 形式
+2. **ディレクトリ自動作成**: 履歴保存ディレクトリの自動生成
+3. **ファイルパス解決**: 相対パス・絶対パスの両方対応
+4. **存在チェック**: 処理前のファイル存在確認
+5. **権限チェック**: ファイル読み書き権限の確認
+
+## 必要な関数一覧
+
+### common-utils.ps1の必要機能
+1. **Get-SchemaConfig**: 設定ファイル読み込み・キャッシュ
+2. **Get-TableDefinition**: テーブル定義取得
+3. **Get-CsvColumns**: CSV用カラムリスト取得
+4. **Get-RequiredColumns**: 必須カラムリスト取得
+5. **New-CreateTableSql**: CREATE TABLE文動的生成
+6. **New-InsertSql**: INSERT文動的生成
+7. **New-SelectSql**: SELECT文動的生成
+8. **New-ComparisonWhereClause**: 比較用WHERE句生成
+9. **New-CsvHeader**: CSVヘッダー生成
+10. **New-CreateIndexSql**: インデックス作成SQL生成
+11. **New-UpdateTriggerSql**: 更新トリガーSQL生成
+12. **Test-SchemaConfig**: 設定検証
+13. **Write-SystemLog**: 統一ログシステム（日本時間）
+14. **Get-DataFilterConfig**: フィルタリング設定取得
+15. **Test-DataFilter**: データフィルタリング実行
+16. **Invoke-DataFiltering**: バッチフィルタリング処理
+17. **Get-FilterStatistics**: フィルタリング統計
+18. **Show-FilterConfig**: フィルタリング設定表示
+19. **Reset-SchemaConfig**: 設定リロード
+20. **Get-JapanTimestamp**: 日本時間タイムスタンプ生成
+21. **Get-FilePathConfig**: ファイルパス設定取得
+22. **New-HistoryFileName**: 履歴用ファイル名生成
+23. **Copy-InputFileToHistory**: 入力ファイル履歴保存
+24. **Resolve-InputFilePath**: ファイルパス解決（パラメータ優先）
+
+### database.ps1の要件
+- **Initialize-Database**: 動的データベース初期化
+- **Invoke-SqliteCommand**: SQLite実行（sqlite3コマンド優先）
+- **Clear-Table**: テーブルクリア
+- **Show-DatabaseInfo**: データベース情報表示
+- **Test-DataConsistency**: データ整合性チェック
+
+### csv-utils.ps1の要件
+- **Import-StaffInfoCsv**: 職員情報CSV読み込み（履歴保存＋フィルタリング）
+- **Import-StaffMasterCsv**: 職員マスタCSV読み込み（履歴保存＋フィルタリング）
+- **Export-SyncResult**: 同期結果デュアル出力（外部パス＋履歴保存）
+- **Export-SyncResultToFile**: 同期結果ファイル出力（内部関数）
+- **Show-SyncStatistics**: 同期統計表示
+- **Test-CsvFormat**: CSVフォーマット検証
+
+### sync-data.ps1の要件
+- **Sync-StaffData**: メイン同期処理
+- **Get-SyncReport**: 同期レポート生成
+
+### main.ps1の要件
+- パラメータ: StaffInfoFilePath, StaffMasterFilePath, OutputFilePath, DatabasePath
+- 全処理の統合実行
+- エラーハンドリング
+- 詳細ログ出力
+
+## 期待される動作結果
+
+1. **フィルタリング**: Z999, Y888 が除外される
+2. **同期結果**: 
+   - UPDATE: E001（田中太郎の役職変更 主任→課長）
+   - KEEP: E002, E003（変更なし）
+   - ADD: E004, E005, E006, E007（職員情報にのみ存在）
+   - DELETE: E008, E009（マスタにのみ存在）
+3. **出力**: 指定パス + data/output/配下の両方に出力
+4. **履歴**: data/staff-info/, data/staff-master/ に入力ファイルの履歴保存
+
+## 実装時の注意事項
+
+1. **設定ベースアーキテクチャ維持**: ハードコーディングを避け、すべて設定から動的生成
+2. **エラーハンドリング徹底**: 各処理でのtry-catch実装
+3. **ログ出力充実**: 処理の各段階での詳細ログ
+4. **パフォーマンス考慮**: 大量データでの処理効率
+5. **拡張性確保**: 新しい項目やテーブルの追加容易性
+6. **日本時間統一**: すべてのタイムスタンプをAsia/Tokyoで統一
+7. **ファイルパス解決**: パラメータ → 設定ファイル の優先順位
+8. **履歴保存徹底**: 入力・出力の両方で履歴保存実行
+
+以上の仕様に基づいて、完全に動作するPowerShell & SQLite職員データ管理システムを作成してください。
