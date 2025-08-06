@@ -253,28 +253,8 @@
     }
   },
   "sync_rules": {
-    "comparison_columns": {
-      "description": "テーブル別比較カラム設定",
-      "provided_data": [
-        "card_number",
-        "name",
-        "department",
-        "position",
-        "email",
-        "phone",
-        "hire_date"
-      ],
-      "current_data": [
-        "card_number",
-        "name",
-        "department",
-        "position",
-        "email",
-        "phone",
-        "hire_date"
-      ]
-    },
     "key_columns": {
+      "description": "各テーブルのレコード比較キー（sync_resultは出力時のソートに利用）",
       "provided_data": [
         "employee_id"
       ],
@@ -286,8 +266,8 @@
       ]
     },
     "column_mappings": {
-      "description": "テーブル間のカラムマッピング設定（単方向定義、逆方向は自動生成）",
-      "provided_data_to_current_data": {
+      "description": "テーブル間の比較項目対応付け（provided_dataの項目:current_dataの項目）",
+      "mappings": {
         "employee_id": "user_id",
         "card_number": "card_number",
         "name": "name",
@@ -299,8 +279,8 @@
       }
     },
     "sync_result_mapping": {
-      "description": "sync_resultテーブルへのフィールドマッピング（provided_data優先）",
-      "field_mappings": {
+      "description": "sync_resultテーブルへの格納項目対応付け（provided_dataが優先）",
+      "mappings": {
         "syokuin_no": {
           "provided_data_field": "employee_id",
           "current_data_field": "user_id"
@@ -334,8 +314,7 @@
           "current_data_field": "hire_date"
         }
       }
-    },
-    "key_column": "syokuin_no"
+    }
   },
   "data_filters": {
     "provided_data": {

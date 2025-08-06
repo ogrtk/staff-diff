@@ -165,7 +165,7 @@ function New-ComparisonWhereClause {
         [string]$Table2Alias,
         
         [Parameter(Mandatory = $true)]
-        [string]$ComparisonType,  # "different" or "same"
+        [string]$ComparisonType, # "different" or "same"
         
         [Parameter(Mandatory = $true)]
         [string]$Table1Name,
@@ -176,18 +176,28 @@ function New-ComparisonWhereClause {
         [string[]]$ComparisonColumns = @()
     )
     
-    if ($ComparisonColumns.Count -eq 0) {
-        $ComparisonColumns = Get-ComparisonColumns -SourceTableName $Table1Name -TargetTableName $Table2Name
-    }
+    # テーブルの比較対象項目を取得
+    $table1Columns = Get-ComparisonColumns -SourceTableName $Table1Name
+    
+    # column_mappingsを取得
+    $mapping = Get-ColumnMapping -SourceTableName $Table1Name -TargetTableName $Table2Name
     
     $conditions = @()
     
-    foreach ($column in $ComparisonColumns) {
+    # Table1の各カラムに対してTable2の対応カラムを見つけて比較条件を作成
+    foreach ($table1Column in $table1Columns) {
+        $table2Column = if ($mapping -and $mapping.$table1Column) { 
+            $mapping.$table1Column 
+        }
+        else { 
+            $table1Column 
+        }
+        
         if ($ComparisonType -eq "different") {
-            $conditions += "($Table1Alias.$column != $Table2Alias.$column OR ($Table1Alias.$column IS NULL AND $Table2Alias.$column IS NOT NULL) OR ($Table1Alias.$column IS NOT NULL AND $Table2Alias.$column IS NULL))"
+            $conditions += "($Table1Alias.$table1Column != $Table2Alias.$table2Column OR ($Table1Alias.$table1Column IS NULL AND $Table2Alias.$table2Column IS NOT NULL) OR ($Table1Alias.$table1Column IS NOT NULL AND $Table2Alias.$table2Column IS NULL))"
         }
         elseif ($ComparisonType -eq "same") {
-            $conditions += "(($Table1Alias.$column = $Table2Alias.$column) OR ($Table1Alias.$column IS NULL AND $Table2Alias.$column IS NULL))"
+            $conditions += "(($Table1Alias.$table1Column = $Table2Alias.$table2Column) OR ($Table1Alias.$table1Column IS NULL AND $Table2Alias.$table2Column IS NULL))"
         }
     }
     
@@ -217,21 +227,11 @@ function New-CsvHeader {
 function Get-SyncResultColumnMapping {
     $config = Get-DataSyncConfig
     
-    if ($config.sync_rules.sync_result_mapping -and $config.sync_rules.sync_result_mapping.field_mappings) {
-        return $config.sync_rules.sync_result_mapping.field_mappings
+    if (-not $config.sync_rules.sync_result_mapping -or -not $config.sync_rules.sync_result_mapping.mappings) {
+        throw "sync_result_mapping が設定されていません。設定ファイルを確認してください。"
     }
     
-    # フォールバック: デフォルトマッピング
-    return @{
-        syokuin_no = @{ provided_data_field = "employee_id"; current_data_field = "employee_id" }
-        card_number = @{ provided_data_field = "card_number"; current_data_field = "card_number" }
-        name = @{ provided_data_field = "name"; current_data_field = "name" }
-        department = @{ provided_data_field = "department"; current_data_field = "department" }
-        position = @{ provided_data_field = "position"; current_data_field = "position" }
-        email = @{ provided_data_field = "email"; current_data_field = "email" }
-        phone = @{ provided_data_field = "phone"; current_data_field = "phone" }
-        hire_date = @{ provided_data_field = "hire_date"; current_data_field = "hire_date" }
-    }
+    return $config.sync_rules.sync_result_mapping.mappings
 }
 
 # 同期結果用INSERT文のカラムリスト取得
@@ -275,32 +275,12 @@ function Get-TableKeyColumns {
     
     $config = Get-DataSyncConfig
     
-    # sync_rules.key_columnsを優先
-    if ($config.sync_rules.key_columns -and $config.sync_rules.key_columns.$TableName) {
-        return $config.sync_rules.key_columns.$TableName
+    # key_columns設定をチェック
+    if (-not $config.sync_rules.key_columns -or -not $config.sync_rules.key_columns.$TableName) {
+        throw "テーブル '$TableName' のkey_columnsが設定されていません。設定ファイルを確認してください。"
     }
     
-    # フォールバック: テーブル定義から主キーを探す
-    $tableDefinition = Get-TableDefinition -TableName $TableName
-    $keyColumns = @()
-    
-    foreach ($column in $tableDefinition.columns) {
-        if ($column.constraints -and $column.constraints -match "PRIMARY KEY") {
-            $keyColumns += $column.name
-        }
-    }
-    
-    if ($keyColumns.Count -eq 0) {
-        # デフォルトでUNIQUE制約のあるカラムを使用
-        foreach ($column in $tableDefinition.columns) {
-            if ($column.constraints -and $column.constraints -match "UNIQUE") {
-                $keyColumns += $column.name
-                break
-            }
-        }
-    }
-    
-    return $keyColumns
+    return $config.sync_rules.key_columns.$TableName
 }
 
 # JOIN条件生成
@@ -338,7 +318,8 @@ function New-JoinCondition {
         $mapping = Get-ColumnMapping -SourceTableName $LeftTableName -TargetTableName $RightTableName
         if ($mapping -and $mapping.$column) {
             $rightColumn = $mapping.$column
-        } else {
+        }
+        else {
             # 逆方向のマッピングもチェック
             $reverseMapping = Get-ReverseColumnMapping -SourceTableName $LeftTableName -TargetTableName $RightTableName
             if ($reverseMapping -and $reverseMapping.$column) {
@@ -393,21 +374,17 @@ function Get-ColumnMapping {
     
     $config = Get-DataSyncConfig
     
-    if (-not $config.sync_rules.column_mappings) {
+    if (-not $config.sync_rules.column_mappings -or -not $config.sync_rules.column_mappings.mappings) {
         return @{}
     }
     
-    $mappingKey = "${SourceTableName}_to_${TargetTableName}"
-    
-    if ($config.sync_rules.column_mappings.$mappingKey) {
-        # JSONオブジェクトを適切なハッシュテーブルに変換
-        $mapping = $config.sync_rules.column_mappings.$mappingKey
-        $hashtable = @{}
-        $mapping.PSObject.Properties | ForEach-Object {
-            $hashtable[$_.Name] = $_.Value
-        }
-        return $hashtable
+    # 固定のmappingsキーを参照
+    $mapping = $config.sync_rules.column_mappings.mappings
+    $hashtable = @{}
+    $mapping.PSObject.Properties | ForEach-Object {
+        $hashtable[$_.Name] = $_.Value
     }
+    return $hashtable
     
     return @{}
 }
@@ -423,21 +400,35 @@ function Get-ComparisonColumns {
     
     $config = Get-DataSyncConfig
     
-    if (-not $config.sync_rules.comparison_columns) {
+    # column_mappingsから比較カラムを自動生成
+    if (-not $config.sync_rules.column_mappings -or -not $config.sync_rules.column_mappings.mappings) {
+        Write-Warning "column_mappings が設定されていません"
         return @()
     }
     
-    # 新しい構造: テーブル別設定
-    if ($config.sync_rules.comparison_columns.$SourceTableName) {
-        return $config.sync_rules.comparison_columns.$SourceTableName
+    $mappings = $config.sync_rules.column_mappings.mappings
+    $columns = @()
+    
+    switch ($SourceTableName) {
+        "provided_data" {
+            # provided_dataの比較カラム = column_mappingsのキー部分
+            $mappings.PSObject.Properties | ForEach-Object {
+                $columns += $_.Name
+            }
+        }
+        "current_data" {
+            # current_dataの比較カラム = column_mappingsの値部分
+            $mappings.PSObject.Properties | ForEach-Object {
+                $columns += $_.Value
+            }
+        }
+        default {
+            Write-Warning "未対応のテーブル名: $SourceTableName"
+            return @()
+        }
     }
     
-    # 古い構造: 共通設定
-    if ($config.sync_rules.comparison_columns -is [System.Array]) {
-        return $config.sync_rules.comparison_columns
-    }
-    
-    return @()
+    return $columns
 }
 
 # GROUP BY句生成

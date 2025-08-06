@@ -83,8 +83,8 @@ function Test-DataSyncConfig {
         
         # 同期ルールの基本検証
         if ($config.sync_rules) {
-            if (-not $config.sync_rules.comparison_columns) {
-                Write-Warning "comparison_columns が設定されていません"
+            if (-not $config.sync_rules.column_mappings -or -not $config.sync_rules.column_mappings.mappings) {
+                Write-Warning "column_mappings が設定されていません"
             }
         }
         

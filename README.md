@@ -1,8 +1,8 @@
-# PowerShell & SQLite 職員データ管理システム
+# PowerShell & SQLite データ管理システム
 
 ## 概要
 
-PowerShellとSQLiteを使用した次世代職員情報管理・同期・出力システムです。
+PowerShellとSQLiteを使用した次世代データ管理・同期・出力システムです。
 **設定ベースアーキテクチャ**により保守性を大幅に向上させ、**単一ファイルパス指定**による柔軟な運用と**履歴保存機能**による安全性を実現します。
 
 ## ⭐ 主要な特徴
@@ -52,12 +52,12 @@ mkdir test-files
 
 ```powershell
 # Windows PowerShell
-.\scripts\main.ps1 -StaffInfoFilePath "C:\data\current-staff.csv" -StaffMasterFilePath "C:\data\master-staff.csv" -OutputFilePath "C:\output\result.csv"
+.\scripts\main.ps1 -ProvidedDataFilePath "C:\data\provided.csv" -CurrentDataFilePath "C:\data\current.csv" -OutputFilePath "C:\output\result.csv"
 ```
 
 ```bash
 # Linux/macOS
-pwsh ./scripts/main.ps1 -StaffInfoFilePath "/data/current-staff.csv" -StaffMasterFilePath "/data/master-staff.csv" -OutputFilePath "/output/result.csv"
+pwsh ./scripts/main.ps1 -ProvidedDataFilePath "/data/provided.csv" -CurrentDataFilePath "/data/current.csv" -OutputFilePath "/output/result.csv"
 ```
 
 #### B. 設定ファイル指定での実行
@@ -67,9 +67,9 @@ pwsh ./scripts/main.ps1 -StaffInfoFilePath "/data/current-staff.csv" -StaffMaste
 ```json
 {
   "file_paths": {
-    "staff_info_file_path": "./test-files/current-staff.csv",
-    "staff_master_file_path": "./test-files/master-staff.csv",
-    "output_file_path": "./test-files/sync-result.csv"
+    "provided_data_file_path": "./test-data/provided.csv",
+    "current_data_file_path": "./test-data/current.csv",
+    "output_file_path": "./test-data/sync-result.csv"
   }
 }
 ```
@@ -85,8 +85,8 @@ pwsh ./scripts/main.ps1 -StaffInfoFilePath "/data/current-staff.csv" -StaffMaste
 
 - **メイン出力**: 指定したパスにCSVファイルが出力
 - **履歴保存**: `data/` 配下に日本時間タイムスタンプ付きで自動保存
-  - `data/staff-info/` : 職員情報の履歴
-  - `data/staff-master/` : 職員マスタの履歴
+  - `data/provided-data/` : 提供データの履歴
+  - `data/current-data/` : 現在データの履歴
   - `data/output/` : 同期結果の履歴
 
 ## ファイル構成
@@ -98,22 +98,32 @@ ps-sqlite/
 ├── scripts/                  # PowerShellスクリプト
 │   ├── main.ps1             # メインスクリプト
 │   ├── common-utils.ps1     # 共通ユーティリティ
+│   ├── config-utils.ps1     # 設定読み込み・検証
+│   ├── sql-utils.ps1        # SQL生成・実行ユーティリティ
+│   ├── file-utils.ps1       # ファイル操作ユーティリティ
+│   ├── data-filter-utils.ps1 # データフィルタリング
 │   ├── database.ps1         # データベース操作
 │   ├── csv-utils.ps1        # CSV処理
 │   └── sync-data.ps1        # データ同期処理
 ├── data/                    # 履歴保存ディレクトリ
-│   ├── staff-info/          # 職員情報履歴
-│   ├── staff-master/        # 職員マスタ履歴
+│   ├── provided-data/       # 提供データ履歴
+│   ├── current-data/        # 現在データ履歴
 │   └── output/              # 同期結果履歴
 ├── database/                # SQLiteデータベース
 │   └── data-sync.db         # メインデータベース
-├── test-data/               # テスト用データ（例）
-└── samples/                 # サンプルデータ
+├── logs/                    # ログファイル
+│   └── staff-management.log # 実行ログ
+└── test-data/               # テスト用データ
+    ├── provided.csv         # 提供データサンプル
+    ├── current.csv          # 現在データサンプル
+    └── sync-result.csv      # 同期結果サンプル
 ```
 
 ## データ項目
 
-現在サポートされている項目：
+**注意**: 以下は現在の設定例です。すべての項目は `config/data-sync-config.json` で変更可能です。
+
+### 提供データ (provided_data) - 現在の設定
 - `employee_id` (職員ID) - 必須、ユニーク
 - `card_number` (カード番号)
 - `name` (氏名) - 必須
@@ -122,6 +132,29 @@ ps-sqlite/
 - `email` (メールアドレス)
 - `phone` (電話番号)
 - `hire_date` (入社日)
+
+### 現在データ (current_data) - 現在の設定
+- `user_id` (利用者ID) - 必須、ユニーク
+- `card_number` (カード番号)
+- `name` (氏名) - 必須
+- `department` (部署)
+- `position` (役職)
+- `email` (メールアドレス)
+- `phone` (電話番号)
+- `hire_date` (入社日)
+
+### 同期結果 (sync_result) - 現在の設定
+- `syokuin_no` (職員番号) - 必須
+- `card_number` (カード番号)
+- `name` (氏名) - 必須
+- `department` (部署)
+- `position` (役職)
+- `email` (メールアドレス)
+- `phone` (電話番号)
+- `hire_date` (入社日)
+- `sync_action` (同期アクション) - 必須 (ADD/UPDATE/DELETE/KEEP)
+
+**設定ベースアーキテクチャ**: 項目の追加・変更・削除は設定ファイルのみで対応可能です。
 
 ## 設定ファイル
 
@@ -133,13 +166,13 @@ ps-sqlite/
 {
   "file_paths": {
     "description": "ファイルパス設定",
-    "staff_info_file_path": "",              // 職員情報ファイルパス
-    "staff_master_file_path": "",            // 職員マスタファイルパス  
-    "output_file_path": "",                  // 出力ファイルパス
-    "staff_info_history_directory": "./data/staff-info/",    // 履歴保存用
-    "staff_master_history_directory": "./data/staff-master/", // 履歴保存用
-    "output_history_directory": "./data/output/",            // 履歴保存用
-    "timezone": "Asia/Tokyo"                 // タイムゾーン設定
+    "provided_data_file_path": "./test-data/provided.csv",         // 提供データファイルパス
+    "current_data_file_path": "./test-data/current.csv",           // 現在データファイルパス  
+    "output_file_path": "./test-data/sync-result.csv",             // 出力ファイルパス
+    "provided_data_history_directory": "./data/provided-data/",    // 提供データ履歴保存用
+    "current_data_history_directory": "./data/current-data/",      // 現在データ履歴保存用
+    "output_history_directory": "./data/output/",                 // 出力履歴保存用
+    "timezone": "Asia/Tokyo"                                       // タイムゾーン設定
   }
 }
 ```
@@ -151,7 +184,7 @@ ps-sqlite/
 ```json
 {
   "data_filters": {
-    "staff_info": {
+    "provided_data": {
       "enabled": true,
       "rules": [
         {
@@ -165,6 +198,17 @@ ps-sqlite/
           "type": "exclude_pattern", 
           "pattern": "^Y.*",
           "description": "Y始まりの職員番号を除外"
+        }
+      ]
+    },
+    "current_data": {
+      "enabled": true,
+      "rules": [
+        {
+          "field": "user_id",
+          "type": "exclude_pattern",
+          "pattern": "^Z.*",
+          "description": "Z始まりの利用者IDを除外"
         }
       ]
     }
@@ -185,9 +229,9 @@ ps-sqlite/
 
 | アクション | 説明 | 条件 |
 |------------|------|------|
-| **ADD** | 新規追加 | 職員情報にあり、マスタにない |
-| **UPDATE** | 更新 | 両方にあるが内容が異なる（職員情報を優先） |
-| **DELETE** | 削除 | マスタにあり、職員情報にない |
+| **ADD** | 新規追加 | 提供データにあり、現在データにない |
+| **UPDATE** | 更新 | 両方にあるが内容が異なる（提供データを優先） |
+| **DELETE** | 削除 | 現在データにあり、提供データにない |
 | **KEEP** | 保持 | 両方にあり、内容が同じ |
 
 ## 履歴保存機能
@@ -196,14 +240,14 @@ ps-sqlite/
 
 システムは以下のタイミングで自動的にファイルを履歴保存します：
 
-1. **入力時**: 外部ファイル → `data/staff-info/`, `data/staff-master/` にコピー
+1. **入力時**: 外部ファイル → `data/provided-data/`, `data/current-data/` にコピー
 2. **出力時**: 同期結果 → `data/output/` に保存
 
 ### タイムスタンプ形式
 
 ```
 元ファイル名_YYYYMMDD_HHMMSS.csv
-例: current-staff_20250803_092046.csv
+例: provided_20250806_092046.csv
 ```
 
 ### 履歴ファイルの確認
@@ -219,7 +263,7 @@ Get-ChildItem -Path ".\data" -Recurse -Filter "*.csv"
 
 1. **ファイルが見つからない**
    ```
-   職員情報 ファイルが見つかりません: ./test.csv
+   提供データ ファイルが見つかりません: ./test.csv
    ```
    - ファイルパスを確認してください
    - 相対パスの場合、実行ディレクトリに注意
@@ -273,13 +317,15 @@ Remove-Item ".\database\data-sync.db" -Force
 
 ### 共通ライブラリ
 
-`scripts/common-utils.ps1` が提供する主要機能：
-- 設定読み込み・検証
-- 動的SQL生成
-- データフィルタリング
-- 統一ログシステム
-- 日本時間タイムスタンプ生成
-- ファイルパス解決機能
+提供される主要機能：
+- **config-utils.ps1**: 設定読み込み・検証
+- **sql-utils.ps1**: 動的SQL生成・実行
+- **data-filter-utils.ps1**: データフィルタリング
+- **file-utils.ps1**: ファイル操作・履歴保存
+- **common-utils.ps1**: 統一ログシステム・日本時間タイムスタンプ生成
+- **csv-utils.ps1**: 設定ベースCSV処理
+- **database.ps1**: データベース操作
+- **sync-data.ps1**: データ同期処理
 
 ## ライセンス
 
