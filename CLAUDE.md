@@ -164,14 +164,15 @@ ps-sqlite/
 │   └── data-sync-config.json # データ同期ツール設定
 ├── scripts/                  # PowerShellスクリプト
 │   ├── main.ps1             # メインスクリプト（単一ファイルパス対応版）
-│   ├── common-utils.ps1     # 共通ユーティリティ（日本時間・ファイルパス解決）
-│   ├── config-utils.ps1     # 設定読み込み・検証
-│   ├── sql-utils.ps1        # SQL生成・実行ユーティリティ
-│   ├── file-utils.ps1       # ファイル操作ユーティリティ
-│   ├── data-filter-utils.ps1 # データフィルタリング
 │   ├── database.ps1         # 動的データベース操作
-│   ├── csv-utils.ps1        # 設定ベースCSV処理（履歴保存対応）
-│   └── sync-data.ps1        # 動的データ同期処理
+│   ├── sync-data.ps1        # 動的データ同期処理
+│   └── utils/               # ユーティリティスクリプト
+│       ├── common-utils.ps1     # 共通ユーティリティ（日本時間・ファイルパス解決）
+│       ├── config-utils.ps1     # 設定読み込み・検証
+│       ├── sql-utils.ps1        # SQL生成・実行ユーティリティ
+│       ├── file-utils.ps1       # ファイル操作ユーティリティ
+│       ├── data-filter-utils.ps1 # データフィルタリング
+│       └── csv-utils.ps1        # 設定ベースCSV処理（履歴保存対応）
 ├── data/                    # 履歴保存ディレクトリ（自動生成）
 │   ├── provided-data/       # 提供データ履歴（タイムスタンプ付き）
 │   ├── current-data/        # 現在データ履歴（タイムスタンプ付き）

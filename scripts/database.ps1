@@ -2,9 +2,9 @@
 # データベース操作スクリプト（設定ベース版）
 
 # 共通ユーティリティの読み込み
-. (Join-Path $PSScriptRoot "config-utils.ps1")
-. (Join-Path $PSScriptRoot "sql-utils.ps1")
-. (Join-Path $PSScriptRoot "common-utils.ps1")
+. (Join-Path $PSScriptRoot "utils/config-utils.ps1")
+. (Join-Path $PSScriptRoot "utils/sql-utils.ps1")
+. (Join-Path $PSScriptRoot "utils/common-utils.ps1")
 
 # 動的データベース初期化
 function Initialize-Database {

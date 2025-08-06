@@ -17,7 +17,7 @@ $Global:DataSyncConfig = $null
 # データ同期設定の読み込み
 function Get-DataSyncConfig {
     param(
-        [string]$ConfigPath = (Join-Path $PSScriptRoot "..\config\data-sync-config.json")
+        [string]$ConfigPath = (Join-Path $PSScriptRoot "..\..\config\data-sync-config.json")
     )
     
     if ($null -eq $Global:DataSyncConfig) {

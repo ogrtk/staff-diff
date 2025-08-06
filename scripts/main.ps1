@@ -16,13 +16,13 @@ $ScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $ProjectRoot = Split-Path -Parent $ScriptPath
 
 # 共通ユーティリティと他のスクリプトファイルをインポート
-. "$ScriptPath\config-utils.ps1"
-. "$ScriptPath\sql-utils.ps1"
-. "$ScriptPath\file-utils.ps1"
-. "$ScriptPath\data-filter-utils.ps1"
-. "$ScriptPath\common-utils.ps1"
+. "$ScriptPath\utils\config-utils.ps1"
+. "$ScriptPath\utils\sql-utils.ps1"
+. "$ScriptPath\utils\file-utils.ps1"
+. "$ScriptPath\utils\data-filter-utils.ps1"
+. "$ScriptPath\utils\common-utils.ps1"
 . "$ScriptPath\database.ps1"
-. "$ScriptPath\csv-utils.ps1"
+. "$ScriptPath\utils\csv-utils.ps1"
 . "$ScriptPath\sync-data.ps1"
 
 function Main {
