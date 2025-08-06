@@ -2,112 +2,112 @@
 # データ同期処理スクリプト（設定ベース版）
 
 # 共通ユーティリティの読み込み
+. (Join-Path $PSScriptRoot "config-utils.ps1")
+. (Join-Path $PSScriptRoot "sql-utils.ps1")
+. (Join-Path $PSScriptRoot "file-utils.ps1")
 . (Join-Path $PSScriptRoot "common-utils.ps1")
 
 # メインの同期処理
 function Sync-StaffData {
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$DatabasePath
     )
     
     try {
         Write-SystemLog "データ同期処理を開始します..." -Level "Info"
         
-        # 同期結果テーブルをクリア
-        Clear-Table -DatabasePath $DatabasePath -TableName "sync_result"
-        
         # 1. 職員マスタに存在しないレコード（新規追加対象）を特定
         Add-NewStaffRecords -DatabasePath $DatabasePath
         
         # 2. 更新があったレコードを処理
-        Process-UpdatedRecords -DatabasePath $DatabasePath
+        Add-UpdateRecords -DatabasePath $DatabasePath
         
         # 3. 職員マスタにしか存在しないレコード（削除対象）を特定
-        Remove-ObsoleteRecords -DatabasePath $DatabasePath
+        Add-DeleteRecords -DatabasePath $DatabasePath
         
         # 4. 変更のないレコードを保持
-        Keep-UnchangedRecords -DatabasePath $DatabasePath
+        Add-KeepRecords -DatabasePath $DatabasePath
         
         Write-SystemLog "データ同期処理が完了しました。" -Level "Success"
         
-    } catch {
+    }
+    catch {
         Write-SystemLog "データ同期処理に失敗しました: $($_.Exception.Message)" -Level "Error"
         throw
     }
 }
 
-# 新規レコードの追加
+# 新規追加対象レコードをsync_resultテーブルに追加
 function Add-NewStaffRecords {
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$DatabasePath
     )
+    
+    # JOIN条件を動的に生成（エイリアス対応）
+    $joinCondition = New-JoinCondition -LeftTableName "provided_data" -RightTableName "current_data" -LeftAlias "pd" -RightAlias "cd"
+    $currentDataKeys = Get-TableKeyColumns -TableName "current_data"
+    $currentDataKey = ($currentDataKeys | Select-Object -First 1)
     
     try {
         Write-SystemLog "新規レコードを特定中..." -Level "Info"
         
-        # 設定ベースで新規レコード挿入クエリを生成
-        $csvColumns = Get-CsvColumns -TableName "staff_info"
-        $csvColumnsWithPrefix = $csvColumns | ForEach-Object { "si.$_" }
-        $csvColumnsString = $csvColumnsWithPrefix -join ", "
-        
-        $insertColumns = $csvColumns + @("sync_action")
+        # 設定ベースで新規レコード挿入クエリを生成（カラムマッピング対応）
+        $insertColumns = Get-SyncResultInsertColumns
         $insertColumnsString = $insertColumns -join ", "
+        
+        $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction "ADD"
         
         $query = @"
 INSERT INTO sync_result ($insertColumnsString)
 SELECT 
-    $csvColumnsString,
-    'ADD'
-FROM staff_info si
-LEFT JOIN staff_master sm ON si.employee_id = sm.employee_id
-WHERE sm.employee_id IS NULL;
+    $selectClause
+FROM provided_data pd
+LEFT JOIN current_data cd ON $joinCondition
+WHERE cd.$currentDataKey IS NULL;
 "@
         
         Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
         
         # 追加されたレコード数を取得
-        $countQuery = "SELECT COUNT(*) as count FROM sync_result WHERE sync_action = 'ADD';"
-        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $countQuery
-        $addCount = if ($result -is [array]) { $result[0] } else { $result }
+        Write-SystemLog "新規追加処理が完了しました" -Level "Success"
         
-        Write-SystemLog "新規追加対象: $($addCount.count)件" -Level "Success"
-        
-    } catch {
+    }
+    catch {
         Write-SystemLog "新規レコードの処理に失敗しました: $($_.Exception.Message)" -Level "Error"
         throw
     }
 }
 
-# 更新されたレコードの処理
-function Process-UpdatedRecords {
+# 更新対象レコードをsync_resultテーブルに追加
+function Add-UpdateRecords {
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$DatabasePath
     )
+    
+    # JOIN条件を動的に生成（エイリアス対応）
+    $joinCondition = New-JoinCondition -LeftTableName "provided_data" -RightTableName "current_data" -LeftAlias "pd" -RightAlias "cd"
     
     try {
         Write-SystemLog "更新レコードを特定中..." -Level "Info"
         
-        # 設定ベースで更新レコード挿入クエリを生成
-        $csvColumns = Get-CsvColumns -TableName "staff_info"
-        $csvColumnsWithPrefix = $csvColumns | ForEach-Object { "si.$_" }
-        $csvColumnsString = $csvColumnsWithPrefix -join ", "
-        
-        $insertColumns = $csvColumns + @("sync_action")
+        # 設定ベースで更新レコード挿入クエリを生成（カラムマッピング対応）
+        $insertColumns = Get-SyncResultInsertColumns
         $insertColumnsString = $insertColumns -join ", "
         
+        $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction "UPDATE"
+        
         # 比較条件を動的に生成
-        $whereClause = New-ComparisonWhereClause -Table1Alias "si" -Table2Alias "sm" -ComparisonType "different"
+        $whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "different" -Table1Name "provided_data" -Table2Name "current_data"
         
         $query = @"
 INSERT INTO sync_result ($insertColumnsString)
 SELECT 
-    $csvColumnsString,
-    'UPDATE'
-FROM staff_info si
-INNER JOIN staff_master sm ON si.employee_id = sm.employee_id
+    $selectClause
+FROM provided_data pd
+INNER JOIN current_data cd ON $joinCondition
 WHERE 
     $whereClause;
 "@
@@ -115,104 +115,116 @@ WHERE
         Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
         
         # 更新されたレコード数を取得
-        $countQuery = "SELECT COUNT(*) as count FROM sync_result WHERE sync_action = 'UPDATE';"
-        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $countQuery
-        $updateCount = if ($result -is [array]) { $result[0] } else { $result }
+        Write-SystemLog "更新処理が完了しました" -Level "Success"
         
-        Write-SystemLog "更新対象: $($updateCount.count)件" -Level "Success"
-        
-    } catch {
+    }
+    catch {
         Write-SystemLog "更新レコードの処理に失敗しました: $($_.Exception.Message)" -Level "Error"
         throw
     }
 }
 
-# 削除対象レコードの処理
-function Remove-ObsoleteRecords {
+# 削除対象レコードをsync_resultテーブルに追加
+function Add-DeleteRecords {
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$DatabasePath
     )
+    
+    # 複合キー対応のJOIN条件生成
+    $joinCondition = New-JoinCondition -LeftTableName "current_data" -RightTableName "provided_data" -LeftAlias "cd" -RightAlias "pd"
+    $providedDataKeys = Get-TableKeyColumns -TableName "provided_data"
+    # 最初の要素を安全に取得
+    $providedDataKey = ($providedDataKeys | Select-Object -First 1)
     
     try {
         Write-SystemLog "削除対象レコードを特定中..." -Level "Info"
         
-        # 設定ベースで削除レコード挿入クエリを生成
-        $csvColumns = Get-CsvColumns -TableName "staff_master"
-        $csvColumnsWithPrefix = $csvColumns | ForEach-Object { "sm.$_" }
-        $csvColumnsString = $csvColumnsWithPrefix -join ", "
-        
-        $insertColumns = $csvColumns + @("sync_action")
+        # 設定ベースで削除レコード挿入クエリを生成（カラムマッピング対応）
+        $insertColumns = Get-SyncResultInsertColumns
         $insertColumnsString = $insertColumns -join ", "
+        
+        $selectClause = New-SyncResultSelectClause -SourceTableName "current_data" -SourceTableAlias "cd" -SyncAction "DELETE"
         
         $query = @"
 INSERT INTO sync_result ($insertColumnsString)
 SELECT 
-    $csvColumnsString,
-    'DELETE'
-FROM staff_master sm
-LEFT JOIN staff_info si ON sm.employee_id = si.employee_id
-WHERE si.employee_id IS NULL;
+    $selectClause
+FROM current_data cd
+LEFT JOIN provided_data pd ON $joinCondition
+WHERE pd.$providedDataKey IS NULL;
 "@
         
         Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
         
         # 削除されたレコード数を取得
-        $countQuery = "SELECT COUNT(*) as count FROM sync_result WHERE sync_action = 'DELETE';"
-        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $countQuery
-        $deleteCount = if ($result -is [array]) { $result[0] } else { $result }
+        Write-SystemLog "削除処理が完了しました" -Level "Success"
         
-        Write-SystemLog "削除対象: $($deleteCount.count)件" -Level "Success"
-        
-    } catch {
+    }
+    catch {
         Write-SystemLog "削除対象レコードの処理に失敗しました: $($_.Exception.Message)" -Level "Error"
         throw
     }
 }
 
-# 変更のないレコードの保持
-function Keep-UnchangedRecords {
+# 保持対象レコードをsync_resultテーブルに追加
+function Add-KeepRecords {
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$DatabasePath
     )
+    
+    # 複合キー対応のJOIN条件とNOT IN条件生成
+    $joinCondition = New-JoinCondition -LeftTableName "provided_data" -RightTableName "current_data" -LeftAlias "pd" -RightAlias "cd"
+    $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
+    
+    # NOT IN句用: provided_dataのキーカラムをマッピングして生成
+    $syncResultMapping = Get-SyncResultColumnMapping
+    $providedDataMappedKeys = @()
+    foreach ($syncResultKey in $syncResultKeys) {
+        $mapping = $syncResultMapping.$syncResultKey
+        if ($mapping -and $mapping.provided_data_field) {
+            $providedDataMappedKeys += "pd.$($mapping.provided_data_field)"
+        }
+        else {
+            $providedDataMappedKeys += "pd.$syncResultKey"
+        }
+    }
+    $providedDataGroupBy = $providedDataMappedKeys -join ", "
+    
+    # サブクエリ用: sync_resultのキーカラムをそのまま指定
+    $syncResultGroupBy = New-GroupByClause -TableName "sync_result"
     
     try {
         Write-SystemLog "変更なしレコードを特定中..." -Level "Info"
         
-        # 設定ベースで変更なしレコード挿入クエリを生成
-        $csvColumns = Get-CsvColumns -TableName "staff_info"
-        $csvColumnsWithPrefix = $csvColumns | ForEach-Object { "si.$_" }
-        $csvColumnsString = $csvColumnsWithPrefix -join ", "
-        
-        $insertColumns = $csvColumns + @("sync_action")
+        # 設定ベースで変更なしレコード挿入クエリを生成（カラムマッピング対応）
+        $insertColumns = Get-SyncResultInsertColumns
         $insertColumnsString = $insertColumns -join ", "
         
+        $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction "KEEP"
+        
         # 比較条件を動的に生成
-        $whereClause = New-ComparisonWhereClause -Table1Alias "si" -Table2Alias "sm" -ComparisonType "same"
+        $whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "same" -Table1Name "provided_data" -Table2Name "current_data"
         
         $query = @"
 INSERT INTO sync_result ($insertColumnsString)
 SELECT 
-    $csvColumnsString,
-    'KEEP'
-FROM staff_info si
-INNER JOIN staff_master sm ON si.employee_id = sm.employee_id
+    $selectClause
+FROM provided_data pd
+INNER JOIN current_data cd ON $joinCondition
 WHERE 
     $whereClause
-    AND si.employee_id NOT IN (SELECT employee_id FROM sync_result);
+    AND ($providedDataGroupBy) NOT IN (SELECT $syncResultGroupBy FROM sync_result);
 "@
         
         Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
         
         # 保持されたレコード数を取得
-        $countQuery = "SELECT COUNT(*) as count FROM sync_result WHERE sync_action = 'KEEP';"
-        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $countQuery
-        $keepCount = if ($result -is [array]) { $result[0] } else { $result }
+        Write-SystemLog "保持処理が完了しました" -Level "Success"
         
-        Write-SystemLog "変更なし（保持）: $($keepCount.count)件" -Level "Success"
-        
-    } catch {
+    }
+    catch {
         Write-SystemLog "変更なしレコードの処理に失敗しました: $($_.Exception.Message)" -Level "Error"
         throw
     }
@@ -221,21 +233,21 @@ WHERE
 # 同期処理の詳細レポート生成
 function Get-SyncReport {
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$DatabasePath
     )
     
     try {
         $reportQuery = @"
 SELECT 
-    'STAFF_INFO_TOTAL' as category,
+    'PROVIDED_DATA_TOTAL' as category,
     COUNT(*) as count
-FROM staff_info
+FROM provided_data
 UNION ALL
 SELECT 
-    'STAFF_MASTER_TOTAL' as category,
+    'CURRENT_DATA_TOTAL' as category,
     COUNT(*) as count
-FROM staff_master
+FROM current_data
 UNION ALL
 SELECT 
     'SYNC_' || sync_action as category,
@@ -244,13 +256,8 @@ FROM sync_result
 GROUP BY sync_action;
 "@
         
-        # SQLite3コマンドラインでCSV形式で結果を取得
-        $sqlite3Path = Get-Command sqlite3 -ErrorAction SilentlyContinue
-        if ($sqlite3Path) {
-            $result = & sqlite3 -csv $DatabasePath $reportQuery
-        } else {
-            $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $reportQuery
-        }
+        # SQLite CSV形式で結果を取得
+        $result = Invoke-SqliteCsvQuery -DatabasePath $DatabasePath -Query $reportQuery
         
         Write-Host "`n=== 詳細同期レポート ===" -ForegroundColor Yellow
         if ($result -and $result.Count -gt 0) {
@@ -262,14 +269,16 @@ GROUP BY sync_action;
                     }
                 }
             }
-        } else {
+        }
+        else {
             Write-Host "レポートデータがありません" -ForegroundColor Gray
         }
         Write-Host "=========================" -ForegroundColor Yellow
         
-        return $report
+        return $result
         
-    } catch {
+    }
+    catch {
         Write-SystemLog "同期レポートの生成に失敗しました: $($_.Exception.Message)" -Level "Error"
         throw
     }
@@ -278,27 +287,36 @@ GROUP BY sync_action;
 # データの整合性チェック
 function Test-DataConsistency {
     param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string]$DatabasePath
     )
+    
+    # 複合キー対応のGROUP BY句生成
+    $groupByClause = New-GroupByClause -TableName "sync_result"
+    $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
     
     try {
         Write-SystemLog "データ整合性をチェック中..." -Level "Info"
         
         # 重複チェック
         $duplicateQuery = @"
-SELECT employee_id, COUNT(*) as count
+SELECT $groupByClause, COUNT(*) as count
 FROM sync_result
-GROUP BY employee_id
+GROUP BY $groupByClause
 HAVING COUNT(*) > 1;
 "@
         
         $duplicates = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $duplicateQuery
         
         if ($duplicates -and $duplicates.Count -gt 0) {
-            Write-Warning "重複したemployee_idが見つかりました:"
+            Write-Warning "重複したキー（$($syncResultKeys -join ', ')）が見つかりました:"
             foreach ($dup in $duplicates) {
-                Write-Warning "  $($dup.employee_id): $($dup.count)件"
+                $keyValues = @()
+                foreach ($key in $syncResultKeys) {
+                    $keyValues += $dup.$key
+                }
+                $keyString = $keyValues -join ', '
+                Write-Warning "  ($keyString): $($dup.count)件"
             }
             return $false
         }
@@ -306,7 +324,8 @@ HAVING COUNT(*) > 1;
         Write-SystemLog "データ整合性チェック完了: 問題なし" -Level "Success"
         return $true
         
-    } catch {
+    }
+    catch {
         Write-SystemLog "データ整合性チェックに失敗しました: $($_.Exception.Message)" -Level "Error"
         return $false
     }

@@ -1,16 +1,12 @@
 # データベースファイル
-database/*.db
-database/*.sqlite
-database/*.sqlite3
+database/
 
 # ログファイル
 logs/
 *.log
 
 # データ履歴ファイル（自動生成）
-data/staff-info/*.csv
-data/staff-master/*.csv
-data/output/*.csv
+data/
 
 # 一時ファイル・キャッシュ
 *.tmp
@@ -25,11 +21,8 @@ config/production-*.json
 config/secrets.json
 config/*.secret.*
 
-# Node.js（もし使用している場合）
+# Node.js（claude code用）
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # OS固有ファイル
 # Windows

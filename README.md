@@ -62,7 +62,7 @@ pwsh ./scripts/main.ps1 -StaffInfoFilePath "/data/current-staff.csv" -StaffMaste
 
 #### B. 設定ファイル指定での実行
 
-1. **設定ファイルを編集**: `config/schema-config.json`
+1. **設定ファイルを編集**: `config/data-sync-config.json`
 
 ```json
 {
@@ -94,7 +94,7 @@ pwsh ./scripts/main.ps1 -StaffInfoFilePath "/data/current-staff.csv" -StaffMaste
 ```
 ps-sqlite/
 ├── config/                   # 設定ファイル
-│   └── schema-config.json    # スキーマ・フィルタリング・パス設定
+│   └── data-sync-config.json # データ同期ツール設定
 ├── scripts/                  # PowerShellスクリプト
 │   ├── main.ps1             # メインスクリプト
 │   ├── common-utils.ps1     # 共通ユーティリティ
@@ -106,7 +106,7 @@ ps-sqlite/
 │   ├── staff-master/        # 職員マスタ履歴
 │   └── output/              # 同期結果履歴
 ├── database/                # SQLiteデータベース
-│   └── staff.db             # メインデータベース
+│   └── data-sync.db         # メインデータベース
 ├── test-data/               # テスト用データ（例）
 └── samples/                 # サンプルデータ
 ```
@@ -127,7 +127,7 @@ ps-sqlite/
 
 ### ファイルパス設定
 
-`config/schema-config.json` の `file_paths` セクション：
+`config/data-sync-config.json` の `file_paths` セクション：
 
 ```json
 {
@@ -238,7 +238,7 @@ Get-ChildItem -Path ".\data" -Recurse -Filter "*.csv"
 
 ```powershell
 # データベースファイルを削除
-Remove-Item ".\database\staff.db" -Force
+Remove-Item ".\database\data-sync.db" -Force
 
 # 再実行
 .\scripts\main.ps1
@@ -248,7 +248,7 @@ Remove-Item ".\database\staff.db" -Force
 
 新しい項目（例：`salary`）を追加する場合：
 
-1. **設定ファイルのみ修正**: `config/schema-config.json`
+1. **設定ファイルのみ修正**: `config/data-sync-config.json`
 ```json
 {
   "name": "salary",

@@ -23,7 +23,7 @@
 - 出力結果も指定パス + 履歴保存のデュアル出力
 
 ### 3. 設定ベースアーキテクチャ
-- config/schema-config.json による一元管理
+- config/data-sync-config.json による一元管理
 - テーブル定義、同期ルール、フィルタリング設定、ファイルパス設定を統合
 - 動的SQL生成、動的CSV処理、設定検証機能
 
@@ -44,7 +44,7 @@
 ```
 ps-sqlite/
 ├── config/
-│   └── schema-config.json    # スキーマ・フィルタリング・ファイルパス設定
+│   └── data-sync-config.json # データ同期ツール設定
 ├── scripts/
 │   ├── main.ps1             # メインスクリプト
 │   ├── common-utils.ps1     # 共通ユーティリティ
@@ -56,7 +56,7 @@ ps-sqlite/
 │   ├── staff-master/        # 職員マスタ履歴
 │   └── output/              # 同期結果履歴
 ├── database/                # SQLiteデータベース
-│   └── staff.db             # メインデータベース
+│   └── data-sync.db         # メインデータベース
 ├── test-data/               # テスト用データ
 │   ├── current-staff-info.csv
 │   ├── master-staff-data.csv
@@ -69,7 +69,7 @@ ps-sqlite/
 └── run.bat                  # Windows実行バッチ
 ```
 
-## schema-config.json 設定ファイル仕様
+## data-sync-config.json 設定ファイル仕様
 
 ```json
 {
@@ -442,7 +442,7 @@ param(
 
 ## 実行フロー
 
-1. **設定検証**: schema-config.json の整合性チェック
+1. **設定検証**: data-sync-config.json の整合性チェック
 2. **ファイルパス解決**: パラメータまたは設定ファイルからファイルパスを解決
 3. **データベースの動的初期化**: 設定からテーブル・インデックス・トリガーを生成
 4. **職員情報CSVの処理**:
@@ -523,7 +523,7 @@ Y888,C00888,退職者,退職,退職,retired@company.com,00-0000-0000,2020-01-01
 ## 必要な関数一覧
 
 ### common-utils.ps1の必要機能
-1. **Get-SchemaConfig**: 設定ファイル読み込み・キャッシュ
+1. **Get-DataSyncConfig**: 設定ファイル読み込み・キャッシュ
 2. **Get-TableDefinition**: テーブル定義取得
 3. **Get-CsvColumns**: CSV用カラムリスト取得
 4. **Get-RequiredColumns**: 必須カラムリスト取得
@@ -534,7 +534,7 @@ Y888,C00888,退職者,退職,退職,retired@company.com,00-0000-0000,2020-01-01
 9. **New-CsvHeader**: CSVヘッダー生成
 10. **New-CreateIndexSql**: インデックス作成SQL生成
 11. **New-UpdateTriggerSql**: 更新トリガーSQL生成
-12. **Test-SchemaConfig**: 設定検証
+12. **Test-DataSyncConfig**: 設定検証
 13. **Write-SystemLog**: 統一ログシステム（日本時間）
 14. **Get-DataFilterConfig**: フィルタリング設定取得
 15. **Test-DataFilter**: データフィルタリング実行

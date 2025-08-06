@@ -1,6 +1,7 @@
-employee_id,card_number,name,department,position,email,phone,hire_date
+user_id,card_number,name,department,position,email,phone,hire_date
 E001,C00001,田中太郎,総務部,課長,tanaka@company.com,03-1234-5678,2020-04-01
 E002,C00002,佐藤花子,営業部,係長,sato@company.com,03-2345-6789,2019-07-15
 E003,C00003,鈴木一郎,開発部,エンジニア,suzuki@company.com,03-3456-7890,2021-10-01
 E008,C00008,中村六郎,経理部,部長,nakamura@company.com,03-8901-2345,2015-04-01
 E009,C00009,小林七子,総務部,事務,kobayashi@company.com,03-9012-3456,2021-08-01
+Y888,C00888,退職者,退職,退職,retired@company.com,00-0000-0000,2020-01-01

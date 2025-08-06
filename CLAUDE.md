@@ -33,7 +33,7 @@ PowerShellとSQLiteを使用して、職員情報の管理・同期・出力を�
 
 5. **ファイルパス管理機能**
    - パラメータ指定による動的ファイルパス指定
-   - 設定ファイル（config/schema-config.json）による静的ファイルパス管理
+   - 設定ファイル（config/data-sync-config.json）による静的ファイルパス管理
    - ファイルパス解決の優先順位: パラメータ → 設定ファイル
 
 ### 追加機能（重要）
@@ -45,7 +45,7 @@ PowerShellとSQLiteを使用して、職員情報の管理・同期・出力を�
 - **デュアル出力**: 指定パス + 履歴保存の同時実行
 
 #### 🚀 設定ベース保守性向上
-- **config/schema-config.json による一元管理**
+- **config/data-sync-config.json による一元管理**
 - **項目追加時の修正箇所を1ファイルに削減**
 - **動的SQL生成**: テーブル定義から自動生成
 - **動的CSV処理**: 設定ベースでヘッダー・バリデーション
@@ -112,7 +112,7 @@ ps-sqlite/
 ├── README.md                 # 使用方法・機能説明
 ├── initialprompt.txt         # 全システム生成用プロンプト
 ├── config/                   # 設定ファイル
-│   └── schema-config.json    # スキーマ・フィルタリング・ファイルパス設定
+│   └── data-sync-config.json # データ同期ツール設定
 ├── scripts/                  # PowerShellスクリプト
 │   ├── main.ps1             # メインスクリプト（単一ファイルパス対応版）
 │   ├── common-utils.ps1     # 共通ユーティリティ（日本時間・ファイルパス解決）
@@ -126,7 +126,7 @@ ps-sqlite/
 │   ├── staff-master/        # 職員マスタ履歴（タイムスタンプ付き）
 │   └── output/              # 同期結果履歴（タイムスタンプ付き）
 ├── database/                # SQLiteデータベース
-│   └── staff.db             # メインデータベース
+│   └── data-sync.db         # メインデータベース
 ├── test-data/               # テスト用データ（外部ファイル例）
 │   ├── current-staff-info.csv
 │   ├── master-staff-data.csv
@@ -139,7 +139,7 @@ ps-sqlite/
 
 ## 実行フロー
 
-1. **設定検証**: schema-config.json の整合性チェック
+1. **設定検証**: data-sync-config.json の整合性チェック
 2. **ファイルパス解決**: パラメータまたは設定ファイルからファイルパスを解決
 3. **データベースの動的初期化**: 設定からテーブル・インデックス・トリガーを生成
 4. **職員情報CSVの処理**:
@@ -171,7 +171,7 @@ pwsh ./scripts/main.ps1 -StaffInfoFilePath "/data/current-staff.csv" -StaffMaste
 ```
 
 ### B. 設定ファイル指定実行
-1. **設定ファイル編集**: `config/schema-config.json`
+1. **設定ファイル編集**: `config/data-sync-config.json`
 ```json
 {
   "file_paths": {
@@ -197,7 +197,7 @@ pwsh ./scripts/main.ps1 -StaffInfoFilePath "/data/current-staff.csv" -StaffMaste
 
 ## 設定管理
 
-### schema-config.json の主要セクション
+### data-sync-config.json の主要セクション
 
 #### 1. file_paths
 ファイルパス設定（新機能）
@@ -340,6 +340,6 @@ pwsh ./scripts/main.ps1 -StaffInfoFilePath "/data/current-staff.csv" -StaffMaste
 
 # important-instruction-reminders
 - 何か変更を行う際は、必ず設定ベースアーキテクチャを維持すること
-- 新機能追加時は config/schema-config.json での設定可能性を検討すること
+- 新機能追加時は config/data-sync-config.json での設定可能性を検討すること
 - ハードコーディングは避け、動的生成を優先すること
 - すべての変更には適切なログとエラーハンドリングを含めること
