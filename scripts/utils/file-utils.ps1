@@ -209,7 +209,7 @@ function Export-CsvCrossPlatform {
         
         [System.Text.Encoding]$Encoding = $null,
         
-        [switch]$NoTypeInformation = $true
+        [bool]$NoTypeInformation = $true
     )
     
     if (-not $Encoding) {

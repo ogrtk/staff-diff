@@ -3,13 +3,47 @@
   "description": "PowerShell & SQLite 職員データ管理システム スキーマ設定",
   "file_paths": {
     "description": "ファイルパス設定",
-    "provided_data_file_path": "./test-data/provided.csv",
-    "current_data_file_path": "./test-data/current.csv",
+    "provided_data_file_path": "./test-data/large-provided.csv",
+    "current_data_file_path": "./test-data/large-current.csv",
     "output_file_path": "./test-data/sync-result.csv",
     "provided_data_history_directory": "./data/provided-data/",
     "current_data_history_directory": "./data/current-data/",
     "output_history_directory": "./data/output/",
     "timezone": "Asia/Tokyo"
+  },
+  "csv_format": {
+    "description": "CSVファイルフォーマット設定（テーブル別）",
+    "provided_data": {
+      "description": "提供データCSV読み込み設定",
+      "encoding": "UTF-8",
+      "delimiter": ",",
+      "newline": "LF",
+      "has_header": false,
+      "null_values": [
+        "",
+        "NULL",
+        "null"
+      ]
+    },
+    "current_data": {
+      "description": "現在データCSV読み込み設定",
+      "encoding": "UTF-8",
+      "delimiter": ",",
+      "newline": "LF",
+      "has_header": true,
+      "null_values": [
+        "",
+        "NULL",
+        "null"
+      ]
+    },
+    "output": {
+      "description": "同期結果CSV出力設定",
+      "encoding": "UTF-8",
+      "delimiter": ",",
+      "newline": "CRLF",
+      "include_header": true
+    }
   },
   "tables": {
     "provided_data": {
@@ -87,7 +121,15 @@
           "description": "入社日"
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "name": "idx_provided_employee_id",
+          "columns": [
+            "employee_id"
+          ],
+          "description": "職員ID検索用インデックス（大量データ時の比較処理高速化）"
+        }
+      ]
     },
     "current_data": {
       "description": "現在データテーブル",
@@ -164,7 +206,15 @@
           "description": "入社日"
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "name": "idx_current_user_id",
+          "columns": [
+            "user_id"
+          ],
+          "description": "利用者ID検索用インデックス（大量データ時の比較処理高速化）"
+        }
+      ]
     },
     "sync_result": {
       "description": "同期結果テーブル",
@@ -352,6 +402,17 @@
           "description": "Y始まりの職員番号を除外"
         }
       ]
+    }
+  },
+  "performance_settings": {
+    "description": "性能最適化設定",
+    "index_threshold": 100000,
+    "auto_optimization": true,
+    "sqlite_pragmas": {
+      "journal_mode": "WAL",
+      "synchronous": "NORMAL",
+      "temp_store": "MEMORY",
+      "cache_size": 10000
     }
   },
   "logging": {

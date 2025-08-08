@@ -88,6 +88,11 @@ function Test-DataSyncConfig {
             }
         }
         
+        # CSVフォーマット設定の検証
+        if ($config.csv_format) {
+            Test-CsvFormatConfig -CsvFormatConfig $config.csv_format
+        }
+        
         Write-Host "設定検証が完了しました: 問題なし" -ForegroundColor Green
         return $true
         
@@ -95,6 +100,64 @@ function Test-DataSyncConfig {
     catch {
         Write-Error "設定検証に失敗しました: $($_.Exception.Message)"
         return $false
+    }
+}
+
+# CSVフォーマット設定の検証
+function Test-CsvFormatConfig {
+    param(
+        [Parameter(Mandatory = $true)]
+        $CsvFormatConfig
+    )
+    
+    $validEncodings = @("UTF-8", "UTF-16", "UTF-16BE", "UTF-32", "SHIFT_JIS", "EUC-JP", "ASCII", "ISO-8859-1")
+    $validNewlines = @("CRLF", "LF", "CR")
+    
+    foreach ($configType in @("provided_data", "current_data", "output")) {
+        if ($CsvFormatConfig.$configType) {
+            $config = $CsvFormatConfig.$configType
+            
+            # エンコーディング検証
+            if ($config.encoding -and $config.encoding -notin $validEncodings) {
+                Write-Warning "無効なエンコーディングが指定されています ($configType): $($config.encoding)"
+            }
+            
+            # 改行コード検証
+            if ($config.newline -and $config.newline -notin $validNewlines) {
+                Write-Warning "無効な改行コードが指定されています ($configType): $($config.newline)"
+            }
+            
+            # 区切り文字の長さチェック
+            if ($config.delimiter -and $config.delimiter.Length -gt 1) {
+                Write-Warning "区切り文字は1文字である必要があります ($configType): '$($config.delimiter)'"
+            }
+            
+            # 実装されていない設定項目の警告
+            if ($config.PSObject.Properties.Name -contains "quote_char") {
+                Write-Warning "[$configType] 'quote_char' 設定は PowerShell の Import-Csv/Export-Csv では使用できません。設定から削除することを推奨します。"
+            }
+            
+            if ($config.PSObject.Properties.Name -contains "escape_char") {
+                Write-Warning "[$configType] 'escape_char' 設定は PowerShell の Import-Csv/Export-Csv では使用できません。設定から削除することを推奨します。"
+            }
+            
+            if ($config.PSObject.Properties.Name -contains "quote_all") {
+                Write-Warning "[$configType] 'quote_all' 設定は PowerShell の Export-Csv では使用できません。設定から削除することを推奨します。"
+            }
+            
+            # ヘッダー設定の検証
+            if ($configType -in @("provided_data", "current_data")) {
+                if (-not ($config.PSObject.Properties.Name -contains "has_header")) {
+                    Write-Warning "[$configType] 'has_header' 設定が見つかりません。デフォルトで true として処理されます。"
+                }
+            }
+            
+            if ($configType -eq "output") {
+                if (-not ($config.PSObject.Properties.Name -contains "include_header")) {
+                    Write-Warning "[$configType] 'include_header' 設定が見つかりません。デフォルトで true として処理されます。"
+                }
+            }
+        }
     }
 }
 

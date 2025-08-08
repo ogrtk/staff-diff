@@ -4,7 +4,7 @@
 # 共通ユーティリティの読み込み
 . (Join-Path $PSScriptRoot "config-utils.ps1")
 
-# テーブル定義の取得
+# テーブル定義の取得（一時テーブル対応）
 function Get-TableDefinition {
     param(
         [Parameter(Mandatory = $true)]
@@ -13,11 +13,17 @@ function Get-TableDefinition {
     
     $config = Get-DataSyncConfig
     
-    if (-not $config.tables.$TableName) {
-        throw "テーブル定義が見つかりません: $TableName"
+    # 一時テーブル（_tempサフィックス）の場合は元のテーブル定義を使用
+    $baseTableName = $TableName
+    if ($TableName -match "^(.+)_temp$") {
+        $baseTableName = $Matches[1]
     }
     
-    return $config.tables.$TableName
+    if (-not $config.tables.$baseTableName) {
+        throw "テーブル定義が見つかりません: $TableName (ベーステーブル: $baseTableName)"
+    }
+    
+    return $config.tables.$baseTableName
 }
 
 # CSVカラムリストの取得
@@ -242,11 +248,13 @@ function Get-SyncResultInsertColumns {
     return $csvColumns
 }
 
-# CREATE INDEX SQL生成
+# CREATE INDEX SQL生成（条件付き）
 function New-CreateIndexSql {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$TableName
+        [string]$TableName,
+        
+        [int]$RecordCount = 0
     )
     
     $tableDefinition = Get-TableDefinition -TableName $TableName
@@ -255,12 +263,33 @@ function New-CreateIndexSql {
         return @()
     }
     
+    # 性能設定を取得
+    $config = Get-DataSyncConfig
+    $threshold = 100000
+    $autoOptimization = $true
+    
+    if ($config.performance_settings) {
+        $threshold = $config.performance_settings.index_threshold
+        $autoOptimization = $config.performance_settings.auto_optimization
+    }
+    
     $indexSqls = @()
     
     foreach ($index in $tableDefinition.indexes) {
-        $columnsStr = $index.columns -join ", "
-        $indexSql = "CREATE INDEX IF NOT EXISTS $($index.name) ON $TableName ($columnsStr);"
-        $indexSqls += $indexSql
+        $shouldCreateIndex = $true
+        
+        # 自動最適化が有効な場合は件数で判定
+        if ($autoOptimization -and $RecordCount -gt 0 -and $RecordCount -lt $threshold) {
+            Write-Host "テーブル '$TableName' は小規模データ ($RecordCount 件 < $threshold) のため、インデックス '$($index.name)' をスキップします" -ForegroundColor Yellow
+            $shouldCreateIndex = $false
+        }
+        
+        if ($shouldCreateIndex) {
+            $columnsStr = $index.columns -join ", "
+            $indexSql = "CREATE INDEX IF NOT EXISTS $($index.name) ON $TableName ($columnsStr);"
+            $indexSqls += $indexSql
+            Write-Host "インデックス '$($index.name)' を作成します: $TableName ($columnsStr)" -ForegroundColor Green
+        }
     }
     
     return $indexSqls
@@ -521,4 +550,141 @@ function New-SyncResultSelectClause {
     }
     
     return $selectClauses -join ", "
+}
+
+# フィルタ用WHERE句生成
+function New-FilterWhereClause {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TableName
+    )
+    
+    $config = Get-DataSyncConfig
+    
+    if (-not $config.data_filters -or -not $config.data_filters.$TableName) {
+        return ""
+    }
+    
+    $filterConfig = $config.data_filters.$TableName
+    
+    if (-not $filterConfig.enabled -or -not $filterConfig.rules) {
+        return ""
+    }
+    
+    $conditions = @()
+    
+    foreach ($rule in $filterConfig.rules) {
+        switch ($rule.type) {
+            "exclude_pattern" {
+                if ($rule.pattern) {
+                    # 正規表現をGLOBパターンに変換
+                    $globPattern = $rule.pattern -replace '\^', '' -replace '\.\*', '*' -replace '\$$', ''
+                    $conditions += "$($rule.field) NOT GLOB '$globPattern'"
+                }
+            }
+            "include_pattern" {
+                if ($rule.pattern) {
+                    # 正規表現をGLOBパターンに変換
+                    $globPattern = $rule.pattern -replace '\^', '' -replace '\.\*', '*' -replace '\$$', ''
+                    $conditions += "$($rule.field) GLOB '$globPattern'"
+                }
+            }
+            "exclude_value" {
+                if ($rule.value) {
+                    $conditions += "$($rule.field) != " + (Protect-SqlValue -Value $rule.value)
+                }
+            }
+            "include_value" {
+                if ($rule.value) {
+                    $conditions += "$($rule.field) = " + (Protect-SqlValue -Value $rule.value)
+                }
+            }
+        }
+    }
+    
+    if ($conditions.Count -gt 0) {
+        return "(" + ($conditions -join " AND ") + ")"
+    }
+    
+    return ""
+}
+
+# 一時テーブル作成SQL生成
+function New-CreateTempTableSql {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BaseTableName,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$TempTableName
+    )
+    
+    $tableDefinition = Get-TableDefinition -TableName $BaseTableName
+    
+    $columns = @()
+    foreach ($column in $tableDefinition.columns) {
+        if ($column.csv_include -eq $true) {
+            $columnDef = "$($column.name) $($column.type)"
+            $columns += $columnDef
+        }
+    }
+    
+    $sql = "CREATE TEMP TABLE $TempTableName (`n"
+    $sql += "    " + ($columns -join ",`n    ") + "`n"
+    $sql += ");"
+    
+    return $sql
+}
+
+# フィルタ付きINSERT SQL生成
+function New-FilteredInsertSql {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TargetTableName,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$SourceTableName,
+        
+        [string]$WhereClause = ""
+    )
+    
+    $csvColumns = Get-CsvColumns -TableName $TargetTableName
+    $columnsStr = $csvColumns -join ", "
+    
+    $sql = "INSERT INTO $TargetTableName ($columnsStr)`n"
+    $sql += "SELECT $columnsStr FROM $SourceTableName"
+    
+    if (-not [string]::IsNullOrWhiteSpace($WhereClause)) {
+        $sql += "`nWHERE $WhereClause"
+    }
+    
+    return $sql + ";"
+}
+
+# SQLite最適化PRAGMA生成
+function New-OptimizationPragmas {
+    $config = Get-DataSyncConfig
+    $pragmas = @()
+    
+    if ($config.performance_settings -and $config.performance_settings.sqlite_pragmas) {
+        $sqlitePragmas = $config.performance_settings.sqlite_pragmas
+        
+        if ($sqlitePragmas.journal_mode) {
+            $pragmas += "PRAGMA journal_mode = $($sqlitePragmas.journal_mode);"
+        }
+        
+        if ($sqlitePragmas.synchronous) {
+            $pragmas += "PRAGMA synchronous = $($sqlitePragmas.synchronous);"
+        }
+        
+        if ($sqlitePragmas.temp_store) {
+            $pragmas += "PRAGMA temp_store = $($sqlitePragmas.temp_store);"
+        }
+        
+        if ($sqlitePragmas.cache_size) {
+            $pragmas += "PRAGMA cache_size = $($sqlitePragmas.cache_size);"
+        }
+    }
+    
+    return $pragmas
 }
