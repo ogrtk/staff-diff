@@ -254,7 +254,7 @@
           "name": "department",
           "type": "TEXT",
           "constraints": "",
-          "csv_include": true,
+          "csv_include": false,
           "required": false,
           "description": "部署"
         },
@@ -329,39 +329,143 @@
       }
     },
     "sync_result_mapping": {
-      "description": "sync_resultテーブルへの格納項目対応付け（provided_dataが優先）",
+      "description": "sync_resultテーブルへの格納項目対応付け（優先度順、自動フォールバック）",
       "mappings": {
         "syokuin_no": {
-          "provided_data_field": "employee_id",
-          "current_data_field": "user_id"
+          "description": "職員番号",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "employee_id",
+              "priority": 1,
+              "description": "提供データの職員ID（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "user_id",
+              "priority": 2,
+              "description": "現在データの利用者ID（フォールバック）"
+            }
+          ]
         },
         "card_number": {
-          "provided_data_field": "card_number",
-          "current_data_field": "card_number"
+          "description": "カード番号",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "card_number",
+              "priority": 1,
+              "description": "提供データのカード番号（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "card_number",
+              "priority": 2,
+              "description": "現在データのカード番号（フォールバック）"
+            }
+          ]
         },
         "name": {
-          "provided_data_field": "name",
-          "current_data_field": "name"
+          "description": "氏名",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "name",
+              "priority": 1,
+              "description": "提供データの氏名（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "name",
+              "priority": 2,
+              "description": "現在データの氏名（フォールバック）"
+            }
+          ]
         },
         "department": {
-          "provided_data_field": "department",
-          "current_data_field": "department"
+          "description": "部署",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "department",
+              "priority": 1,
+              "description": "提供データの部署（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "department",
+              "priority": 2,
+              "description": "現在データの部署（フォールバック）"
+            },
+            {
+              "type": "fixed_value",
+              "value": "未設定",
+              "priority": 3,
+              "description": "デフォルト部署名（最終フォールバック）"
+            }
+          ]
         },
         "position": {
-          "provided_data_field": "position",
-          "current_data_field": "position"
+          "description": "役職",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "position",
+              "priority": 1,
+              "description": "提供データの役職（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "position",
+              "priority": 2,
+              "description": "現在データの役職（フォールバック）"
+            }
+          ]
         },
         "email": {
-          "provided_data_field": "email",
-          "current_data_field": "email"
+          "description": "メールアドレス",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "email",
+              "priority": 1,
+              "description": "提供データのメールアドレス（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "email",
+              "priority": 2,
+              "description": "現在データのメールアドレス（フォールバック）"
+            }
+          ]
         },
         "phone": {
-          "provided_data_field": "phone",
-          "current_data_field": "phone"
+          "description": "電話番号",
+          "sources": [
+            {
+              "type": "fixed_value",
+              "value": "999-9999-9999",
+              "priority": 1,
+              "description": "固定値"
+            }
+          ]
         },
         "hire_date": {
-          "provided_data_field": "hire_date",
-          "current_data_field": "hire_date"
+          "description": "入社日",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "hire_date",
+              "priority": 1,
+              "description": "提供データの入社日（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "hire_date",
+              "priority": 2,
+              "description": "現在データの入社日（フォールバック）"
+            }
+          ]
         }
       }
     }
@@ -373,14 +477,14 @@
       "rules": [
         {
           "field": "employee_id",
-          "type": "exclude_pattern",
-          "pattern": "^Z.*",
+          "type": "exclude",
+          "glob": "Z*",
           "description": "Z始まりの職員番号を除外"
         },
         {
           "field": "employee_id",
-          "type": "exclude_pattern",
-          "pattern": "^Y.*",
+          "type": "exclude",
+          "glob": "Y*",
           "description": "Y始まりの職員番号を除外"
         }
       ]
@@ -391,14 +495,14 @@
       "rules": [
         {
           "field": "user_id",
-          "type": "exclude_pattern",
-          "pattern": "^Z.*",
+          "type": "exclude",
+          "glob": "Z*",
           "description": "Z始まりの職員番号を除外"
         },
         {
           "field": "user_id",
-          "type": "exclude_pattern",
-          "pattern": "^Y.*",
+          "type": "exclude",
+          "glob": "Y*",
           "description": "Y始まりの職員番号を除外"
         }
       ]

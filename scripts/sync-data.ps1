@@ -97,7 +97,7 @@ function Add-UpdateRecords {
         $insertColumns = Get-SyncResultInsertColumns
         $insertColumnsString = $insertColumns -join ", "
         
-        $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction "UPDATE"
+        $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction "UPDATE"
         
         # 比較条件を動的に生成
         $whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "different" -Table1Name "provided_data" -Table2Name "current_data"
@@ -178,17 +178,11 @@ function Add-KeepRecords {
     $joinCondition = New-JoinCondition -LeftTableName "provided_data" -RightTableName "current_data" -LeftAlias "pd" -RightAlias "cd"
     $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
     
-    # NOT IN句用: provided_dataのキーカラムをマッピングして生成
-    $syncResultMapping = Get-SyncResultColumnMapping
+    # NOT IN句用: provided_dataのキーカラムを優先度ベースマッピングから生成
     $providedDataMappedKeys = @()
     foreach ($syncResultKey in $syncResultKeys) {
-        $mapping = $syncResultMapping.$syncResultKey
-        if ($mapping -and $mapping.provided_data_field) {
-            $providedDataMappedKeys += "pd.$($mapping.provided_data_field)"
-        }
-        else {
-            $providedDataMappedKeys += "pd.$syncResultKey"
-        }
+        $providedDataField = Get-PriorityBasedSourceField -SyncResultField $syncResultKey -SourceTableName "provided_data"
+        $providedDataMappedKeys += "pd.$providedDataField"
     }
     $providedDataGroupBy = $providedDataMappedKeys -join ", "
     
@@ -202,7 +196,7 @@ function Add-KeepRecords {
         $insertColumns = Get-SyncResultInsertColumns
         $insertColumnsString = $insertColumns -join ", "
         
-        $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction "KEEP"
+        $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction "KEEP"
         
         # 比較条件を動的に生成
         $whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "same" -Table1Name "provided_data" -Table2Name "current_data"

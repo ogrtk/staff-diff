@@ -229,7 +229,7 @@ function New-CsvHeader {
     return Get-CsvColumns -TableName $TableName
 }
 
-# 同期結果用カラムマッピングの取得
+# 同期結果用カラムマッピングの取得（後方互換性のため保持）
 function Get-SyncResultColumnMapping {
     $config = Get-DataSyncConfig
     
@@ -238,6 +238,122 @@ function Get-SyncResultColumnMapping {
     }
     
     return $config.sync_rules.sync_result_mapping.mappings
+}
+
+# 優先度ベース値選択関数
+function Get-PriorityBasedValue {
+    param(
+        [Parameter(Mandatory = $true)]
+        [array]$Sources,
+        
+        [Parameter(Mandatory = $true)]
+        [hashtable]$DataContext
+    )
+    
+    # 優先度順にソート
+    $sortedSources = $Sources | Sort-Object priority
+    
+    foreach ($source in $sortedSources) {
+        $value = $null
+        
+        switch ($source.type) {
+            "provided_data" {
+                if ($DataContext.ContainsKey("provided_data") -and $DataContext["provided_data"]) {
+                    $value = $DataContext["provided_data"].($source.field)
+                }
+            }
+            "current_data" {
+                if ($DataContext.ContainsKey("current_data") -and $DataContext["current_data"]) {
+                    $value = $DataContext["current_data"].($source.field)
+                }
+            }
+            "fixed_value" {
+                $value = $source.value
+            }
+        }
+        
+        # 値が有効かチェック（null・空文字・フィールド不存在でない）
+        if ($null -ne $value -and $value -ne "") {
+            return $value
+        }
+    }
+    
+    # すべてのソースで値が取得できない場合
+    return $null
+}
+
+# 優先度ベースSQLのCASE文生成（シンプル版）
+function New-PriorityBasedCaseStatement {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FieldName,
+        
+        [Parameter(Mandatory = $true)]
+        [array]$Sources
+    )
+    
+    # 優先度順にソート
+    $sortedSources = $Sources | Sort-Object priority
+    
+    $coalesceParts = @()
+    
+    foreach ($source in $sortedSources) {
+        switch ($source.type) {
+            "provided_data" {
+                $fieldRef = "pd.$($source.field)"
+                # NULL と空文字をNULLとして扱う
+                $coalesceParts += "NULLIF($fieldRef, '')"
+            }
+            "current_data" {
+                $fieldRef = "cd.$($source.field)"
+                # NULL と空文字をNULLとして扱う
+                $coalesceParts += "NULLIF($fieldRef, '')"
+            }
+            "fixed_value" {
+                # 固定値は最後のフォールバック
+                $coalesceParts += "'$($source.value)'"
+            }
+        }
+    }
+    
+    if ($coalesceParts.Count -gt 1) {
+        return "COALESCE(" + ($coalesceParts -join ", ") + ")"
+    }
+    elseif ($coalesceParts.Count -eq 1) {
+        return $coalesceParts[0]
+    }
+    
+    return "NULL"
+}
+
+# 優先度ベースマッピングから最優先のソーステーブル項目を取得
+function Get-PriorityBasedSourceField {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SyncResultField,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$SourceTableName
+    )
+    
+    $syncResultMappingConfig = Get-SyncResultMappingConfig
+    $fieldConfig = $syncResultMappingConfig.mappings.$SyncResultField
+    
+    if (-not $fieldConfig -or -not $fieldConfig.sources) {
+        return $SyncResultField  # フォールバック: 同名フィールド
+    }
+    
+    # 優先度順にソートして、指定されたソーステーブルの最初の項目を返す
+    $sortedSources = $fieldConfig.sources | Sort-Object priority
+    
+    foreach ($source in $sortedSources) {
+        if ($source.type -eq $SourceTableName -and $source.field) {
+            return $source.field
+        }
+    }
+    
+    # 見つからない場合はフォールバック
+    return $SyncResultField
 }
 
 # 同期結果用INSERT文のカラムリスト取得
@@ -515,7 +631,7 @@ function New-SyncResultSelectClause {
         [string]$SyncAction
     )
     
-    $syncResultMapping = Get-SyncResultColumnMapping
+    $syncResultMappingConfig = Get-SyncResultMappingConfig
     $selectClauses = @()
     
     foreach ($syncResultColumn in (Get-CsvColumns -TableName "sync_result")) {
@@ -523,28 +639,46 @@ function New-SyncResultSelectClause {
             $selectClauses += "'$SyncAction'"
         }
         else {
-            $mapping = $syncResultMapping.$syncResultColumn
-            if ($mapping) {
-                # ソーステーブル名に基づいてフィールドを選択
-                $sourceField = $null
-                if ($SourceTableName -eq "provided_data" -and $mapping.provided_data_field) {
-                    $sourceField = $mapping.provided_data_field
-                }
-                elseif ($SourceTableName -eq "current_data" -and $mapping.current_data_field) {
-                    $sourceField = $mapping.current_data_field
-                }
-                
-                if ($sourceField) {
-                    $selectClauses += "$SourceTableAlias.$sourceField"
-                }
-                else {
-                    # フォールバック: 同名カラムを使用
-                    $selectClauses += "$SourceTableAlias.$syncResultColumn"
-                }
+            $fieldConfig = $syncResultMappingConfig.mappings.$syncResultColumn
+            if ($fieldConfig -and $fieldConfig.sources) {
+                # 優先度ベースのCASE文を生成
+                $caseStatement = New-PriorityBasedCaseStatement -FieldName $syncResultColumn -Sources $fieldConfig.sources
+                $selectClauses += $caseStatement
             }
             else {
                 # フォールバック: 同名カラムを使用
                 $selectClauses += "$SourceTableAlias.$syncResultColumn"
+            }
+        }
+    }
+    
+    return $selectClauses -join ", "
+}
+
+# 優先度ベース用の新しいSyncResultSelectClause（UPDATE専用 - provided_dataを優先）
+function New-PriorityBasedSyncResultSelectClause {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SyncAction
+    )
+    
+    $syncResultMappingConfig = Get-SyncResultMappingConfig
+    $selectClauses = @()
+    
+    foreach ($syncResultColumn in (Get-CsvColumns -TableName "sync_result")) {
+        if ($syncResultColumn -eq "sync_action") {
+            $selectClauses += "'$SyncAction'"
+        }
+        else {
+            $fieldConfig = $syncResultMappingConfig.mappings.$syncResultColumn
+            if ($fieldConfig -and $fieldConfig.sources) {
+                # 優先度ベースのCASE文を生成（両テーブルを考慮）
+                $caseStatement = New-PriorityBasedCaseStatement -FieldName $syncResultColumn -Sources $fieldConfig.sources
+                $selectClauses += $caseStatement
+            }
+            else {
+                # フォールバック: provided_dataを優先
+                $selectClauses += "COALESCE(pd.$syncResultColumn, cd.$syncResultColumn)"
             }
         }
     }
@@ -575,28 +709,14 @@ function New-FilterWhereClause {
     
     foreach ($rule in $filterConfig.rules) {
         switch ($rule.type) {
-            "exclude_pattern" {
-                if ($rule.pattern) {
-                    # 正規表現をGLOBパターンに変換
-                    $globPattern = $rule.pattern -replace '\^', '' -replace '\.\*', '*' -replace '\$$', ''
-                    $conditions += "$($rule.field) NOT GLOB '$globPattern'"
+            "exclude" {
+                if ($rule.glob) {
+                    $conditions += "$($rule.field) NOT GLOB '$($rule.glob)'"
                 }
             }
-            "include_pattern" {
-                if ($rule.pattern) {
-                    # 正規表現をGLOBパターンに変換
-                    $globPattern = $rule.pattern -replace '\^', '' -replace '\.\*', '*' -replace '\$$', ''
-                    $conditions += "$($rule.field) GLOB '$globPattern'"
-                }
-            }
-            "exclude_value" {
-                if ($rule.value) {
-                    $conditions += "$($rule.field) != " + (Protect-SqlValue -Value $rule.value)
-                }
-            }
-            "include_value" {
-                if ($rule.value) {
-                    $conditions += "$($rule.field) = " + (Protect-SqlValue -Value $rule.value)
+            "include" {
+                if ($rule.glob) {
+                    $conditions += "$($rule.field) GLOB '$($rule.glob)'"
                 }
             }
         }

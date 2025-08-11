@@ -210,14 +210,20 @@ function Export-CsvWithFormat {
         [string]$OutputPath,
         
         [Parameter(Mandatory = $true)]
-        [string]$TableName
+        [string]$TableName,
+        
+        [switch]$SuppressDetailedLog,
+        
+        [switch]$SkipConversion
     )
     
     try {
         $formatConfig = Get-CsvFormatConfig -TableName $TableName
         
-        Write-SystemLog "CSVファイルを出力中: $OutputPath (テーブル: $TableName)" -Level "Info"
-        Write-SystemLog "使用設定 - エンコーディング: $($formatConfig.encoding), 区切り文字: '$($formatConfig.delimiter)', ヘッダー出力: $($formatConfig.include_header)" -Level "Info"
+        if (-not $SuppressDetailedLog) {
+            Write-SystemLog "CSVファイルを出力中: $OutputPath (テーブル: $TableName)" -Level "Info"
+            Write-SystemLog "使用設定 - エンコーディング: $($formatConfig.encoding), 区切り文字: '$($formatConfig.delimiter)', ヘッダー出力: $($formatConfig.include_header)" -Level "Info"
+        }
         
         # データ型とサイズのチェック
         if ($null -eq $Data) {
@@ -229,22 +235,32 @@ function Export-CsvWithFormat {
             $Data = @($Data)
         }
         
-        Write-SystemLog "データ型: $($Data.GetType().Name), 要素数: $($Data.Count)" -Level "Info"
-        if ($Data.Count -gt 0) {
-            Write-SystemLog "最初の要素の型: $($Data[0].GetType().Name)" -Level "Info"
-            
-            # 文字列データの検出と自動変換
-            if ($Data[0] -is [string]) {
+        if (-not $SuppressDetailedLog) {
+            Write-SystemLog "データ型: $($Data.GetType().Name), 要素数: $($Data.Count)" -Level "Info"
+            if ($Data.Count -gt 0) {
+                Write-SystemLog "最初の要素の型: $($Data[0].GetType().Name)" -Level "Info"
+            }
+        }
+        
+        # 文字列データの検出と自動変換（SkipConversionが指定されていない場合のみ）
+        if (-not $SkipConversion -and $Data.Count -gt 0 -and $Data[0] -is [string]) {
+            if (-not $SuppressDetailedLog) {
                 Write-SystemLog "SQLite結果の文字列データを検出しました。PSCustomObjectに自動変換します。" -Level "Info"
-                $Data = ConvertFrom-SqliteStringResult -StringArray $Data -TableName $TableName
-                
-                # 変換後のデータチェック
+            }
+            $Data = ConvertFrom-SqliteStringResult -StringArray $Data -TableName $TableName
+            
+            # 変換後のデータチェック
+            if (-not $SuppressDetailedLog) {
                 if ($Data.Count -gt 0) {
+                    Write-SystemLog "SQLite結果変換完了: $($Data.Count)件のPSCustomObjectに変換" -Level "Info"
                     Write-SystemLog "変換後のデータ型: $($Data[0].GetType().Name), 要素数: $($Data.Count)" -Level "Info"
                 } else {
                     Write-SystemLog "変換後のデータが空です" -Level "Warning"
                 }
             }
+        }
+        elseif ($SkipConversion -and -not $SuppressDetailedLog) {
+            Write-SystemLog "変換をスキップします（既に変換済みデータを使用）" -Level "Info"
         }
         
         # PowerShell用エンコーディング名に変換
@@ -290,7 +306,9 @@ function Export-CsvWithFormat {
             $convertedContent | Out-File -FilePath $OutputPath -Encoding $encoding -NoNewline
         }
         
-        Write-SystemLog "CSVファイル出力完了: $($Data.Count)行" -Level "Success"
+        if (-not $SuppressDetailedLog) {
+            Write-SystemLog "CSVファイル出力完了: $($Data.Count)行" -Level "Success"
+        }
         
     }
     catch {
@@ -494,16 +512,49 @@ function Export-SyncResult {
             Write-SystemLog "出力ファイルパスが指定されていません（履歴保存のみ実行）" -Level "Warning"
         }
         
+        # 履歴保存パス準備
+        $historyFileName = New-HistoryFileName -BaseFileName "synchronized_staff.csv"
+        $historyPath = Join-Path $filePathConfig.output_history_directory $historyFileName
+        
+        # SQLクエリを1回だけ実行してデータを取得
+        Write-SystemLog "同期結果データを取得中..." -Level "Info"
+        $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
+        $firstKey = if ($syncResultKeys -is [array]) { $syncResultKeys[0] } else { $syncResultKeys }
+        $query = New-SelectSql -TableName "sync_result" -OrderBy $firstKey
+        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
+        
+        Write-SystemLog "結果をCSVファイルに出力中..." -Level "Info"
+        if (-not [string]::IsNullOrEmpty($resolvedOutputPath)) {
+            Write-SystemLog "ファイル パス（パラメータ指定）: $resolvedOutputPath" -Level "Info"
+        }
+        
+        # パフォーマンス最適化: 1回のPSObject変換で両方のファイルに出力
+        $convertedData = $null
+        if ($result.Count -gt 0 -and $result[0] -is [string]) {
+            Write-SystemLog "SQLite結果をPSCustomObjectに変換中..." -Level "Info"
+            $convertedData = ConvertFrom-SqliteStringResult -StringArray $result -TableName "sync_result"
+        }
+        else {
+            $convertedData = $result
+        }
+        
+        # デュアル出力実行（変換済みデータを使用）
+        $outputCount = 0
+        
         # メイン出力（外部パス）
         if (-not [string]::IsNullOrEmpty($resolvedOutputPath)) {
-            Export-SyncResultToFile -DatabasePath $DatabasePath -OutputPath $resolvedOutputPath
+            Export-CsvWithFormat -Data $convertedData -OutputPath $resolvedOutputPath -TableName "sync_result" -SuppressDetailedLog -SkipConversion
+            Write-SystemLog "同期結果をCSVファイルに出力しました: $resolvedOutputPath" -Level "Success"
+            $outputCount++
         }
         
         # 履歴保存（data/output配下）
-        $historyFileName = New-HistoryFileName -BaseFileName "synchronized_staff.csv"
-        $historyPath = Join-Path $filePathConfig.output_history_directory $historyFileName
-        Export-SyncResultToFile -DatabasePath $DatabasePath -OutputPath $historyPath
+        Export-CsvWithFormat -Data $convertedData -OutputPath $historyPath -TableName "sync_result" -SuppressDetailedLog -SkipConversion
+        Write-SystemLog "同期結果をCSVファイルに出力しました: $historyPath" -Level "Success"
         Write-SystemLog "履歴ファイルとして保存: $historyPath" -Level "Info"
+        $outputCount++
+        
+        Write-SystemLog "同期結果出力完了: $outputCount ファイル" -Level "Success"
         
         # 結果の統計情報を表示
         Show-SyncStatistics -DatabasePath $DatabasePath
@@ -515,37 +566,6 @@ function Export-SyncResult {
     }
 }
 
-# 同期結果をファイルにエクスポート（内部関数）
-function Export-SyncResultToFile {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$DatabasePath,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$OutputPath
-    )
-    
-    try {
-        # 設定ベースで同期結果を取得
-        $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
-        # 配列として強制的に扱い、最初の要素を安全に取得
-        $firstKey = if ($syncResultKeys -is [array]) { $syncResultKeys[0] } else { $syncResultKeys }
-        $query = New-SelectSql -TableName "sync_result" -OrderBy $firstKey
-        
-        # SQLite結果を取得
-        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
-        
-        # 設定ベースCSVエクスポートを使用
-        Export-CsvWithFormat -Data $result -OutputPath $OutputPath -TableName "sync_result"
-        
-        Write-SystemLog "同期結果をCSVファイルに出力しました: $OutputPath" -Level "Success"
-        
-    }
-    catch {
-        Write-SystemLog "CSVファイルの出力に失敗しました: $($_.Exception.Message)" -Level "Error"
-        throw
-    }
-}
 
 # 同期統計情報の表示
 function Show-SyncStatistics {

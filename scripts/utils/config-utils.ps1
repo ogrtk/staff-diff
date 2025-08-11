@@ -86,6 +86,11 @@ function Test-DataSyncConfig {
             if (-not $config.sync_rules.column_mappings -or -not $config.sync_rules.column_mappings.mappings) {
                 Write-Warning "column_mappings が設定されていません"
             }
+            
+            # sync_result_mappingの検証
+            if ($config.sync_rules.sync_result_mapping) {
+                Test-SyncResultMappingConfig -SyncResultMappingConfig $config.sync_rules.sync_result_mapping
+            }
         }
         
         # CSVフォーマット設定の検証
@@ -194,4 +199,87 @@ function Get-DataFilterConfig {
     }
     
     return $config.data_filters.$TableName
+}
+
+# sync_result_mapping設定の検証
+function Test-SyncResultMappingConfig {
+    param(
+        [Parameter(Mandatory = $true)]
+        $SyncResultMappingConfig
+    )
+    
+    if (-not $SyncResultMappingConfig.mappings) {
+        throw "sync_result_mappingにmappingsが設定されていません"
+    }
+    
+    $validTypes = @("provided_data", "current_data", "fixed_value")
+    
+    foreach ($fieldName in $SyncResultMappingConfig.mappings.PSObject.Properties.Name) {
+        $fieldConfig = $SyncResultMappingConfig.mappings.$fieldName
+        
+        if (-not $fieldConfig.sources -or $fieldConfig.sources.Count -eq 0) {
+            throw "フィールド '$fieldName' にsourcesが設定されていません"
+        }
+        
+        $priorities = @()
+        
+        foreach ($source in $fieldConfig.sources) {
+            # type検証
+            if (-not $source.type -or $source.type -notin $validTypes) {
+                throw "フィールド '$fieldName' の無効なtype: $($source.type). 有効な値: $($validTypes -join ', ')"
+            }
+            
+            # priority検証
+            if (-not $source.priority -or $source.priority -lt 1) {
+                throw "フィールド '$fieldName' のpriorityは1以上の整数である必要があります: $($source.priority)"
+            }
+            
+            # priority重複チェック
+            if ($source.priority -in $priorities) {
+                throw "フィールド '$fieldName' でpriorityが重複しています: $($source.priority)"
+            }
+            $priorities += $source.priority
+            
+            # type別の必須項目検証
+            switch ($source.type) {
+                "provided_data" {
+                    if (-not $source.field) {
+                        throw "フィールド '$fieldName' のprovided_dataタイプにfieldが設定されていません"
+                    }
+                }
+                "current_data" {
+                    if (-not $source.field) {
+                        throw "フィールド '$fieldName' のcurrent_dataタイプにfieldが設定されていません"
+                    }
+                }
+                "fixed_value" {
+                    if (-not ($source.PSObject.Properties.Name -contains "value")) {
+                        throw "フィールド '$fieldName' のfixed_valueタイプにvalueが設定されていません"
+                    }
+                }
+            }
+        }
+        
+        # priority連続性チェック（1から始まる連続した番号であるか）
+        $sortedPriorities = $priorities | Sort-Object
+        for ($i = 0; $i -lt $sortedPriorities.Count; $i++) {
+            if ($sortedPriorities[$i] -ne ($i + 1)) {
+                Write-Warning "フィールド '$fieldName' のpriorityが連続していません。$($i + 1)が期待されますが$($sortedPriorities[$i])が設定されています"
+                break
+            }
+        }
+    }
+    
+    Write-Host "sync_result_mapping設定の検証が完了しました" -ForegroundColor Green
+}
+
+# sync_result_mappingの取得
+function Get-SyncResultMappingConfig {
+    $config = Get-DataSyncConfig
+    
+    if (-not $config.sync_rules -or -not $config.sync_rules.sync_result_mapping) {
+        throw "sync_result_mapping設定が見つかりません"
+    }
+    
+    return $config.sync_rules.sync_result_mapping
 }

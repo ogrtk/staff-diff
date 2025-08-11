@@ -349,14 +349,14 @@ pwsh ./scripts/main.ps1 -ProvidedDataFilePath "/data/provided.csv" -CurrentDataF
       "rules": [
         {
           "field": "employee_id",
-          "type": "exclude_pattern",
-          "pattern": "^Z.*",
+          "type": "exclude",
+          "glob": "Z*",
           "description": "Z始まりの職員番号を除外"
         },
         {
           "field": "employee_id",
-          "type": "exclude_pattern",
-          "pattern": "^Y.*",
+          "type": "exclude",
+          "glob": "Y*",
           "description": "Y始まりの職員番号を除外"
         }
       ]
@@ -366,8 +366,8 @@ pwsh ./scripts/main.ps1 -ProvidedDataFilePath "/data/provided.csv" -CurrentDataF
       "rules": [
         {
           "field": "user_id",
-          "type": "exclude_pattern",
-          "pattern": "^Z.*",
+          "type": "exclude",
+          "glob": "Z*",
           "description": "Z始まりの利用者IDを除外"
         }
       ]
@@ -382,10 +382,20 @@ pwsh ./scripts/main.ps1 -ProvidedDataFilePath "/data/provided.csv" -CurrentDataF
 
 | タイプ | 説明 | 設定例 |
 |--------|------|--------|
-| exclude_pattern | 正規表現に一致するデータを除外 | `"^Z.*"` (Z始まり除外) |
-| include_pattern | 正規表現に一致するデータのみ処理 | `"^E.*"` (E始まりのみ) |
-| exclude_value | 特定の値を除外 | `"TEMP"` (TEMP値除外) |
-| include_value | 特定の値のみ処理 | `"ACTIVE"` (ACTIVE値のみ) |
+| exclude | GLOBパターンに一致するデータを除外 | `"Z*"` (Z始まり除外), `"TEMP"` (TEMP値除外) |
+| include | GLOBパターンに一致するデータのみ処理 | `"E*"` (E始まりのみ), `"ACTIVE"` (ACTIVE値のみ) |
+
+#### GLOBパターンの記法
+- `*` : 0文字以上の任意の文字列
+- `?` : 1文字の任意の文字
+- `[abc]` : a, b, c のいずれか1文字
+- `[!abc]` : a, b, c 以外の1文字
+
+#### GLOBパターンの例
+- `Z*` : Z始まり（前方一致）
+- `*test*` : testを含む（部分一致）
+- `???` : 3文字ちょうど
+- `TEMP` : 完全一致
 
 ### 除外対象の例
 - **Z始まりのID**: テストデータや一時的なデータ（employee_id、user_id）
