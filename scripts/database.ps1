@@ -39,12 +39,26 @@ function Initialize-Database {
 }
 
 # 動的データベース初期化の実装（性能最適化対応）
+# 統合されたデータベース初期化関数（責務分割によるリファクタリング）
 function Initialize-DatabaseDynamic {
     param(
         [Parameter(Mandatory = $true)]
         [string]$DatabasePath
     )
     
+    Write-SystemLog "データベース初期化を開始します: $DatabasePath" -Level "Info"
+    
+    # 1. SQL文の生成
+    $sqlStatements = New-DatabaseSchema
+    
+    # 2. SQL文の実行
+    Execute-DatabaseInitialization -DatabasePath $DatabasePath -SqlStatements $sqlStatements
+    
+    Write-SystemLog "データベース初期化が完了しました" -Level "Success"
+}
+
+# データベーススキーマのSQL文を生成（責務の分離）
+function New-DatabaseSchema {
     $config = Get-DataSyncConfig
     $allSqlStatements = @()
     
@@ -62,122 +76,65 @@ function Initialize-DatabaseDynamic {
         
         $createTableSql = New-CreateTableSql -TableName $tableName
         $allSqlStatements += $createTableSql
-        
-        # インデックスの作成（動的最適化は後でレコード数判定後に実行）
-        # ここでは初期インデックスのみ作成
     }
     
-    # SQLの実行
-    $combinedSql = $allSqlStatements -join "`n`n"
+    return $allSqlStatements
+}
+
+# データベース初期化の実行（sqlite3コマンド必須）
+function Execute-DatabaseInitialization {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [array]$SqlStatements
+    )
+    
+    $combinedSql = $SqlStatements -join "`n`n"
     
     # sqlite3コマンドが利用可能かチェック
     $sqlite3Path = Get-Command sqlite3 -ErrorAction SilentlyContinue
-    if ($sqlite3Path) {
-        try {
-            $tempSqlFile = [System.IO.Path]::GetTempFileName() + ".sql"
-            $encoding = Get-CrossPlatformEncoding
-            $combinedSql | Out-File -FilePath $tempSqlFile -Encoding $encoding
-            
-            Write-SystemLog "sqlite3コマンドでデータベースを初期化中..." -Level "Info"
-            
-            # sqlite3コマンドの実行と結果の確認
-            $sqliteResult = & sqlite3 $DatabasePath ".read $tempSqlFile" 2>&1
-            
-            if ($LASTEXITCODE -ne 0) {
-                throw "sqlite3コマンドの実行に失敗しました。終了コード: $LASTEXITCODE, 出力: $sqliteResult"
-            }
-            
-            Write-SystemLog "sqlite3コマンドでの初期化が完了しました" -Level "Success"
-            
-        }
-        catch {
-            Write-SystemLog "sqlite3コマンドでの初期化に失敗しました: $($_.Exception.Message)" -Level "Warning"
-            Write-SystemLog "PowerShellでの直接操作にフォールバックします" -Level "Info"
-            Initialize-DatabaseWithPowerShell -DatabasePath $DatabasePath -SqlContent $combinedSql
-        }
-        finally {
-            if (Test-Path $tempSqlFile) {
-                Remove-Item -Path $tempSqlFile -Force
-            }
-        }
+    if (-not $sqlite3Path) {
+        throw "sqlite3コマンドが見つかりません。sqlite3をインストールしてPATHに追加してください。"
     }
-    else {
-        Write-SystemLog "sqlite3コマンドが見つかりません。PowerShellでの直接操作を試行します。" -Level "Info"
-        Initialize-DatabaseWithPowerShell -DatabasePath $DatabasePath -SqlContent $combinedSql
-    }
+    
+    Invoke-SqliteSchemaCommand -DatabasePath $DatabasePath -SqlContent $combinedSql
 }
 
-# PowerShellでのデータベース初期化（フォールバック）
-function Initialize-DatabaseWithPowerShell {
+# SQLite3コマンドでのSQL実行（スキーマ初期化専用）
+function Invoke-SqliteSchemaCommand {
     param(
+        [Parameter(Mandatory = $true)]
         [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
         [string]$SqlContent
     )
     
+    $tempSqlFile = [System.IO.Path]::GetTempFileName() + ".sql"
     try {
-        # SQLiteアセンブリの動的ロード
-        $sqliteAssemblyPath = $null
-        $possiblePaths = @(
-            "System.Data.SQLite",
-            "System.Data.SQLite.dll"
-        )
+        $encoding = Get-CrossPlatformEncoding
+        $SqlContent | Out-File -FilePath $tempSqlFile -Encoding $encoding
         
-        foreach ($path in $possiblePaths) {
-            try {
-                Add-Type -AssemblyName $path -ErrorAction Stop
-                $sqliteAssemblyPath = $path
-                break
-            }
-            catch {
-                # 次のパスを試行
-                continue
-            }
+        Write-SystemLog "sqlite3コマンドでSQL実行中..." -Level "Info"
+        
+        # sqlite3コマンドの実行と結果の確認
+        $sqliteResult = & sqlite3 $DatabasePath ".read $tempSqlFile" 2>&1
+        
+        if ($LASTEXITCODE -ne 0) {
+            throw "sqlite3コマンドの実行に失敗しました。終了コード: $LASTEXITCODE, 出力: $sqliteResult"
         }
         
-        if (-not $sqliteAssemblyPath) {
-            throw "System.Data.SQLiteアセンブリが見つかりません。sqlite3コマンドを使用してください。"
-        }
-        
-        # 簡単なSQLite接続クラス
-        Add-Type -TypeDefinition @"
-        using System;
-        using System.Data;
-        using System.Data.SQLite;
-        
-        public class SQLiteHelper {
-            public static void ExecuteNonQuery(string connectionString, string sql) {
-                using (var connection = new SQLiteConnection(connectionString)) {
-                    connection.Open();
-                    using (var command = new SQLiteCommand(sql, connection)) {
-                        command.ExecuteNonQuery();
-                    }
-                }
-            }
-            
-            public static DataTable ExecuteQuery(string connectionString, string sql) {
-                using (var connection = new SQLiteConnection(connectionString)) {
-                    connection.Open();
-                    using (var command = new SQLiteCommand(sql, connection)) {
-                        using (var adapter = new SQLiteDataAdapter(command)) {
-                            var dataTable = new DataTable();
-                            adapter.Fill(dataTable);
-                            return dataTable;
-                        }
-                    }
-                }
-            }
-        }
-"@ -ReferencedAssemblies "System.Data", $sqliteAssemblyPath
-        
-        $connectionString = "Data Source=$DatabasePath;Version=3;"
-        [SQLiteHelper]::ExecuteNonQuery($connectionString, $SqlContent)
-        
+        Write-SystemLog "sqlite3コマンドでの実行が完了しました" -Level "Success"
     }
-    catch {
-        Write-SystemLog "PowerShellでのSQLite操作に失敗しました: $($_.Exception.Message)" -Level "Error"
-        throw "SQLiteの初期化に失敗しました。sqlite3コマンドが必要です。"
+    finally {
+        if (Test-Path $tempSqlFile) {
+            Remove-Item -Path $tempSqlFile -Force
+        }
     }
 }
+
 
 # SQLiteコマンド実行（汎用）
 function Invoke-SqliteCommand {
@@ -436,7 +393,9 @@ function Import-CsvDataToTable {
         $columnsStr = $csvColumns -join ", "
         
         $insertStatements = @()
-        $batchSize = 1000  # バッチサイズ
+        # 設定ファイルからバッチサイズを取得（ハードコーディング排除）
+        $config = Get-DataSyncConfig
+        $batchSize = $config.performance_settings.batch_size
         
         for ($i = 0; $i -lt $CsvData.Count; $i += $batchSize) {
             $batch = $CsvData[$i..([Math]::Min($i + $batchSize - 1, $CsvData.Count - 1))]
@@ -525,7 +484,9 @@ function Get-CsvInsertStatements {
         $columnsStr = $csvColumns -join ", "
         
         $insertStatements = @()
-        $batchSize = 1000  # バッチサイズ
+        # 設定ファイルからバッチサイズを取得（ハードコーディング排除）
+        $config = Get-DataSyncConfig
+        $batchSize = $config.performance_settings.batch_size
         
         for ($i = 0; $i -lt $CsvData.Count; $i += $batchSize) {
             $batch = $CsvData[$i..([Math]::Min($i + $batchSize - 1, $CsvData.Count - 1))]

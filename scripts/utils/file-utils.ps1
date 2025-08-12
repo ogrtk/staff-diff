@@ -128,16 +128,7 @@ function Resolve-FilePath {
 }
 
 # クロスプラットフォーム対応エンコーディング取得
-function Get-CrossPlatformEncoding {
-    if ($PSVersionTable.PSVersion.Major -ge 6) {
-        # PowerShell Core (6+) では UTF8 (BOM なし) がデフォルト
-        return [System.Text.Encoding]::UTF8
-    }
-    else {
-        # Windows PowerShell (5.1) では UTF8 (BOM あり)
-        return [System.Text.UTF8Encoding]::new($true)
-    }
-}
+# Get-CrossPlatformEncoding 関数は common-utils.ps1 に統合されました
 
 # 改行コードの統一
 function ConvertTo-UnifiedLineEndings {

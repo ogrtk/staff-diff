@@ -5,6 +5,18 @@
 . (Join-Path $PSScriptRoot "config-utils.ps1")
 . (Join-Path $PSScriptRoot "file-utils.ps1")
 
+# クロスプラットフォーム対応エンコーディング取得（DRY原則による統一関数）
+function Get-CrossPlatformEncoding {
+    if ($PSVersionTable.PSVersion.Major -ge 6) {
+        # PowerShell Core (6+) では UTF8 (BOM なし) がデフォルト
+        return [System.Text.Encoding]::UTF8
+    }
+    else {
+        # Windows PowerShell (5.1) では UTF8 (BOM あり)
+        return [System.Text.UTF8Encoding]::new($true)
+    }
+}
+
 # ログファイルの初期化
 function Initialize-LogFile {
     try {
@@ -188,10 +200,10 @@ ORDER BY sync_action;
         $results = Invoke-SqliteCsvQuery -DatabasePath $DatabasePath -Query $countSql
         
         $counts = @{
-            ADD = 0
+            ADD    = 0
             UPDATE = 0
             DELETE = 0
-            KEEP = 0
+            KEEP   = 0
         }
         
         foreach ($result in $results) {

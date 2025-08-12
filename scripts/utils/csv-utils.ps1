@@ -22,17 +22,7 @@ function Get-CsvFormatConfig {
         $configKey = if ($TableName -eq "sync_result") { "output" } else { $TableName }
         
         if (-not $config.csv_format -or -not $config.csv_format.$configKey) {
-            # デフォルト設定を返す（PowerShellで実装可能な設定のみ）
-            $defaultConfig = @{
-                encoding = "UTF-8"
-                delimiter = ","
-                newline = "CRLF"
-                has_header = $true
-                include_header = $true
-                null_values = @("", "NULL", "null")
-            }
-            Write-SystemLog "CSVフォーマット設定が見つかりません ($TableName)。デフォルト設定を使用します。" -Level "Warning"
-            return $defaultConfig
+            throw "CSVフォーマット設定が見つかりません: $TableName (設定キー: $configKey)"
         }
         
         return $config.csv_format.$configKey
@@ -201,6 +191,7 @@ function ConvertFrom-SqliteStringResult {
 }
 
 # 設定ベースCSVエクスポート関数
+# 統合されたCSVエクスポート関数（責務分割によるリファクタリング）
 function Export-CsvWithFormat {
     param(
         [Parameter(Mandatory = $true)]
@@ -218,102 +209,143 @@ function Export-CsvWithFormat {
     )
     
     try {
+        if (-not $SuppressDetailedLog) {
+            Write-SystemLog "CSVファイルを出力中: $OutputPath (テーブル: $TableName)" -Level "Info"
+        }
+        
+        # 1. データの前処理・変換
+        $processedData = Convert-DataForExport -Data $Data -TableName $TableName -SkipConversion:$SkipConversion -SuppressDetailedLog:$SuppressDetailedLog
+        
+        # 2. CSVフォーマット設定の取得
         $formatConfig = Get-CsvFormatConfig -TableName $TableName
         
         if (-not $SuppressDetailedLog) {
-            Write-SystemLog "CSVファイルを出力中: $OutputPath (テーブル: $TableName)" -Level "Info"
             Write-SystemLog "使用設定 - エンコーディング: $($formatConfig.encoding), 区切り文字: '$($formatConfig.delimiter)', ヘッダー出力: $($formatConfig.include_header)" -Level "Info"
         }
         
-        # データ型とサイズのチェック
-        if ($null -eq $Data) {
-            throw "データがnullです"
-        }
-        
-        # データが配列でない場合は配列に変換
-        if ($Data -isnot [array]) {
-            $Data = @($Data)
-        }
+        # 3. CSVファイル出力処理
+        Write-CsvWithEncoding -Data $processedData -OutputPath $OutputPath -FormatConfig $formatConfig
         
         if (-not $SuppressDetailedLog) {
-            Write-SystemLog "データ型: $($Data.GetType().Name), 要素数: $($Data.Count)" -Level "Info"
-            if ($Data.Count -gt 0) {
-                Write-SystemLog "最初の要素の型: $($Data[0].GetType().Name)" -Level "Info"
-            }
-        }
-        
-        # 文字列データの検出と自動変換（SkipConversionが指定されていない場合のみ）
-        if (-not $SkipConversion -and $Data.Count -gt 0 -and $Data[0] -is [string]) {
-            if (-not $SuppressDetailedLog) {
-                Write-SystemLog "SQLite結果の文字列データを検出しました。PSCustomObjectに自動変換します。" -Level "Info"
-            }
-            $Data = ConvertFrom-SqliteStringResult -StringArray $Data -TableName $TableName
-            
-            # 変換後のデータチェック
-            if (-not $SuppressDetailedLog) {
-                if ($Data.Count -gt 0) {
-                    Write-SystemLog "SQLite結果変換完了: $($Data.Count)件のPSCustomObjectに変換" -Level "Info"
-                    Write-SystemLog "変換後のデータ型: $($Data[0].GetType().Name), 要素数: $($Data.Count)" -Level "Info"
-                } else {
-                    Write-SystemLog "変換後のデータが空です" -Level "Warning"
-                }
-            }
-        }
-        elseif ($SkipConversion -and -not $SuppressDetailedLog) {
-            Write-SystemLog "変換をスキップします（既に変換済みデータを使用）" -Level "Info"
-        }
-        
-        # PowerShell用エンコーディング名に変換
-        $encoding = ConvertTo-PowerShellEncoding -EncodingName $formatConfig.encoding
-        
-        # 出力ディレクトリが存在しない場合は作成
-        $outputDir = Split-Path -Parent $OutputPath
-        if (-not (Test-Path $outputDir)) {
-            New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-        }
-        
-        # Export-Csvパラメータ準備
-        $exportParams = @{
-            Path = $OutputPath
-            Encoding = $encoding
-            NoTypeInformation = $true
-        }
-        
-        # 区切り文字設定
-        if ($formatConfig.delimiter -ne ",") {
-            $exportParams.Delimiter = $formatConfig.delimiter
-        }
-        
-        # ヘッダー設定
-        if ($formatConfig.include_header -eq $false) {
-            # ヘッダーなし出力の場合、一時的にヘッダー付きで出力してからヘッダー行を削除
-            $tempPath = "$OutputPath.tmp"
-            $Data | Export-Csv @exportParams -Path $tempPath
-            
-            $content = Get-Content $tempPath -Encoding $encoding | Select-Object -Skip 1
-            $content | Out-File -FilePath $OutputPath -Encoding $encoding
-            Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
-        }
-        else {
-            # 通常のヘッダー付き出力
-            $Data | Export-Csv @exportParams
-        }
-        
-        # 改行コード変換（必要な場合）
-        if ($formatConfig.newline -and $formatConfig.newline.ToUpper() -ne "CRLF") {
-            $content = Get-Content $OutputPath -Raw -Encoding $encoding
-            $convertedContent = ConvertTo-NewlineFormat -Content $content -NewlineFormat $formatConfig.newline
-            $convertedContent | Out-File -FilePath $OutputPath -Encoding $encoding -NoNewline
-        }
-        
-        if (-not $SuppressDetailedLog) {
-            Write-SystemLog "CSVファイル出力完了: $($Data.Count)行" -Level "Success"
+            Write-SystemLog "CSVファイル出力完了: $($processedData.Count)行" -Level "Success"
         }
         
     }
     catch {
         Write-SystemLog "CSVファイルの出力に失敗しました: $($_.Exception.Message)" -Level "Error"
         throw
+    }
+}
+
+# データのエクスポート用前処理（責務の分離）
+function Convert-DataForExport {
+    param(
+        [Parameter(Mandatory = $true)]
+        $Data,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$TableName,
+        
+        [switch]$SkipConversion,
+        
+        [switch]$SuppressDetailedLog
+    )
+    
+    # データ型とサイズのチェック
+    if ($null -eq $Data) {
+        throw "データがnullです"
+    }
+    
+    # データが配列でない場合は配列に変換
+    if ($Data -isnot [array]) {
+        $Data = @($Data)
+    }
+    
+    if (-not $SuppressDetailedLog) {
+        Write-SystemLog "データ型: $($Data.GetType().Name), 要素数: $($Data.Count)" -Level "Info"
+        if ($Data.Count -gt 0) {
+            Write-SystemLog "最初の要素の型: $($Data[0].GetType().Name)" -Level "Info"
+        }
+    }
+    
+    # 文字列データの検出と自動変換（SkipConversionが指定されていない場合のみ）
+    if (-not $SkipConversion -and $Data.Count -gt 0 -and $Data[0] -is [string]) {
+        if (-not $SuppressDetailedLog) {
+            Write-SystemLog "SQLite結果の文字列データを検出しました。PSCustomObjectに自動変換します。" -Level "Info"
+        }
+        $Data = ConvertFrom-SqliteStringResult -StringArray $Data -TableName $TableName
+        
+        # 変換後のデータチェック
+        if (-not $SuppressDetailedLog) {
+            if ($Data.Count -gt 0) {
+                Write-SystemLog "SQLite結果変換完了: $($Data.Count)件のPSCustomObjectに変換" -Level "Info"
+                Write-SystemLog "変換後のデータ型: $($Data[0].GetType().Name), 要素数: $($Data.Count)" -Level "Info"
+            } else {
+                Write-SystemLog "変換後のデータが空です" -Level "Warning"
+            }
+        }
+    }
+    elseif ($SkipConversion -and -not $SuppressDetailedLog) {
+        Write-SystemLog "変換をスキップします（既に変換済みデータを使用）" -Level "Info"
+    }
+    
+    return $Data
+}
+
+# CSVファイル書き込み処理（エンコーディング・フォーマット対応）
+function Write-CsvWithEncoding {
+    param(
+        [Parameter(Mandatory = $true)]
+        $Data,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$OutputPath,
+        
+        [Parameter(Mandatory = $true)]
+        $FormatConfig
+    )
+    
+    # PowerShell用エンコーディング名に変換
+    $encoding = ConvertTo-PowerShellEncoding -EncodingName $FormatConfig.encoding
+    
+    # 出力ディレクトリが存在しない場合は作成
+    $outputDir = Split-Path -Parent $OutputPath
+    if (-not (Test-Path $outputDir)) {
+        New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
+    }
+    
+    # Export-Csvパラメータ準備
+    $exportParams = @{
+        Path = $OutputPath
+        Encoding = $encoding
+        NoTypeInformation = $true
+    }
+    
+    # 区切り文字設定
+    if ($FormatConfig.delimiter -ne ",") {
+        $exportParams.Delimiter = $FormatConfig.delimiter
+    }
+    
+    # ヘッダー設定による出力分岐
+    if ($FormatConfig.include_header -eq $false) {
+        # ヘッダーなし出力の場合、一時的にヘッダー付きで出力してからヘッダー行を削除
+        $tempPath = "$OutputPath.tmp"
+        $Data | Export-Csv @exportParams -Path $tempPath
+        
+        $content = Get-Content $tempPath -Encoding $encoding | Select-Object -Skip 1
+        $content | Out-File -FilePath $OutputPath -Encoding $encoding
+        Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
+    }
+    else {
+        # 通常のヘッダー付き出力
+        $Data | Export-Csv @exportParams
+    }
+    
+    # 改行コード変換（必要な場合）
+    if ($FormatConfig.newline -and $FormatConfig.newline.ToUpper() -ne "CRLF") {
+        $content = Get-Content $OutputPath -Raw -Encoding $encoding
+        $convertedContent = ConvertTo-NewlineFormat -Content $content -NewlineFormat $FormatConfig.newline
+        $convertedContent | Out-File -FilePath $OutputPath -Encoding $encoding -NoNewline
     }
 }
 
@@ -446,14 +478,8 @@ DROP TABLE temp_import_table;
         
     }
     catch {
-        Write-SystemLog "バルクインポートに失敗、個別INSERTにフォールバック: $($_.Exception.Message)" -Level "Warning"
-        
-        # フォールバック: 個別INSERT
-        foreach ($row in $Data) {
-            $data = ConvertTo-DataHashtable -InputObject $row
-            $query = New-InsertSql -TableName $TableName -Data $data
-            Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
-        }
+        Write-SystemLog "バルクインポートに失敗しました: $($_.Exception.Message)" -Level "Error"
+        throw
     }
     finally {
         # 一時ファイルを削除
@@ -463,7 +489,44 @@ DROP TABLE temp_import_table;
     }
 }
 
-# 職員情報CSVをデータベースにインポート（汎用関数使用）
+# 統合されたデータインポート関数（DRY原則に基づく統合）
+function Import-DataCsvByType {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$CsvPath,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("provided_data", "current_data")]
+        [string]$DataType
+    )
+    
+    $filePathConfig = Get-FilePathConfig
+    
+    # データタイプに応じた設定を取得
+    $config = switch ($DataType) {
+        "provided_data" {
+            @{
+                TableName = "provided_data"
+                HistoryDirectory = $filePathConfig.provided_data_history_directory
+                Description = "提供データ"
+            }
+        }
+        "current_data" {
+            @{
+                TableName = "current_data" 
+                HistoryDirectory = $filePathConfig.current_data_history_directory
+                Description = "現在データ"
+            }
+        }
+    }
+    
+    Import-CsvToTable -CsvPath $CsvPath -DatabasePath $DatabasePath -TableName $config.TableName -HistoryDirectory $config.HistoryDirectory -FileTypeDescription $config.Description
+}
+
+# 後方互換性のための提供データインポート関数（Import-DataCsvByTypeの薄いラッパー）
 function Import-ProvidedDataCsv {
     param(
         [Parameter(Mandatory = $true)]
@@ -473,11 +536,10 @@ function Import-ProvidedDataCsv {
         [string]$DatabasePath
     )
     
-    $filePathConfig = Get-FilePathConfig
-    Import-CsvToTable -CsvPath $CsvPath -DatabasePath $DatabasePath -TableName "provided_data" -HistoryDirectory $filePathConfig.provided_data_history_directory -FileTypeDescription "提供データ"
+    Import-DataCsvByType -CsvPath $CsvPath -DatabasePath $DatabasePath -DataType "provided_data"
 }
 
-# 職員マスタCSVをデータベースにインポート（汎用関数使用）
+# 後方互換性のための現在データインポート関数（Import-DataCsvByTypeの薄いラッパー）
 function Import-CurrentDataCsv {
     param(
         [Parameter(Mandatory = $true)]
@@ -487,8 +549,7 @@ function Import-CurrentDataCsv {
         [string]$DatabasePath
     )
     
-    $filePathConfig = Get-FilePathConfig
-    Import-CsvToTable -CsvPath $CsvPath -DatabasePath $DatabasePath -TableName "current_data" -HistoryDirectory $filePathConfig.current_data_history_directory -FileTypeDescription "現在データ"
+    Import-DataCsvByType -CsvPath $CsvPath -DatabasePath $DatabasePath -DataType "current_data"
 }
 
 # 同期結果をCSVファイルにエクスポート（外部パス出力 + 履歴保存対応）

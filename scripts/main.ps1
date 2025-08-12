@@ -32,18 +32,20 @@ function Main {
         [string]$OutputFilePath,
         [string]$DatabasePath
     )
-    # DatabasePathが空の場合はデフォルトパスを設定
+
+    Write-SystemLog "=== 同期データ比較 開始 ===" -Level "Success"
+
+    # DatabasePathが空の場合はデフォルトパスを設定（内部動作）
     if ([string]::IsNullOrEmpty($DatabasePath)) {
         $DatabasePath = Join-Path $ProjectRoot "database" "data-sync.db"
+        Write-SystemLog "DatabasePathが未指定のため、デフォルトパスを使用します: $DatabasePath" -Level "Info"
     }
-    
-    Write-SystemLog "=== 職員データ管理システム 開始 ===" -Level "Success"
-    
+        
     try {
         # 1. 設定の検証とファイルパス設定の取得
-        Write-SystemLog "データ同期設定を検証中..." -Level "Info"
+        Write-SystemLog "設定を検証中..." -Level "Info"
         if (-not (Test-DataSyncConfig)) {
-            throw "データ同期設定の検証に失敗しました"
+            throw "設定の検証に失敗しました"
         }
         
         # ファイルパス設定を取得

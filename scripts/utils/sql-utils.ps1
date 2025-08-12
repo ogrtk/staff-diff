@@ -379,13 +379,12 @@ function New-CreateIndexSql {
         return @()
     }
     
-    # 性能設定を取得
+    # 性能設定を取得（ハードコーディング排除）
     $config = Get-DataSyncConfig
-    $threshold = 100000
+    $threshold = $config.performance_settings.index_threshold
     $autoOptimization = $true
     
     if ($config.performance_settings) {
-        $threshold = $config.performance_settings.index_threshold
         $autoOptimization = $config.performance_settings.auto_optimization
     }
     

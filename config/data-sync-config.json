@@ -511,6 +511,7 @@
   "performance_settings": {
     "description": "性能最適化設定",
     "index_threshold": 100000,
+    "batch_size": 1000,
     "auto_optimization": true,
     "sqlite_pragmas": {
       "journal_mode": "WAL",

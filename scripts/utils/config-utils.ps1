@@ -2,14 +2,7 @@
 # 設定管理ライブラリ
 
 # クロスプラットフォーム対応エンコーディング取得（内部関数）
-function Get-CrossPlatformEncoding {
-    if ($PSVersionTable.PSVersion.Major -ge 6) {
-        return [System.Text.Encoding]::UTF8
-    }
-    else {
-        return [System.Text.UTF8Encoding]::new($true)
-    }
-}
+# Get-CrossPlatformEncoding 関数は common-utils.ps1 に統合されました
 
 # グローバル変数
 $Global:DataSyncConfig = $null
@@ -30,11 +23,11 @@ function Get-DataSyncConfig {
             $configContent = Get-Content -Path $ConfigPath -Raw -Encoding $encoding
             $Global:DataSyncConfig = $configContent | ConvertFrom-Json
             
-            Write-Host "データ同期設定を読み込みました: $ConfigPath" -ForegroundColor Green
+            Write-Host "設定を読み込みました: $ConfigPath" -ForegroundColor Green
             
         }
         catch {
-            Write-Error "データ同期設定の読み込みに失敗しました: $($_.Exception.Message)"
+            Write-Error "設定の読み込みに失敗しました: $($_.Exception.Message)"
             throw
         }
     }
@@ -45,22 +38,45 @@ function Get-DataSyncConfig {
 # ファイルパス設定の取得
 function Get-FilePathConfig {
     $config = Get-DataSyncConfig
-    return $config.file_paths
-}
-
-# 同期ルール設定の取得
-function Get-SyncRulesConfig {
-    $config = Get-DataSyncConfig
-    return $config.sync_rules
+    
+    # file_pathsセクションが存在しない場合、デフォルト値を生成（内部動作）
+    if (-not $config.file_paths) {
+        # Write-SystemLogを使うと無限ループの可能性があるため、直接出力
+        Write-Host "file_paths設定が見つかりません。デフォルト値を使用します。" -ForegroundColor Yellow
+        $defaultPaths = @{
+            provided_data_history_directory = "./data/provided-data/"
+            current_data_history_directory  = "./data/current-data/"
+            output_history_directory        = "./data/output/"
+            timezone                        = "Asia/Tokyo"
+        }
+        
+        # 設定オブジェクトにデフォルト値を追加
+        $config | Add-Member -MemberType NoteProperty -Name "file_paths" -Value $defaultPaths -Force
+    }
+    
+    # 個別項目のデフォルト値設定（内部動作）
+    $paths = $config.file_paths
+    if (-not $paths.provided_data_history_directory) {
+        $paths | Add-Member -MemberType NoteProperty -Name "provided_data_history_directory" -Value "./data/provided-data/" -Force
+    }
+    if (-not $paths.current_data_history_directory) {
+        $paths | Add-Member -MemberType NoteProperty -Name "current_data_history_directory" -Value "./data/current-data/" -Force
+    }
+    if (-not $paths.output_history_directory) {
+        $paths | Add-Member -MemberType NoteProperty -Name "output_history_directory" -Value "./data/output/" -Force
+    }
+    if (-not $paths.timezone) {
+        $paths | Add-Member -MemberType NoteProperty -Name "timezone" -Value "Asia/Tokyo" -Force
+    }
+    
+    return $paths
 }
 
 # 設定の検証
 function Test-DataSyncConfig {
     try {
         $config = Get-DataSyncConfig
-        
-        Write-Host "設定検証を実行中..." -ForegroundColor Cyan
-        
+
         # 基本構造の検証
         if (-not $config.tables) {
             throw "テーブル定義が見つかりません"
@@ -98,12 +114,12 @@ function Test-DataSyncConfig {
             Test-CsvFormatConfig -CsvFormatConfig $config.csv_format
         }
         
-        Write-Host "設定検証が完了しました: 問題なし" -ForegroundColor Green
+        Write-Host "設定の検証が完了しました: 問題なし" -ForegroundColor Green
         return $true
         
     }
     catch {
-        Write-Error "設定検証に失敗しました: $($_.Exception.Message)"
+        Write-Error "設定の検証に失敗しました: $($_.Exception.Message)"
         return $false
     }
 }
@@ -147,19 +163,19 @@ function Test-CsvFormatConfig {
             }
             
             if ($config.PSObject.Properties.Name -contains "quote_all") {
-                Write-Warning "[$configType] 'quote_all' 設定は PowerShell の Export-Csv では使用できません。設定から削除することを推奨します。"
+                throw "[$configType] 'quote_all' 設定は PowerShell の Export-Csv では使用できません。設定から削除してください。"
             }
             
-            # ヘッダー設定の検証
+            # ヘッダー設定の必須チェック
             if ($configType -in @("provided_data", "current_data")) {
                 if (-not ($config.PSObject.Properties.Name -contains "has_header")) {
-                    Write-Warning "[$configType] 'has_header' 設定が見つかりません。デフォルトで true として処理されます。"
+                    throw "[$configType] 'has_header' 設定が必要です。設定ファイルに追加してください。"
                 }
             }
             
             if ($configType -eq "output") {
                 if (-not ($config.PSObject.Properties.Name -contains "include_header")) {
-                    Write-Warning "[$configType] 'include_header' 設定が見つかりません。デフォルトで true として処理されます。"
+                    throw "[$configType] 'include_header' 設定が必要です。設定ファイルに追加してください。"
                 }
             }
         }
@@ -171,15 +187,20 @@ function Get-LoggingConfig {
     $config = Get-DataSyncConfig
     
     if (-not $config.logging) {
-        # デフォルト設定を返す
-        return @{
-            enabled          = $false
+        # Write-SystemLogを使うと無限ループするため、直接出力
+        Write-Host "ログ設定が見つかりません。デフォルト値を使用します。" -ForegroundColor Yellow
+        # デフォルトログ設定を生成（内部動作）
+        $defaultLogging = @{
+            enabled          = $true
             log_directory    = "./logs/"
             log_file_name    = "staff-management.log"
             max_file_size_mb = 10
             max_files        = 5
             levels           = @("Info", "Warning", "Error", "Success")
         }
+        
+        # 設定オブジェクトにデフォルト値を追加
+        $config | Add-Member -MemberType NoteProperty -Name "logging" -Value $defaultLogging -Force
     }
     
     return $config.logging
