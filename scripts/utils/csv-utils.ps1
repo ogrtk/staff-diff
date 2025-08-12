@@ -521,36 +521,25 @@ function Export-SyncResult {
         $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
         $firstKey = if ($syncResultKeys -is [array]) { $syncResultKeys[0] } else { $syncResultKeys }
         $query = New-SelectSql -TableName "sync_result" -OrderBy $firstKey
-        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
         
         Write-SystemLog "結果をCSVファイルに出力中..." -Level "Info"
         if (-not [string]::IsNullOrEmpty($resolvedOutputPath)) {
             Write-SystemLog "ファイル パス（パラメータ指定）: $resolvedOutputPath" -Level "Info"
         }
         
-        # パフォーマンス最適化: 1回のPSObject変換で両方のファイルに出力
-        $convertedData = $null
-        if ($result.Count -gt 0 -and $result[0] -is [string]) {
-            Write-SystemLog "SQLite結果をPSCustomObjectに変換中..." -Level "Info"
-            $convertedData = ConvertFrom-SqliteStringResult -StringArray $result -TableName "sync_result"
-        }
-        else {
-            $convertedData = $result
-        }
-        
-        # デュアル出力実行（変換済みデータを使用）
+        # パフォーマンス最適化: SQLite3から直接CSV出力（PSObject変換を完全に回避）
         $outputCount = 0
         
         # メイン出力（外部パス）
         if (-not [string]::IsNullOrEmpty($resolvedOutputPath)) {
-            Export-CsvWithFormat -Data $convertedData -OutputPath $resolvedOutputPath -TableName "sync_result" -SuppressDetailedLog -SkipConversion
-            Write-SystemLog "同期結果をCSVファイルに出力しました: $resolvedOutputPath" -Level "Success"
+            $recordCount = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query -CsvOutput -CsvOutputPath $resolvedOutputPath
+            Write-SystemLog "同期結果をCSVファイルに出力しました: $resolvedOutputPath ($recordCount件)" -Level "Success"
             $outputCount++
         }
         
         # 履歴保存（data/output配下）
-        Export-CsvWithFormat -Data $convertedData -OutputPath $historyPath -TableName "sync_result" -SuppressDetailedLog -SkipConversion
-        Write-SystemLog "同期結果をCSVファイルに出力しました: $historyPath" -Level "Success"
+        $recordCount = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query -CsvOutput -CsvOutputPath $historyPath
+        Write-SystemLog "同期結果をCSVファイルに出力しました: $historyPath ($recordCount件)" -Level "Success"
         Write-SystemLog "履歴ファイルとして保存: $historyPath" -Level "Info"
         $outputCount++
         

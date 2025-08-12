@@ -188,13 +188,41 @@ function Invoke-SqliteCommand {
         [Parameter(Mandatory = $true)]
         [string]$Query,
         
-        [hashtable]$Parameters = @{}
+        [hashtable]$Parameters = @{},
+        
+        [string]$CsvOutputPath = "",
+        
+        [switch]$CsvOutput
     )
     
     try {
         $sqlite3Path = Get-Command sqlite3 -ErrorAction SilentlyContinue
         if ($sqlite3Path) {
-            # sqlite3コマンドラインツールを使用
+            # CSV出力モードの処理
+            if ($CsvOutput -and -not [string]::IsNullOrEmpty($CsvOutputPath)) {
+                try {
+                    # SQLite3で直接CSV出力（ヘッダー付き）
+                    $csvArgs = @($DatabasePath, "-csv", "-header", $Query)
+                    $result = & sqlite3 @csvArgs 2>&1
+                    
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "sqlite3 CSV出力エラー (終了コード: $LASTEXITCODE): $result"
+                    }
+                    
+                    # 結果を指定されたファイルに書き込み
+                    $encoding = Get-CrossPlatformEncoding
+                    $result | Out-File -FilePath $CsvOutputPath -Encoding $encoding
+                    
+                    Write-SystemLog "SQLite直接CSV出力完了: $CsvOutputPath ($(if ($result -is [array]) { $result.Count - 1 } else { 0 })件)" -Level "Success"
+                    return $result.Count - 1  # ヘッダー行を除いた件数を返す
+                }
+                catch {
+                    Write-SystemLog "SQLite直接CSV出力に失敗しました: $($_.Exception.Message)" -Level "Warning"
+                    # フォールバックとして通常処理を続行
+                }
+            }
+            
+            # 通常のSQLite3コマンド実行
             try {
                 $tempFile = [System.IO.Path]::GetTempFileName()
                 $encoding = Get-CrossPlatformEncoding
@@ -304,36 +332,34 @@ function Import-CsvToSqliteWithSqlFilter {
         # 1. 一時テーブル作成
         $createTempTableSql = New-CreateTempTableSql -BaseTableName $TableName -TempTableName $tempTableName
         Write-SystemLog "一時テーブル作成: $tempTableName" -Level "Info"
-        $allSqlStatements += $createTempTableSql
+        # 一時テーブルを事前に作成
+        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $createTempTableSql
         
-        # 2. CSVデータを一時テーブルに挿入
-        Write-Host "一時テーブルへのデータ挿入用SQL生成中..." -ForegroundColor Cyan
-        $insertSqls = Get-CsvInsertStatements -CsvData $csvData -TableName $tempTableName
-        $allSqlStatements += $insertSqls
+        # 2. CSVデータを一時テーブルに直接インポート（SQLite .import使用）
+        Write-Host "CSVデータを一時テーブルに直接インポート中..." -ForegroundColor Cyan
+        $importResult = Import-CsvToSqliteTable -CsvFilePath $CsvFilePath -DatabasePath $DatabasePath -TableName $tempTableName
+        if (-not $importResult) {
+            throw "CSVファイルの一時テーブルへのインポートに失敗しました"
+        }
         
         # 3. フィルタ用WHERE句生成
         $whereClause = New-FilterWhereClause -TableName $TableName
         
-        # 4. フィルタ済みデータを本テーブルに移行
+        # 4-6. フィルタ済みデータ移行、統計取得、クリーンアップ
         $filteredInsertSql = New-FilteredInsertSql -TargetTableName $TableName -SourceTableName $tempTableName -WhereClause $whereClause
-        Write-SystemLog "フィルタ済みデータを本テーブルに移行中..." -Level "Info"
-        $allSqlStatements += $filteredInsertSql
-        
-        # 5. 統計情報取得用のクエリ準備（一時変数を使用）
-        $statisticsSql = @"
--- 統計情報取得
-SELECT COUNT(*) as filtered_count FROM $TableName;
-"@
-        $allSqlStatements += $statisticsSql
-        
-        # 6. 一時テーブル削除
+        $statisticsSql = "SELECT COUNT(*) as filtered_count FROM $TableName;"
         $dropTempTableSql = "DROP TABLE $tempTableName;"
-        $allSqlStatements += $dropTempTableSql
         
-        # 全処理を1つのトランザクションで実行
-        $transactionSql = "BEGIN TRANSACTION;`n" + ($allSqlStatements -join "`n") + "`nCOMMIT;"
-        Write-SystemLog "SQLベースフィルタリング（統合トランザクション）実行中..." -Level "Info"
-        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $transactionSql
+        $filteringAndCleanupSql = @"
+BEGIN TRANSACTION;
+$filteredInsertSql
+$statisticsSql
+$dropTempTableSql
+COMMIT;
+"@
+        
+        Write-SystemLog "フィルタリングとクリーンアップ実行中..." -Level "Info"
+        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $filteringAndCleanupSql
         
         # 結果から件数を取得
         $filteredCount = if ($result -is [array] -and $result.Count -gt 0) { 
@@ -445,6 +471,41 @@ function Import-CsvDataToTable {
 }
 
 # CSVデータからINSERT文を生成
+# CSV直接インポート関数（SQLite .importコマンド使用）
+function Import-CsvToSqliteTable {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$CsvFilePath,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$TableName
+    )
+    
+    try {
+        if (-not (Test-Path $CsvFilePath)) {
+            throw "CSVファイルが見つかりません: $CsvFilePath"
+        }
+        
+        # SQLite3の.importコマンドを使用した直接インポート
+        $result = & sqlite3 $DatabasePath ".mode csv" ".import `"$CsvFilePath`" $TableName" 2>&1
+        
+        if ($LASTEXITCODE -ne 0) {
+            throw "SQLite .import エラー (終了コード: $LASTEXITCODE): $result"
+        }
+        
+        Write-SystemLog "CSV直接インポート完了: $TableName" -Level "Success"
+        return $true
+        
+    }
+    catch {
+        Write-SystemLog "CSV直接インポートに失敗しました: $($_.Exception.Message)" -Level "Error"
+        return $false
+    }
+}
+
 function Get-CsvInsertStatements {
     param(
         [Parameter(Mandatory = $true)]
