@@ -5,6 +5,20 @@
 . (Join-Path $PSScriptRoot "config-utils.ps1")
 . (Join-Path $PSScriptRoot "file-utils.ps1")
 
+# SQLite3コマンドパス取得（DRY原則による統一関数）
+function Get-Sqlite3Path {
+    try {
+        $sqlite3Path = Get-Command sqlite3 -ErrorAction SilentlyContinue
+        if (-not $sqlite3Path) {
+            throw "sqlite3コマンドが見つかりません。sqlite3をインストールしてPATHに追加してください。"
+        }
+        return $sqlite3Path
+    }
+    catch {
+        throw "SQLite3コマンドの取得に失敗しました: $($_.Exception.Message)"
+    }
+}
+
 # クロスプラットフォーム対応エンコーディング取得（DRY原則による統一関数）
 function Get-CrossPlatformEncoding {
     if ($PSVersionTable.PSVersion.Major -ge 6) {
@@ -14,6 +28,57 @@ function Get-CrossPlatformEncoding {
     else {
         # Windows PowerShell (5.1) では UTF8 (BOM あり)
         return [System.Text.UTF8Encoding]::new($true)
+    }
+}
+
+# テーブルクリア（汎用・リトライ対応）
+function Clear-Table {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$TableName,
+        
+        [switch]$ShowStatistics = $true
+    )
+    
+    try {
+        # テーブルの存在確認
+        $checkTableQuery = @"
+SELECT name FROM sqlite_master 
+WHERE type='table' AND name='$TableName';
+"@
+        
+        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $checkTableQuery
+        
+        if ($result -and $result.Count -gt 0) {
+            # レコード数を事前に取得（統計表示用）
+            if ($ShowStatistics) {
+                $countQuery = "SELECT COUNT(*) as count FROM $TableName;"
+                $countResult = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $countQuery
+                $existingCount = if ($countResult -and $countResult[0]) { $countResult[0].count } else { 0 }
+                
+                Write-SystemLog "テーブル '$TableName' をクリア中（既存件数: $existingCount）..." -Level "Info"
+            }
+            else {
+                Write-SystemLog "テーブル '$TableName' をクリア中..." -Level "Info"
+            }
+            
+            # テーブル内容を削除
+            $deleteQuery = "DELETE FROM $TableName;"
+            Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $deleteQuery
+            
+            Write-SystemLog "テーブル '$TableName' のクリアが完了しました" -Level "Success"
+        }
+        else {
+            Write-SystemLog "テーブル '$TableName' は存在しないため、スキップします" -Level "Info"
+        }
+        
+    }
+    catch {
+        Write-SystemLog "テーブルクリア処理に失敗しました: $($_.Exception.Message)" -Level "Error"
+        throw
     }
 }
 
@@ -160,65 +225,6 @@ function Write-SystemLog {
     
     # ファイル出力
     Write-LogToFile -Message $Message -Level $Level
-}
-
-# ハッシュテーブル変換（データ処理用）
-function ConvertTo-DataHashtable {
-    param(
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [object]$InputObject
-    )
-    
-    $hashtable = @{}
-    
-    foreach ($property in $InputObject.PSObject.Properties) {
-        $hashtable[$property.Name] = $property.Value
-    }
-    
-    return $hashtable
-}
-
-# 同期アクション件数の取得
-function Get-SyncActionCount {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$DatabasePath,
-        
-        [string]$TableName = "sync_result"
-    )
-    
-    try {
-        $countSql = @"
-SELECT 
-    sync_action,
-    COUNT(*) as count
-FROM $TableName 
-GROUP BY sync_action
-ORDER BY sync_action;
-"@
-        
-        $results = Invoke-SqliteCsvQuery -DatabasePath $DatabasePath -Query $countSql
-        
-        $counts = @{
-            ADD    = 0
-            UPDATE = 0
-            DELETE = 0
-            KEEP   = 0
-        }
-        
-        foreach ($result in $results) {
-            if ($counts.ContainsKey($result.sync_action)) {
-                $counts[$result.sync_action] = [int]$result.count
-            }
-        }
-        
-        return $counts
-        
-    }
-    catch {
-        Write-Error "同期アクション件数の取得に失敗しました: $($_.Exception.Message)"
-        return @{ ADD = 0; UPDATE = 0; DELETE = 0; KEEP = 0 }
-    }
 }
 
 # SQLite CSV クエリ実行

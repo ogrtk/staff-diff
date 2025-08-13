@@ -7,8 +7,9 @@
 . (Join-Path $PSScriptRoot "utils/file-utils.ps1")
 . (Join-Path $PSScriptRoot "utils/common-utils.ps1")
 
+
 # メインの同期処理
-function Sync-StaffData {
+function Sync-Data {
     param(
         [Parameter(Mandatory = $true)]
         [string]$DatabasePath
@@ -17,13 +18,16 @@ function Sync-StaffData {
     try {
         Write-SystemLog "データ同期処理を開始します..." -Level "Info"
         
-        # 1. 職員マスタに存在しないレコード（新規追加対象）を特定
-        Add-NewStaffRecords -DatabasePath $DatabasePath
+        # 0. リトライ対応: sync_resultテーブルを初期化
+        Clear-Table -DatabasePath $DatabasePath -TableName "sync_result"
+        
+        # 1. 現在データに存在しないレコード（新規追加対象）を特定
+        Add-NewRecords -DatabasePath $DatabasePath
         
         # 2. 更新があったレコードを処理
         Add-UpdateRecords -DatabasePath $DatabasePath
         
-        # 3. 職員マスタにしか存在しないレコード（削除対象）を特定
+        # 3. 現在データにしか存在しないレコード（削除対象）を特定
         Add-DeleteRecords -DatabasePath $DatabasePath
         
         # 4. 変更のないレコードを保持
@@ -39,7 +43,7 @@ function Sync-StaffData {
 }
 
 # 新規追加対象レコードをsync_resultテーブルに追加
-function Add-NewStaffRecords {
+function script:Add-NewRecords {
     param(
         [Parameter(Mandatory = $true)]
         [string]$DatabasePath
@@ -81,7 +85,7 @@ WHERE cd.$currentDataKey IS NULL;
 }
 
 # 更新対象レコードをsync_resultテーブルに追加
-function Add-UpdateRecords {
+function script:Add-UpdateRecords {
     param(
         [Parameter(Mandatory = $true)]
         [string]$DatabasePath
@@ -125,7 +129,7 @@ WHERE
 }
 
 # 削除対象レコードをsync_resultテーブルに追加
-function Add-DeleteRecords {
+function script:Add-DeleteRecords {
     param(
         [Parameter(Mandatory = $true)]
         [string]$DatabasePath
@@ -168,7 +172,7 @@ WHERE pd.$providedDataKey IS NULL;
 }
 
 # 保持対象レコードをsync_resultテーブルに追加
-function Add-KeepRecords {
+function script:Add-KeepRecords {
     param(
         [Parameter(Mandatory = $true)]
         [string]$DatabasePath

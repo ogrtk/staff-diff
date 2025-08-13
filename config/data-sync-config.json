@@ -3,8 +3,8 @@
   "description": "PowerShell & SQLite 職員データ管理システム スキーマ設定",
   "file_paths": {
     "description": "ファイルパス設定",
-    "provided_data_file_path": "./test-data/large-provided.csv",
-    "current_data_file_path": "./test-data/large-current.csv",
+    "provided_data_file_path": "./test-data/provided.csv",
+    "current_data_file_path": "./test-data/current.csv",
     "output_file_path": "./test-data/sync-result.csv",
     "provided_data_history_directory": "./data/provided-data/",
     "current_data_history_directory": "./data/current-data/",
@@ -18,7 +18,7 @@
       "encoding": "UTF-8",
       "delimiter": ",",
       "newline": "LF",
-      "has_header": false,
+      "has_header": true,
       "null_values": [
         "",
         "NULL",
@@ -520,11 +520,42 @@
       "cache_size": 10000
     }
   },
+  "error_handling": {
+    "description": "エラーハンドリング設定",
+    "enabled": true,
+    "log_stack_trace": true,
+    "retry_settings": {
+      "description": "リトライ設定",
+      "enabled": true,
+      "max_attempts": 3,
+      "delay_seconds": [
+        1,
+        2,
+        5
+      ],
+      "retryable_categories": [
+        "External"
+      ]
+    },
+    "error_levels": {
+      "description": "エラーカテゴリ別のログレベル設定",
+      "System": "Error",
+      "Data": "Warning",
+      "External": "Error"
+    },
+    "continue_on_error": {
+      "description": "エラー発生時の処理継続設定",
+      "System": false,
+      "Data": true,
+      "External": false
+    },
+    "cleanup_on_error": true
+  },
   "logging": {
     "description": "ログ設定",
     "enabled": true,
     "log_directory": "./logs/",
-    "log_file_name": "staff-management.log",
+    "log_file_name": "data-sync-system.log",
     "max_file_size_mb": 10,
     "max_files": 5,
     "levels": [

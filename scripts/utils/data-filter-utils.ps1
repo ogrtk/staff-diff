@@ -4,88 +4,6 @@
 # 共通ユーティリティの読み込み
 . (Join-Path $PSScriptRoot "config-utils.ps1")
 
-# データフィルタリングの実行（最適化版）
-function Test-DataFilter {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$TableName,
-        
-        [Parameter(Mandatory = $true)]
-        [hashtable]$DataRow,
-        
-        [ref]$ExclusionReason
-    )
-    
-    $filterConfig = Get-DataFilterConfig -TableName $TableName
-    
-    # フィルタリングが無効または設定されていない場合は通す
-    if (-not $filterConfig -or -not $filterConfig.enabled) {
-        return $true
-    }
-    
-    # 各フィルタルールをチェック
-    foreach ($rule in $filterConfig.rules) {
-        $fieldValue = $DataRow[$rule.field]
-        
-        if (-not $fieldValue) {
-            continue
-        }
-        
-        switch ($rule.type) {
-            "exclude_pattern" {
-                if ($fieldValue -match $rule.pattern) {
-                    $ExclusionReason.Value = "$($rule.field)='$fieldValue' (理由: $($rule.description))"
-                    return $false
-                }
-            }
-            "include_pattern" {
-                if ($fieldValue -notmatch $rule.pattern) {
-                    $ExclusionReason.Value = "$($rule.field)='$fieldValue' (理由: $($rule.description))"
-                    return $false
-                }
-            }
-            "exclude_value" {
-                if ($fieldValue -eq $rule.value) {
-                    $ExclusionReason.Value = "$($rule.field)='$fieldValue' (理由: $($rule.description))"
-                    return $false
-                }
-            }
-            "include_value" {
-                if ($fieldValue -ne $rule.value) {
-                    $ExclusionReason.Value = "$($rule.field)='$fieldValue' (理由: $($rule.description))"
-                    return $false
-                }
-            }
-        }
-    }
-    
-    return $true
-}
-
-# フィルタリング統計の取得
-function Get-FilterStatistics {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$TableName,
-        
-        [Parameter(Mandatory = $true)]
-        [int]$TotalCount,
-        
-        [Parameter(Mandatory = $true)]
-        [int]$FilteredCount
-    )
-    
-    $excludedCount = $TotalCount - $FilteredCount
-    $exclusionRate = if ($TotalCount -gt 0) { [Math]::Round(($excludedCount / $TotalCount) * 100, 2) } else { 0 }
-    
-    return @{
-        TableName     = $TableName
-        TotalCount    = $TotalCount
-        FilteredCount = $FilteredCount
-        ExcludedCount = $excludedCount
-        ExclusionRate = $exclusionRate
-    }
-}
 
 # フィルタ設定の表示
 function Show-FilterConfig {
@@ -127,84 +45,8 @@ function Show-FilterConfig {
     }
 }
 
-# データフィルタリングの実行（配列対応）
-function Invoke-DataFiltering {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$TableName,
-        
-        [Parameter(Mandatory = $true)]
-        [array]$DataArray,
-        
-        [bool]$ShowStatistics = $true,
-        
-        [bool]$ShowConfig = $false
-    )
-    
-    if ($ShowConfig) {
-        Show-FilterConfig -TableName $TableName
-    }
-    
-    $filterConfig = Get-DataFilterConfig -TableName $TableName
-    
-    # フィルタリングが無効または設定されていない場合は全データを返す
-    if (-not $filterConfig -or -not $filterConfig.enabled) {
-        Write-Host "テーブル '$TableName' のフィルタリングは無効です" -ForegroundColor Yellow
-        return $DataArray
-    }
-    
-    Write-Host "テーブル '$TableName' のデータフィルタリングを実行中..." -ForegroundColor Cyan
-    
-    $filteredData = @()
-    $exclusionReasons = @{}
-    
-    foreach ($dataRow in $DataArray) {
-        $exclusionReason = ""
-        $exclusionReasonRef = [ref]$exclusionReason
-        
-        # PSCustomObjectをhashtableに変換
-        $hashtableRow = @{}
-        foreach ($property in $dataRow.PSObject.Properties) {
-            $hashtableRow[$property.Name] = $property.Value
-        }
-        
-        if (Test-DataFilter -TableName $TableName -DataRow $hashtableRow -ExclusionReason $exclusionReasonRef) {
-            $filteredData += $dataRow
-        }
-        else {
-            # 除外理由を記録
-            $reason = $exclusionReasonRef.Value
-            if ($exclusionReasons.ContainsKey($reason)) {
-                $exclusionReasons[$reason]++
-            }
-            else {
-                $exclusionReasons[$reason] = 1
-            }
-        }
-    }
-    
-    # 統計情報の表示
-    if ($ShowStatistics) {
-        $statistics = Get-FilterStatistics -TableName $TableName -TotalCount $DataArray.Count -FilteredCount $filteredData.Count
-        
-        Write-Host "=== フィルタリング統計: $TableName ===" -ForegroundColor Green
-        Write-Host "総件数: $($statistics.TotalCount)" -ForegroundColor White
-        Write-Host "通過件数: $($statistics.FilteredCount)" -ForegroundColor Green
-        Write-Host "除外件数: $($statistics.ExcludedCount)" -ForegroundColor Red
-        
-        if ($exclusionReasons.Count -gt 0) {
-            Write-Host "除外理由別件数:" -ForegroundColor Cyan
-            foreach ($reason in $exclusionReasons.Keys | Sort-Object) {
-                Write-Host "  - $reason : $($exclusionReasons[$reason])件" -ForegroundColor Gray
-            }
-        }
-    }
-    
-    return $filteredData
-}
-
-# SQLベースフィルタリングのサポート関数
-function Invoke-SqlBasedFiltering {
+# データフィルタリング
+function Invoke-Filtering {
     param(
         [Parameter(Mandatory = $true)]
         [string]$DatabasePath,
@@ -225,132 +67,99 @@ function Invoke-SqlBasedFiltering {
     }
     
     try {
-        Write-Host "SQLベースフィルタリングを実行中: $TableName" -ForegroundColor Cyan
+        Write-SystemLog "フィルタリング用に一時テーブルへCSVをインポートする: $TableName ($CsvFilePath)" -Level "Info"
+
+        # 一時テーブル名
+        $tempTableName = "${TableName}_temp"
+
+        # リトライ対応: 既存データをクリア
+        Clear-Table -DatabasePath $DatabasePath -TableName $TableName
+
+        # CSVファイルの件数を事前に取得
+        $csvData = Import-Csv -Path $CsvFilePath
+        $totalRecords = $csvData.Count
         
-        # 新しい高速フィルタリング機能を呼び出し
-        $statistics = Import-CsvToSqliteWithSqlFilter -DatabasePath $DatabasePath -CsvFilePath $CsvFilePath -TableName $TableName -ShowStatistics:$ShowStatistics
+        Write-Host "CSVファイル読み込み完了: $totalRecords 件" -ForegroundColor Green
         
-        return $statistics
+        # 1. 一時テーブル作成
+        $createTempTableSql = New-CreateTempTableSql -BaseTableName $TableName -TempTableName $tempTableName
+        Write-SystemLog "一時テーブル作成: $tempTableName" -Level "Info"
+        # 一時テーブルを事前に作成
+        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $createTempTableSql
+        
+        # 2. CSVデータを一時テーブルに直接インポート（SQLite .import使用）
+        Write-Host "CSVデータを一時テーブルに直接インポート中..." -ForegroundColor Cyan
+        $importResult = Import-CsvToSqliteTable -CsvFilePath $CsvFilePath -DatabasePath $DatabasePath -TableName $tempTableName
+        if (-not $importResult) {
+            throw "CSVファイルの一時テーブルへのインポートに失敗しました"
+        }
+        
+        # 3. フィルタ用WHERE句生成
+        $whereClause = New-FilterWhereClause -TableName $TableName
+        
+        # 4-6. フィルタ済みデータ移行、統計取得、クリーンアップ
+        $filteredInsertSql = New-FilteredInsertSql -TargetTableName $TableName -SourceTableName $tempTableName -WhereClause $whereClause
+        $statisticsSql = "SELECT COUNT(*) as filtered_count FROM $TableName;"
+        $dropTempTableSql = "DROP TABLE $tempTableName;"
+        
+        $filteringAndCleanupSql = @"
+BEGIN TRANSACTION;
+$filteredInsertSql
+$statisticsSql
+$dropTempTableSql
+COMMIT;
+"@
+        
+        Write-SystemLog "フィルタリングとクリーンアップ実行中..." -Level "Info"
+        $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $filteringAndCleanupSql
+        
+        # 結果から件数を取得
+        $filteredCount = if ($result -is [array] -and $result.Count -gt 0) { 
+            # 最後の統計クエリの結果を取得
+            [int]($result | Select-Object -Last 1)
+        }
+        else { 
+            [int]$result 
+        }
+        
+        # 動的インデックス作成（レコード数に基づく判定）
+        $indexSqls = New-CreateIndexSql -TableName $TableName -RecordCount $filteredCount
+        foreach ($indexSql in $indexSqls) {
+            Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $indexSql
+        }
+        
+        # 統計表示
+        if ($ShowStatistics) {
+            $excludedCount = $totalRecords - $filteredCount
+            $exclusionRate = if ($totalRecords -gt 0) { [Math]::Round(($excludedCount / $totalRecords) * 100, 2) } else { 0 }
+            
+            Write-Host "`n=== SQLフィルタリング統計: $TableName ===" -ForegroundColor Green
+            Write-Host "総件数: $totalRecords" -ForegroundColor White
+            Write-Host "通過件数: $filteredCount" -ForegroundColor Green
+            Write-Host "除外件数: $excludedCount" -ForegroundColor Red
+            Write-Host "除外率: $exclusionRate%" -ForegroundColor Yellow
+            Write-Host "処理方式: SQLベースフィルタリング（高速）" -ForegroundColor Cyan
+            
+            if ($whereClause) {
+                Write-Host "適用フィルタ: $whereClause" -ForegroundColor Gray
+            }
+            else {
+                Write-Host "適用フィルタ: なし（全件通過）" -ForegroundColor Gray
+            }
+        }
+        
+        Write-SystemLog "SQLベースフィルタリング完了: $filteredCount 件を $TableName に挿入" -Level "Success"
+        
+        return @{
+            TotalCount    = $totalRecords
+            FilteredCount = $filteredCount
+            ExcludedCount = $excludedCount
+            ExclusionRate = $exclusionRate
+        }
         
     }
     catch {
         Write-SystemLog "SQLベースフィルタリングに失敗しました: $($_.Exception.Message)" -Level "Error"
-        throw
-    }
-}
-
-# フィルタリング方式の自動選択
-function Invoke-OptimalFiltering {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$DatabasePath,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$TableName,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$CsvFilePath,
-        
-        [bool]$ShowStatistics = $true,
-        
-        [bool]$ShowConfig = $false,
-        
-        [bool]$ForceClassicFiltering = $false
-    )
-    
-    if ($ForceClassicFiltering) {
-        Write-Host "クラシックフィルタリング（PowerShell）を強制実行" -ForegroundColor Yellow
-        
-        # 従来の PowerShell ベースフィルタリング
-        $csvData = Import-Csv -Path $CsvFilePath
-        $filteredData = Invoke-DataFiltering -TableName $TableName -DataArray $csvData -ShowStatistics:$ShowStatistics -ShowConfig:$ShowConfig
-        
-        # データベースに挿入（従来の方法）
-        # この部分は既存の実装に依存
-        
-        return @{
-            TotalCount      = $csvData.Count
-            FilteredCount   = $filteredData.Count
-            ExcludedCount   = $csvData.Count - $filteredData.Count
-            ExclusionRate   = if ($csvData.Count -gt 0) { [Math]::Round((($csvData.Count - $filteredData.Count) / $csvData.Count) * 100, 2) } else { 0 }
-            FilteringMethod = "PowerShell (Classic)"
-        }
-    }
-    else {
-        Write-Host "SQLベースフィルタリング（高速）を実行" -ForegroundColor Green
-        
-        # 新しい SQL ベースフィルタリング
-        $statistics = Invoke-SqlBasedFiltering -DatabasePath $DatabasePath -TableName $TableName -CsvFilePath $CsvFilePath -ShowStatistics:$ShowStatistics -ShowConfig:$ShowConfig
-        $statistics.FilteringMethod = "SQL (High Speed)"
-        
-        return $statistics
-    }
-}
-
-# フィルタリング性能比較機能
-function Compare-FilteringPerformance {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$DatabasePath,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$TableName,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$CsvFilePath
-    )
-    
-    Write-Host "`n=== フィルタリング性能比較 ===" -ForegroundColor Yellow
-    
-    try {
-        # SQLベース測定
-        Write-Host "`n[1] SQLベースフィルタリング測定中..." -ForegroundColor Cyan
-        $sqlStartTime = Get-Date
-        $sqlStats = Invoke-SqlBasedFiltering -DatabasePath $DatabasePath -TableName $TableName -CsvFilePath $CsvFilePath -ShowStatistics:$false
-        $sqlEndTime = Get-Date
-        $sqlDuration = ($sqlEndTime - $sqlStartTime).TotalSeconds
-        
-        # テーブルクリア（PowerShell測定のため）
-        Invoke-SqliteCommand -DatabasePath $DatabasePath -Query "DELETE FROM $TableName"
-        
-        # PowerShellベース測定
-        Write-Host "`n[2] PowerShellベースフィルタリング測定中..." -ForegroundColor Cyan
-        $classicStartTime = Get-Date
-        Invoke-OptimalFiltering -DatabasePath $DatabasePath -TableName $TableName -CsvFilePath $CsvFilePath -ShowStatistics:$false -ForceClassicFiltering
-        $classicEndTime = Get-Date
-        $classicDuration = ($classicEndTime - $classicStartTime).TotalSeconds
-        
-        # 結果比較
-        Write-Host "`n=== 性能比較結果 ===" -ForegroundColor Green
-        Write-Host "データ件数: $($sqlStats.TotalCount)" -ForegroundColor White
-        Write-Host "フィルタ後: $($sqlStats.FilteredCount)" -ForegroundColor White
-        Write-Host ""
-        Write-Host "SQLベース処理時間: $([Math]::Round($sqlDuration, 2))秒" -ForegroundColor Green
-        Write-Host "PowerShellベース処理時間: $([Math]::Round($classicDuration, 2))秒" -ForegroundColor Yellow
-        
-        $speedImprovement = if ($sqlDuration -gt 0) { [Math]::Round($classicDuration / $sqlDuration, 2) } else { 0 }
-        Write-Host "性能向上倍率: ${speedImprovement}倍" -ForegroundColor Cyan
-        
-        if ($speedImprovement -gt 1) {
-            Write-Host "✅ SQLベースが高速です" -ForegroundColor Green
-        }
-        elseif ($speedImprovement -eq 1) {
-            Write-Host "➡️ 同等の性能です" -ForegroundColor Yellow
-        }
-        else {
-            Write-Host "⚠️ PowerShellベースが高速です（データサイズが小さい可能性）" -ForegroundColor Red
-        }
-        
-        return @{
-            SqlDuration       = $sqlDuration
-            ClassicDuration   = $classicDuration
-            SpeedImprovement  = $speedImprovement
-            RecommendedMethod = if ($speedImprovement -ge 1) { "SQL" } else { "PowerShell" }
-        }
-        
-    }
-    catch {
-        Write-SystemLog "性能比較に失敗しました: $($_.Exception.Message)" -Level "Error"
         throw
     }
 }

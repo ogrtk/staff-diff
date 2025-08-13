@@ -92,38 +92,6 @@ function Protect-SqlValue {
     return "'$escapedValue'"
 }
 
-# INSERT SQL生成
-function New-InsertSql {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$TableName,
-        
-        [Parameter(Mandatory = $true)]
-        [hashtable]$Data
-    )
-    
-    $csvColumns = Get-CsvColumns -TableName $TableName
-    
-    $columns = @()
-    $values = @()
-    
-    foreach ($column in $csvColumns) {
-        if ($Data.ContainsKey($column) -and -not [string]::IsNullOrWhiteSpace($Data[$column])) {
-            $columns += $column
-            $values += Protect-SqlValue -Value $Data[$column]
-        }
-    }
-    
-    if ($columns.Count -eq 0) {
-        throw "挿入するデータがありません"
-    }
-    
-    $columnsStr = $columns -join ", "
-    $valuesStr = $values -join ", "
-    
-    return "INSERT INTO $TableName ($columnsStr) VALUES ($valuesStr);"
-}
-
 # SELECT SQL生成
 function New-SelectSql {
     param(
@@ -219,70 +187,7 @@ function New-ComparisonWhereClause {
     }
 }
 
-# CSVヘッダー生成
-function New-CsvHeader {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$TableName
-    )
-    
-    return Get-CsvColumns -TableName $TableName
-}
-
-# 同期結果用カラムマッピングの取得（後方互換性のため保持）
-function Get-SyncResultColumnMapping {
-    $config = Get-DataSyncConfig
-    
-    if (-not $config.sync_rules.sync_result_mapping -or -not $config.sync_rules.sync_result_mapping.mappings) {
-        throw "sync_result_mapping が設定されていません。設定ファイルを確認してください。"
-    }
-    
-    return $config.sync_rules.sync_result_mapping.mappings
-}
-
-# 優先度ベース値選択関数
-function Get-PriorityBasedValue {
-    param(
-        [Parameter(Mandatory = $true)]
-        [array]$Sources,
-        
-        [Parameter(Mandatory = $true)]
-        [hashtable]$DataContext
-    )
-    
-    # 優先度順にソート
-    $sortedSources = $Sources | Sort-Object priority
-    
-    foreach ($source in $sortedSources) {
-        $value = $null
-        
-        switch ($source.type) {
-            "provided_data" {
-                if ($DataContext.ContainsKey("provided_data") -and $DataContext["provided_data"]) {
-                    $value = $DataContext["provided_data"].($source.field)
-                }
-            }
-            "current_data" {
-                if ($DataContext.ContainsKey("current_data") -and $DataContext["current_data"]) {
-                    $value = $DataContext["current_data"].($source.field)
-                }
-            }
-            "fixed_value" {
-                $value = $source.value
-            }
-        }
-        
-        # 値が有効かチェック（null・空文字・フィールド不存在でない）
-        if ($null -ne $value -and $value -ne "") {
-            return $value
-        }
-    }
-    
-    # すべてのソースで値が取得できない場合
-    return $null
-}
-
-# 優先度ベースSQLのCASE文生成（シンプル版）
+# 優先度ベースSQLのCASE文生成
 function New-PriorityBasedCaseStatement {
     param(
         [Parameter(Mandatory = $true)]
@@ -602,19 +507,6 @@ function New-GroupByClause {
     else {
         return $GroupColumns -join ", "
     }
-}
-
-# NOT IN条件生成
-function New-NotInCondition {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Column,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$SubQuery
-    )
-    
-    return "$Column NOT IN ($SubQuery)"
 }
 
 # sync_result用のSELECT句生成（カラムマッピング対応）

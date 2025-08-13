@@ -456,8 +456,186 @@ pwsh ./scripts/main.ps1 -ProvidedDataFilePath "/data/provided.csv" -CurrentDataF
 - インデックスは設定ファイルで管理可能（現在は未設定）
 - 履歴保存は処理性能に影響するが、安全性のため推奨
 
+## エラーハンドリング標準化ガイドライン
+
+### 概要
+システム全体で統一されたエラーハンドリングパターンを提供し、保守性と信頼性を向上させます。
+
+### エラーカテゴリ分類
+| カテゴリ | 説明 | リトライ | 継続可否 | デフォルトレベル |
+|----------|------|----------|----------|------------------|
+| **System** | 設定ファイル不正、プログラムロジックエラー等 | ❌ | 中断 | Error |
+| **Data** | 個別レコードのCSV不正、フィルタリング失敗等 | ❌ | 継続 | Warning |
+| **External** | ファイルアクセス、DB接続、外部コマンド不在等 | ✅ | 中断 | Error |
+
+### 統一エラーハンドリング関数
+
+#### 基本パターン
+```powershell
+# 統合エラーハンドリング（リトライ・クリーンアップ対応）
+Invoke-WithErrorHandling -ScriptBlock {
+    # 処理内容
+} -Category System -Operation "処理名" -Context @{
+    "ファイルパス" = $filePath
+} -CleanupScript { 
+    # クリーンアップ処理 
+}
+```
+
+#### 専用関数（推奨）
+```powershell
+# ファイル操作専用
+Invoke-FileOperationWithErrorHandling -FileOperation {
+    # ファイル処理
+} -FilePath $path -OperationType "操作種別"
+
+# データベース操作専用  
+Invoke-DatabaseOperationWithErrorHandling -DatabaseOperation {
+    # DB処理
+} -DatabasePath $dbPath -OperationType "操作種別"
+
+# 設定検証専用
+Invoke-ConfigValidationWithErrorHandling -ValidationOperation {
+    # 設定検証
+} -ConfigSection "設定セクション"
+
+# 外部コマンド実行専用
+Invoke-ExternalCommandWithErrorHandling -CommandOperation {
+    # コマンド実行
+} -CommandName "sqlite3" -OperationType "操作種別"
+
+# 安全な実行（エラーを例外として再スローしない）
+Invoke-SafeOperation -Operation {
+    # 処理内容
+} -OperationName "操作名" -Category Data -DefaultReturn $null
+```
+
+### エラーハンドリング設定
+
+#### config/data-sync-config.json
+```json
+{
+  "error_handling": {
+    "enabled": true,
+    "log_stack_trace": true,
+    "retry_settings": {
+      "enabled": true,
+      "max_attempts": 3,
+      "delay_seconds": [1, 2, 5],
+      "retryable_categories": ["External"]
+    },
+    "error_levels": {
+      "System": "Error",
+      "Data": "Warning",
+      "External": "Error"
+    },
+    "continue_on_error": {
+      "System": false,
+      "Data": true,
+      "External": false
+    },
+    "cleanup_on_error": true
+  }
+}
+```
+
+### 実装ガイドライン
+
+#### ✅ 推奨パターン
+```powershell
+# 1. 適切なカテゴリの選択
+Invoke-WithErrorHandling -Category Data -Operation "CSVファイル読み込み"
+
+# 2. コンテキスト情報の提供
+-Context @{
+    "ファイルパス" = $csvPath
+    "テーブル名" = $tableName
+}
+
+# 3. クリーンアップ処理の定義
+-CleanupScript {
+    if (Test-Path $tempFile) {
+        Remove-Item $tempFile -Force
+    }
+}
+
+# 4. 専用関数の使用（より具体的）
+Invoke-FileOperationWithErrorHandling -FileOperation { 
+    Copy-Item $source $destination 
+} -FilePath $source -OperationType "ファイルコピー"
+```
+
+#### ❌ 避けるべきパターン
+```powershell
+# 1. 旧式のtry-catchの直接使用
+try {
+    # 処理
+} catch {
+    Write-Error "エラー: $($_.Exception.Message)"
+    throw
+}
+
+# 2. エラー情報の不足
+Invoke-WithErrorHandling { /* 処理 */ } # カテゴリ・操作名なし
+
+# 3. 一律のエラー処理
+catch { throw } # すべて同じ処理
+
+# 4. ログとエラーハンドリングの混在
+Write-SystemLog "エラー" -Level "Error"
+throw $_.Exception
+```
+
+### エラー対応指針
+
+#### 自動復旧可能エラー
+- **リトライ対象**: External, System カテゴリ
+- **最大試行回数**: 3回（設定可能）
+- **遅延**: 1秒、2秒、5秒（設定可能）
+
+#### 処理継続可能エラー
+- **Data カテゴリ**: CSVフォーマット不正等
+- **継続条件**: 部分的なデータ損失が許容される場合
+- **ログレベル**: Warning
+
+#### 即座中断エラー  
+- **System, Configuration, External カテゴリ**
+- **中断理由**: システム基盤の問題、設定不正
+- **ログレベル**: Error
+
+### デバッグとトラブルシューティング
+
+#### ログ出力内容
+- **エラーカテゴリ**: `[System] ファイル操作 でエラーが発生しました`
+- **スタックトレース**: `log_stack_trace: true` で有効
+- **コンテキスト情報**: ファイルパス、テーブル名等の関連情報
+- **対処方法**: カテゴリ別の推奨対処法
+
+#### エラー分析手順
+1. **ログファイル確認**: `logs/staff-management.log`
+2. **エラーカテゴリ特定**: System/Configuration/Data/External
+3. **コンテキスト情報確認**: ファイルパス、設定等
+4. **カテゴリ別対処**: 推奨対処法に従い修正
+
+### 注意事項
+
+#### 循環参照の回避
+- `config-utils.ps1` では `error-handling-utils.ps1` を読み込まない
+- 設定読み込み関数では旧式のtry-catchを使用
+
+#### 性能への配慮
+- エラーハンドリングは必要最小限に留める
+- リトライは外部依存とシステムエラーのみ
+- クリーンアップ処理は軽量に保つ
+
+#### 後方互換性
+- 既存の `Write-SystemLog` は継続使用可能
+- 段階的な移行を推奨（クリティカルな箇所から優先）
+
 # important-instruction-reminders
 - 何か変更を行う際は、必ず設定ベースアーキテクチャを維持すること
 - 新機能追加時は config/data-sync-config.json での設定可能性を検討すること
 - ハードコーディングは避け、動的生成を優先すること
 - すべての変更には適切なログとエラーハンドリングを含めること
+- **エラーハンドリングは統一関数を使用し、適切なカテゴリを選択すること**
+- **新規関数作成時は専用エラーハンドリング関数の使用を必須とすること**

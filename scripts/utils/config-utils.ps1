@@ -125,7 +125,7 @@ function Test-DataSyncConfig {
 }
 
 # CSVフォーマット設定の検証
-function Test-CsvFormatConfig {
+function script:Test-CsvFormatConfig {
     param(
         [Parameter(Mandatory = $true)]
         $CsvFormatConfig
@@ -183,7 +183,7 @@ function Test-CsvFormatConfig {
 }
 
 # ログ設定の取得
-function Get-LoggingConfig {
+function script:Get-LoggingConfig {
     $config = Get-DataSyncConfig
     
     if (-not $config.logging) {
@@ -193,7 +193,7 @@ function Get-LoggingConfig {
         $defaultLogging = @{
             enabled          = $true
             log_directory    = "./logs/"
-            log_file_name    = "staff-management.log"
+            log_file_name    = "data-sync-system.log"
             max_file_size_mb = 10
             max_files        = 5
             levels           = @("Info", "Warning", "Error", "Success")
@@ -207,7 +207,7 @@ function Get-LoggingConfig {
 }
 
 # データフィルタ設定の取得
-function Get-DataFilterConfig {
+function script:Get-DataFilterConfig {
     param(
         [Parameter(Mandatory = $true)]
         [string]$TableName
@@ -223,7 +223,7 @@ function Get-DataFilterConfig {
 }
 
 # sync_result_mapping設定の検証
-function Test-SyncResultMappingConfig {
+function script:Test-SyncResultMappingConfig {
     param(
         [Parameter(Mandatory = $true)]
         $SyncResultMappingConfig
@@ -295,7 +295,7 @@ function Test-SyncResultMappingConfig {
 }
 
 # sync_result_mappingの取得
-function Get-SyncResultMappingConfig {
+function script:Get-SyncResultMappingConfig {
     $config = Get-DataSyncConfig
     
     if (-not $config.sync_rules -or -not $config.sync_rules.sync_result_mapping) {
