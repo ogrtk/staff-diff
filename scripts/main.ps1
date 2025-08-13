@@ -1,143 +1,98 @@
-# PowerShell & SQLite 職員データ管理システム
-# メインスクリプト（設定ベース版）
+# PowerShell & SQLite データ同期システム
+# メインスクリプト（エントリーポイント）
 
+# パラメータ定義
 param(
     [string]$ProvidedDataFilePath = "",
-    
     [string]$CurrentDataFilePath = "",
-    
     [string]$OutputFilePath = "",
-    
     [string]$DatabasePath = ""
 )
 
-# スクリプトの実行パスを取得
-$ScriptPath = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$ProjectRoot = Split-Path -Parent $ScriptPath
+# スクリプトの場所を基準にプロジェクトルートを設定
+$ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.FullName
 
-# 共通ユーティリティと他のスクリプトファイルをインポート
-. "$ScriptPath\utils\config-utils.ps1"
-. "$ScriptPath\utils\sql-utils.ps1"
-. "$ScriptPath\utils\file-utils.ps1"
-. "$ScriptPath\utils\data-filter-utils.ps1"
-. "$ScriptPath\utils\common-utils.ps1"
-. "$ScriptPath\utils\error-handling-utils.ps1"
-. "$ScriptPath\database.ps1"
-. "$ScriptPath\utils\csv-utils.ps1"
-. "$ScriptPath\sync-data.ps1"
+# モジュールディレクトリのパス
+$UtilsModulePath = Join-Path $ProjectRoot "scripts" "modules" "Utils"
+$ProcessModulePath = Join-Path $ProjectRoot "scripts" "modules" "Process"
 
-function Main {
-    param(
-        [string]$DatabasePath,
-        [string]$ProvidedDataFilePath,
-        [string]$CurrentDataFilePath,
-        [string]$OutputFilePath
-    )
+# 堅牢なエラーハンドリング
+$ErrorActionPreference = "Stop"
 
-    # ログファイルの初期化（最初に実行）
-    Initialize-LogFile
+try {
+    # --- モジュール読み込み ---
+    # ユーティリティモジュール
+    Import-Module (Join-Path $UtilsModulePath "CommonUtils.psm1")
+    Import-Module (Join-Path $UtilsModulePath "ConfigUtils.psm1")
+    Import-Module (Join-Path $UtilsModulePath "CsvUtils.psm1")
+    Import-Module (Join-Path $UtilsModulePath "DataFilterUtils.psm1")
+    Import-Module (Join-Path $UtilsModulePath "ErrorHandlingUtils.psm1")
+    Import-Module (Join-Path $UtilsModulePath "FileUtils.psm1")
+    Import-Module (Join-Path $UtilsModulePath "SqlUtils.psm1")
 
-    Write-SystemLog "=== 同期データ比較システム 開始 ===" -Level "Success"
-        
-    # 統合エラーハンドリングでメイン処理を実行
-    Invoke-WithErrorHandling -Category System -Operation "メイン処理" -Context @{
-        "DatabasePath"         = $DatabasePath
-        "ProvidedDataFilePath" = $ProvidedDataFilePath
-        "CurrentDataFilePath"  = $CurrentDataFilePath
-        "OutputFilePath"       = $OutputFilePath
-    } -ScriptBlock {
+    # プロセスモジュール
+    Import-Module (Join-Path $ProcessModulePath "Invoke-ConfigValidation.psm1")
+    Import-Module (Join-Path $ProcessModulePath "Invoke-CsvExport.psm1")
+    Import-Module (Join-Path $ProcessModulePath "Invoke-CsvImport.psm1")
+    Import-Module (Join-Path $ProcessModulePath "Invoke-DatabaseInitialization.psm1")
+    Import-Module (Join-Path $ProcessModulePath "Invoke-DataSync.psm1")
+    Import-Module (Join-Path $ProcessModulePath "Get-SyncReport.psm1")
+    Import-Module (Join-Path $ProcessModulePath "Show-DatabaseInfo.psm1")
+    Import-Module (Join-Path $ProcessModulePath "Show-SyncStatistics.psm1")
+    Import-Module (Join-Path $ProcessModulePath "Test-DataConsistency.psm1")
 
-        # DatabasePathが未指定の場合、デフォルトを設定
-        if ([string]::IsNullOrEmpty($DatabasePath)) {
-            $DatabasePath = Join-Path $ProjectRoot "database" "data-sync.db"
-            Write-SystemLog "DatabasePathが未指定のため、デフォルトパスを使用します: $DatabasePath" -Level "Info"
-        }
-    
-        # 1. 設定の検証とファイルパス設定の取得
-        Invoke-WithErrorHandling -Category System -Operation "設定の検証" -ScriptBlock {
-            if (-not (Test-DataSyncConfig)) {
-                throw "設定の検証に失敗しました"
-            }
-        }
-        
-        # ファイルパス設定を取得
-        $filePathConfig = Get-FilePathConfig
-        
-        # 入力ファイルパスの解決
-        $resolvedProvidedDataPath = Invoke-WithErrorHandling -ScriptBlock {
-            Resolve-FilePath -ParameterPath $ProvidedDataFilePath -ConfigKey "provided_data_file_path" -Description "提供データファイル"
-        } -Category External -Operation "提供データファイルパス解決"
-        
-        $resolvedCurrentDataPath = Invoke-WithErrorHandling -ScriptBlock {
-            Resolve-FilePath -ParameterPath $CurrentDataFilePath -ConfigKey "current_data_file_path" -Description "現在データファイル"
-        } -Category External -Operation "現在データファイルパス解決"
-        
-        # 出力ファイルパスの解決
-        $resolvedOutputPath = Invoke-WithErrorHandling -ScriptBlock {
-            Resolve-FilePath -ParameterPath $OutputFilePath -ConfigKey "output_file_path" -Description "出力ファイル"
-        } -Category External -Operation "出力ファイルパス解決"
-        
-        Write-SystemLog "データベースを初期化中..." -Level "Info"
-        Write-SystemLog "Database Path: $DatabasePath" -Level "Info"
-        Write-SystemLog "Provided Data File: $resolvedProvidedDataPath" -Level "Info"
-        Write-SystemLog "Current Data File: $resolvedCurrentDataPath" -Level "Info"
-        Write-SystemLog "Output File: $resolvedOutputPath" -Level "Info"
-        Write-SystemLog "Output History Directory: $($filePathConfig.output_history_directory)" -Level "Info"
-        
-        # 1. DBの初期化
-        Invoke-WithErrorHandling -ScriptBlock {
-            Initialize-Database -DatabasePath $DatabasePath
-        } -Category External -Operation "データベース初期化"
-        
-        # 2. 提供データCSVの読み込み・格納（単一ファイル + 履歴保存）
-        Write-SystemLog "提供データCSVを読み込み中..." -Level "Info"
-        Import-DataCsvByType -CsvPath $resolvedProvidedDataPath -DatabasePath $DatabasePath -DataType "provided_data"
-        
-        # 3. 現在データCSVの読み込み・格納（単一ファイル + 履歴保存）
-        Write-SystemLog "現在データCSVを読み込み中..." -Level "Info"
-        Import-DataCsvByType -CsvPath $resolvedCurrentDataPath -DatabasePath $DatabasePath -DataType "current_data"
-        
-        # 4. データ比較・同期処理
-        Invoke-WithErrorHandling -ScriptBlock {
-            Write-SystemLog "データ同期処理を実行中..." -Level "Info"
-            Sync-Data -DatabasePath $DatabasePath
-        } -Category External -Operation "データ同期処理"
-        
-        # データ整合性チェック
-        Invoke-SafeOperation -Operation {
-            Write-SystemLog "データ整合性をチェック中..." -Level "Info"
-            if (-not (Test-DataConsistency -DatabasePath $DatabasePath)) {
-                Write-SystemLog "データ整合性エラーが検出されました" -Level "Warning"
-                return "整合性エラー検出"
-            }
-            else {
-                return "整合性チェック完了"
-            }
-        } -OperationName "データ整合性チェック" -Category Data -DefaultReturn "整合性チェックスキップ" | Out-Null
-        
-        # 5. 結果をCSVファイルに出力（外部パス + 履歴保存）
-        Write-SystemLog "結果をCSVファイルに出力中..." -Level "Info"
-        Invoke-WithErrorHandling -ScriptBlock {
-            Export-SyncResult -DatabasePath $DatabasePath -OutputFilePath $resolvedOutputPath
-        } -Category External -Operation "同期結果CSV出力"
-        
-        # 同期レポートの表示
-        Invoke-SafeOperation -Operation {
-            Get-SyncReport -DatabasePath $DatabasePath
-            return "レポート表示完了"
-        } -OperationName "同期レポート表示" -Category Data -DefaultReturn "レポート表示スキップ" | Out-Null
-        
-        # データベース情報の表示
-        Invoke-SafeOperation -Operation {
-            Show-DatabaseInfo -DatabasePath $DatabasePath
-            return "表示完了"  # 明示的に成功を示す戻り値
-        } -OperationName "データベース情報表示" -Category System -DefaultReturn "表示スキップ" | Out-Null
-                
-    } 
+    # --- 初期設定: 設定ファイルの読み込み ---
+    # 全ての処理に先立ち、設定ファイルを読み込んでキャッシュする
+    $configPath = Join-Path $ProjectRoot "config" "data-sync-config.json"
+    Get-DataSyncConfig -ConfigPath $configPath | Out-Null
 
-    Write-SystemLog "=== 同期データ比較システム 完了 ===" -Level "Success"
+    # --- 処理開始 ---
+    Write-SystemLog "======================================" -Level "Info"
+    Write-SystemLog "===== データ同期処理を開始します =====" -Level "Info"
+    Write-SystemLog "======================================" -Level "Info"
+    $startTime = Get-Date
+
+    # 1. 設定検証とパラメータ解決
+    $params = Invoke-ConfigValidation -ProjectRoot $ProjectRoot -DatabasePath $DatabasePath -ProvidedDataFilePath $ProvidedDataFilePath -CurrentDataFilePath $CurrentDataFilePath -OutputFilePath $OutputFilePath
+
+    # 2. データベースの初期化
+    Invoke-DatabaseInitialization -DatabasePath $params.DatabasePath
+
+    # 3. 提供データのインポート
+    Invoke-CsvImport -CsvPath $params.ProvidedDataFilePath -DatabasePath $params.DatabasePath -DataType "provided_data"
+
+    # 4. 現在データのインポート
+    Invoke-CsvImport -CsvPath $params.CurrentDataFilePath -DatabasePath $params.DatabasePath -DataType "current_data"
+
+    # 5. データ同期
+    Invoke-DataSync -DatabasePath $params.DatabasePath
+
+    # 6. データ整合性チェック
+    Test-DataConsistency -DatabasePath $params.DatabasePath
+
+    # 7. 同期結果のエクスポート
+    Invoke-CsvExport -DatabasePath $params.DatabasePath -OutputFilePath $params.OutputFilePath
+
+    # 8. 統計とレポートの表示
+    Get-SyncReport -DatabasePath $params.DatabasePath
+    Show-DatabaseInfo -DatabasePath $params.DatabasePath
+
+    # --- 処理終了 ---
+    $endTime = Get-Date
+    $duration = New-TimeSpan -Start $startTime -End $endTime
+    Write-SystemLog "すべての処理が正常に完了しました。" -Level "Success"
+    Write-SystemLog "合計処理時間: $($duration.TotalSeconds) 秒" -Level "Info"
+
+    Write-SystemLog "======================================" -Level "Info"
+    Write-SystemLog "===== データ同期処理を終了します =====" -Level "Info"
+    Write-SystemLog "======================================" -Level "Info"
 
 }
-
-# メイン処理実行
-Main -ProvidedDataFilePath $ProvidedDataFilePath -CurrentDataFilePath $CurrentDataFilePath -OutputFilePath $OutputFilePath -DatabasePath $DatabasePath
+catch {
+    # 致命的なエラー処理
+    Write-SystemLog "スクリプトの実行中に致命的なエラーが発生しました: $($_.Exception.Message)" -Level "Error"
+    if ($_.ScriptStackTrace) {
+        Write-SystemLog "スタックトレース: `n$($_.ScriptStackTrace)" -Level "Error"
+    }
+    exit 1
+}

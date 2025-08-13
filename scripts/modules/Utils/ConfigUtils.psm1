@@ -1,38 +1,52 @@
 # PowerShell & SQLite データ同期システム
 # 設定管理ライブラリ
 
+# モジュールスコープの変数で設定をキャッシュ
+$script:DataSyncConfig = $null
+
 # クロスプラットフォーム対応エンコーディング取得（内部関数）
-# Get-CrossPlatformEncoding 関数は common-utils.ps1 に統合されました
+function Get-CrossPlatformEncoding {
+    if ($PSVersionTable.PSVersion.Major -ge 6) {
+        # PowerShell Core (6+) では UTF8 (BOM なし) がデフォルト
+        return [System.Text.Encoding]::UTF8
+    }
+    else {
+        # Windows PowerShell (5.1) では UTF8 (BOM あり)
+        return [System.Text.UTF8Encoding]::new($true)
+    }
+}
 
-# グローバル変数
-$Global:DataSyncConfig = $null
-
-# データ同期設定の読み込み
+# データ同期設定の読み込み（初回はパス指定が必須）
 function Get-DataSyncConfig {
     param(
-        [string]$ConfigPath = (Join-Path $PSScriptRoot "..\..\config\data-sync-config.json")
+        [string]$ConfigPath
     )
-    
-    if ($null -eq $Global:DataSyncConfig) {
-        try {
-            if (-not (Test-Path $ConfigPath)) {
-                throw "設定ファイルが見つかりません: $ConfigPath"
-            }
-            
-            $encoding = Get-CrossPlatformEncoding
-            $configContent = Get-Content -Path $ConfigPath -Raw -Encoding $encoding
-            $Global:DataSyncConfig = $configContent | ConvertFrom-Json
-            
-            Write-Host "設定を読み込みました: $ConfigPath" -ForegroundColor Green
-            
-        }
-        catch {
-            Write-Error "設定の読み込みに失敗しました: $($_.Exception.Message)"
-            throw
-        }
+
+    if ($null -ne $script:DataSyncConfig) {
+        return $script:DataSyncConfig
     }
-    
-    return $Global:DataSyncConfig
+
+    if ([string]::IsNullOrEmpty($ConfigPath)) {
+        throw "設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。"
+    }
+
+    try {
+        if (-not (Test-Path $ConfigPath)) {
+            throw "設定ファイルが見つかりません: $ConfigPath"
+        }
+        
+        $encoding = Get-CrossPlatformEncoding
+        $configContent = Get-Content -Path $ConfigPath -Raw -Encoding $encoding
+        $script:DataSyncConfig = $configContent | ConvertFrom-Json
+        
+        Write-Host "設定を読み込みました: $ConfigPath" -ForegroundColor Green
+        
+        return $script:DataSyncConfig
+    }
+    catch {
+        Write-Error "設定の読み込みに失敗しました: $($_.Exception.Message)"
+        throw
+    }
 }
 
 # ファイルパス設定の取得
@@ -125,7 +139,7 @@ function Test-DataSyncConfig {
 }
 
 # CSVフォーマット設定の検証
-function script:Test-CsvFormatConfig {
+function Test-CsvFormatConfig {
     param(
         [Parameter(Mandatory = $true)]
         $CsvFormatConfig
@@ -183,7 +197,7 @@ function script:Test-CsvFormatConfig {
 }
 
 # ログ設定の取得
-function script:Get-LoggingConfig {
+function Get-LoggingConfig {
     $config = Get-DataSyncConfig
     
     if (-not $config.logging) {
@@ -207,7 +221,7 @@ function script:Get-LoggingConfig {
 }
 
 # データフィルタ設定の取得
-function script:Get-DataFilterConfig {
+function Get-DataFilterConfig {
     param(
         [Parameter(Mandatory = $true)]
         [string]$TableName
@@ -223,7 +237,7 @@ function script:Get-DataFilterConfig {
 }
 
 # sync_result_mapping設定の検証
-function script:Test-SyncResultMappingConfig {
+function Test-SyncResultMappingConfig {
     param(
         [Parameter(Mandatory = $true)]
         $SyncResultMappingConfig
@@ -295,7 +309,7 @@ function script:Test-SyncResultMappingConfig {
 }
 
 # sync_result_mappingの取得
-function script:Get-SyncResultMappingConfig {
+function Get-SyncResultMappingConfig {
     $config = Get-DataSyncConfig
     
     if (-not $config.sync_rules -or -not $config.sync_rules.sync_result_mapping) {
@@ -304,3 +318,14 @@ function script:Get-SyncResultMappingConfig {
     
     return $config.sync_rules.sync_result_mapping
 }
+
+Export-ModuleMember -Function @(
+    'Get-DataSyncConfig',
+    'Get-FilePathConfig',
+    'Test-DataSyncConfig',
+    'Test-CsvFormatConfig',
+    'Get-LoggingConfig',
+    'Get-DataFilterConfig',
+    'Test-SyncResultMappingConfig',
+    'Get-SyncResultMappingConfig'
+)

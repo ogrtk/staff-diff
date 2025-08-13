@@ -1,9 +1,6 @@
 # PowerShell & SQLite データ同期システム
 # SQL生成・テーブル定義ユーティリティライブラリ
 
-# 共通ユーティリティの読み込み
-. (Join-Path $PSScriptRoot "config-utils.ps1")
-
 # テーブル定義の取得（一時テーブル対応）
 function Get-TableDefinition {
     param(
@@ -620,32 +617,6 @@ function New-FilterWhereClause {
     return ""
 }
 
-# 一時テーブル作成SQL生成
-function New-CreateTempTableSql {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$BaseTableName,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$TempTableName
-    )
-    
-    $tableDefinition = Get-TableDefinition -TableName $BaseTableName
-    
-    $columns = @()
-    foreach ($column in $tableDefinition.columns) {
-        if ($column.csv_include -eq $true) {
-            $columnDef = "$($column.name) $($column.type)"
-            $columns += $columnDef
-        }
-    }
-    
-    $sql = "CREATE TEMP TABLE $TempTableName (`n"
-    $sql += "    " + ($columns -join ",`n    ") + "`n"
-    $sql += ");"
-    
-    return $sql
-}
 
 # フィルタ付きINSERT SQL生成
 function New-FilteredInsertSql {
@@ -699,3 +670,28 @@ function New-OptimizationPragmas {
     
     return $pragmas
 }
+
+Export-ModuleMember -Function @(
+    'Get-TableDefinition',
+    'Get-CsvColumns',
+    'Get-RequiredColumns',
+    'New-CreateTableSql',
+    'New-SelectSql',
+    'New-ComparisonWhereClause',
+    'New-PriorityBasedCaseStatement',
+    'Get-PriorityBasedSourceField',
+    'Get-SyncResultInsertColumns',
+    'New-CreateIndexSql',
+    'Get-TableKeyColumns',
+    'New-JoinCondition',
+    'Get-ReverseColumnMapping',
+    'Get-ColumnMapping',
+    'Get-ComparisonColumns',
+    'New-GroupByClause',
+    'New-SyncResultSelectClause',
+    'New-PriorityBasedSyncResultSelectClause',
+    'New-FilterWhereClause',
+    'New-CreateTempTableSql',
+    'New-FilteredInsertSql',
+    'New-OptimizationPragmas'
+)

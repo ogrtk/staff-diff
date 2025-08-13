@@ -1,10 +1,6 @@
 # PowerShell & SQLite データ同期システム
 # エラーハンドリングユーティリティライブラリ
 
-# 共通ユーティリティの読み込み
-. (Join-Path $PSScriptRoot "config-utils.ps1")
-. (Join-Path $PSScriptRoot "common-utils.ps1")
-
 # エラー分類の定義
 enum ErrorCategory {
     System       # システム関連エラー（設定ファイル不正、プログラムロジックエラーなど）- リトライ不可・継続不可
@@ -88,15 +84,15 @@ function Invoke-WithErrorHandling {
     }
     
     $attempt = 1
-    $maxAttempts = 1
-    $retryDelays = @()
-    
-    # リトライ設定の取得
-    if ($errorConfig.retry_settings.enabled -and $Category -in $errorConfig.retry_settings.retryable_categories) {
+    $maxAttempts = 1 # Default to no retries
+    $retryDelays = @() # Default to no delays
+
+    # リトライ設定を適用 (リトライが有効かつ、現在のカテゴリがリトライ対象の場合のみ)
+    if ($errorConfig.retry_settings.enabled -and ($errorConfig.retry_settings.retryable_categories -contains $Category.ToString())) {
         $maxAttempts = $errorConfig.retry_settings.max_attempts
         $retryDelays = $errorConfig.retry_settings.delay_seconds
     }
-    
+
     $lastException = $null
     
     while ($attempt -le $maxAttempts) {
@@ -106,7 +102,7 @@ function Invoke-WithErrorHandling {
                 Write-SystemLog "$Operation を実行中... (試行 $attempt/$maxAttempts)" -Level "Info"
             }
             else {
-                Write-SystemLog "$Operation を実行中..." -Level "Info"
+                Write-SystemLog "$Operation を実行中...（リトライなし）" -Level "Info"
             }
             
             # スクリプトブロック実行
@@ -126,7 +122,7 @@ function Invoke-WithErrorHandling {
             Write-ErrorDetails -Exception $_ -Category $Category -Operation $Operation -Context $Context -ErrorConfig $errorConfig
             
             # リトライ判定
-            if ($attempt -lt $maxAttempts) {
+            if ($errorConfig.retry_settings.enabled -and ($errorConfig.retry_settings.retryable_categories -contains $Category.ToString()) -and $attempt -lt $maxAttempts) {
                 $delay = if ($attempt - 1 -lt $retryDelays.Count) { $retryDelays[$attempt - 1] } else { 5 }
                 Write-SystemLog "$Operation を $delay 秒後にリトライします... (試行 $($attempt + 1)/$maxAttempts)" -Level "Warning"
                 Start-Sleep -Seconds $delay
@@ -256,149 +252,6 @@ function Write-ErrorDetails {
     }
 }
 
-# ファイル操作エラーハンドリング専用関数
-function Invoke-FileOperationWithErrorHandling {
-    param(
-        [Parameter(Mandatory = $true)]
-        [ScriptBlock]$ScriptBlock,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$FilePath,
-        
-        [string]$Operation = "ファイル操作",
-        
-        [switch]$SuppressThrow
-    )
-    
-    $context = @{
-        "ファイルパス" = $FilePath
-        "操作種別"   = $Operation
-    }
-    
-    $cleanupScript = {
-        # ファイル操作特有のクリーンアップ
-        if (Test-Path $FilePath -ErrorAction SilentlyContinue) {
-            $fileInfo = Get-Item $FilePath -ErrorAction SilentlyContinue
-            if ($fileInfo) {
-                Write-SystemLog "ファイル情報 - サイズ: $($fileInfo.Length) bytes, 最終更新: $($fileInfo.LastWriteTime)" -Level "Info"
-            }
-        }
-    }
-    
-    return Invoke-WithErrorHandling -ScriptBlock $ScriptBlock -Category External -Operation $Operation -Context $context -CleanupScript $cleanupScript -SuppressThrow:$SuppressThrow
-}
-
-# データベース操作エラーハンドリング専用関数
-function Invoke-DatabaseOperationWithErrorHandling {
-    param(
-        [Parameter(Mandatory = $true)]
-        [ScriptBlock]$ScriptBlock,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$DatabasePath,
-        
-        [string]$Operation = "データベース操作",
-        
-        [string]$TableName = "",
-        
-        [switch]$SuppressThrow
-    )
-    
-    $context = @{
-        "データベースパス" = $DatabasePath
-        "操作種別"     = $Operation
-    }
-    
-    if ($TableName) {
-        $context["テーブル名"] = $TableName
-    }
-    
-    $cleanupScript = {
-        # データベース操作特有のクリーンアップ
-        if (Test-Path $DatabasePath -ErrorAction SilentlyContinue) {
-            $dbInfo = Get-Item $DatabasePath -ErrorAction SilentlyContinue
-            if ($dbInfo) {
-                Write-SystemLog "データベース情報 - サイズ: $($dbInfo.Length) bytes, 最終更新: $($dbInfo.LastWriteTime)" -Level "Info"
-            }
-        }
-    }
-    
-    return Invoke-WithErrorHandling -ScriptBlock $ScriptBlock -Category External -Operation $Operation -Context $context -CleanupScript $cleanupScript -SuppressThrow:$SuppressThrow
-}
-
-# 設定検証エラーハンドリング専用関数  
-function Invoke-ConfigValidationWithErrorHandling {
-    param(
-        [Parameter(Mandatory = $true)]
-        [ScriptBlock]$ValidationOperation,
-        
-        [string]$ConfigSection = "全体設定",
-        
-        [switch]$SuppressThrow
-    )
-    
-    $context = @{
-        "設定セクション" = $ConfigSection
-    }
-    
-    return Invoke-WithErrorHandling -ScriptBlock $ValidationOperation -Category System -Operation "設定の検証" -Context $context -SuppressThrow:$SuppressThrow
-}
-
-# 外部コマンド実行エラーハンドリング専用関数
-function Invoke-ExternalCommandWithErrorHandling {
-    param(
-        [Parameter(Mandatory = $true)]
-        [ScriptBlock]$ScriptBlock,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$CommandName,
-        
-        [string]$Operation = "外部コマンド実行",
-        
-        [switch]$SuppressThrow
-    )
-    
-    $context = @{
-        "コマンド名" = $CommandName
-        "操作種別"  = $Operation
-    }
-    
-    $cleanupScript = {
-        # 外部コマンド特有のクリーンアップ
-        Write-SystemLog "外部コマンドの終了コード: $LASTEXITCODE" -Level "Info"
-        
-        # コマンド可用性チェック
-        $commandPath = Get-Command $CommandName -ErrorAction SilentlyContinue
-        if ($commandPath) {
-            Write-SystemLog "コマンドパス: $($commandPath.Source)" -Level "Info"
-        }
-        else {
-            Write-SystemLog "コマンドが見つかりません: $CommandName" -Level "Warning"
-        }
-    }
-    
-    return Invoke-WithErrorHandling -ScriptBlock $ScriptBlock -Category External -Operation $Operation -Context $context -CleanupScript $cleanupScript -SuppressThrow:$SuppressThrow
-}
-
-# 安全な関数実行（エラーを例外として再スローしない）
-function Invoke-SafeOperation {
-    param(
-        [Parameter(Mandatory = $true)]
-        [ScriptBlock]$Operation,
-        
-        [string]$OperationName = "操作",
-        
-        [ErrorCategory]$Category = "System",
-        
-        $DefaultReturn = $null
-    )
-    
-    $result = Invoke-WithErrorHandling -ScriptBlock $Operation -Category $Category -Operation $OperationName -SuppressThrow
-    
-    if ($null -eq $result) {
-        Write-SystemLog "$OperationName の実行に失敗しましたが、デフォルト値を返します" -Level "Warning"
-        return $DefaultReturn
-    }
-    
-    return $result
-}
+Export-ModuleMember -Function @(
+    'Invoke-WithErrorHandling'
+)

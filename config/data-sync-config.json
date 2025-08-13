@@ -3,8 +3,8 @@
   "description": "PowerShell & SQLite 職員データ管理システム スキーマ設定",
   "file_paths": {
     "description": "ファイルパス設定",
-    "provided_data_file_path": "./test-data/provided.csv",
-    "current_data_file_path": "./test-data/current.csv",
+    "provided_data_file_path": "./test-data/large-provided.csv",
+    "current_data_file_path": "./test-data/large-current.csv",
     "output_file_path": "./test-data/sync-result.csv",
     "provided_data_history_directory": "./data/provided-data/",
     "current_data_history_directory": "./data/current-data/",
@@ -18,7 +18,7 @@
       "encoding": "UTF-8",
       "delimiter": ",",
       "newline": "LF",
-      "has_header": true,
+      "has_header": false,
       "null_values": [
         "",
         "NULL",
@@ -468,6 +468,13 @@
           ]
         }
       }
+    },
+    "sync_action_labels": {
+      "description": "同期アクションの表示ラベル設定",
+      "ADD": "1",
+      "UPDATE": "2",
+      "DELETE": "3",
+      "KEEP": "9"
     }
   },
   "data_filters": {
