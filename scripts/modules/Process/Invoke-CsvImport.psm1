@@ -36,10 +36,8 @@ function Invoke-CsvImport {
     }
         
     Write-SystemLog "$($config.Description)のインポート処理を開始します" -Level "Info"
-    $result = Import-CsvToTable -CsvPath $CsvPath -DatabasePath $DatabasePath -TableName $config.TableName -HistoryDirectory $config.HistoryDirectory -FileTypeDescription $config.Description
+    Import-CsvToTable -CsvPath $CsvPath -DatabasePath $DatabasePath -TableName $config.TableName -HistoryDirectory $config.HistoryDirectory -FileTypeDescription $config.Description
     Write-SystemLog "$($config.Description)のインポート処理が完了しました" -Level "Success"
-        
-    return $result
 }
 
 # 汎用CSVインポート関数（単一ファイル + 履歴保存対応）
@@ -304,8 +302,6 @@ COMMIT;
     }
         
     Write-SystemLog "SQLベースフィルタリング完了: $filteredCount 件を $TableName に挿入" -Level "Success"
-        
-    return New-FilteringResult -TotalCount $totalRecords -FilteredCount $filteredCount
 }
 
 # CSV直接インポート関数（SQLite .importコマンド使用）

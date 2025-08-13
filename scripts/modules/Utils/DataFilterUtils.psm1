@@ -67,47 +67,44 @@ function Show-FilteringStatistics {
     )
     
     $excludedCount = $TotalCount - $FilteredCount
-    $exclusionRate = if ($TotalCount -gt 0) { [Math]::Round(($excludedCount / $TotalCount) * 100, 2) } else { 0 }
     
-    Write-Host "`n=== SQLフィルタリング統計: $TableName ===" -ForegroundColor Green
-    Write-Host "総件数: $TotalCount" -ForegroundColor White
-    Write-Host "通過件数: $FilteredCount" -ForegroundColor Green
-    Write-Host "除外件数: $excludedCount" -ForegroundColor Red
-    Write-Host "除外率: $exclusionRate%" -ForegroundColor Yellow
-    Write-Host "処理方式: SQLベースフィルタリング（高速）" -ForegroundColor Cyan
+    Write-SystemLog "`n=== データフィルタ処理結果: $TableName ===" -Level "Info"
     
     if ($WhereClause) {
-        Write-Host "適用フィルタ: $WhereClause" -ForegroundColor Gray
+        Write-SystemLog "適用フィルタ: $WhereClause" -Level "Info"
+        Write-SystemLog "総件数: $TotalCount" -Level "Info"
+        Write-SystemLog "通過件数: $FilteredCount" -Level "Info"
+        Write-SystemLog "除外件数: $excludedCount" -Level "Info"
     }
     else {
-        Write-Host "適用フィルタ: なし（全件通過）" -ForegroundColor Gray
+        Write-SystemLog "適用フィルタ: なし（全件通過）" -Level "Info"
     }
 }
 
-# フィルタリング結果の返却形式（utils関数）
-function New-FilteringResult {
-    param(
-        [Parameter(Mandatory = $true)]
-        [int]$TotalCount,
+# # フィルタリング結果の返却形式（utils関数）
+# function New-FilteringResult {
+#     param(
+#         [Parameter(Mandatory = $true)]
+#         [int]$TotalCount,
         
-        [Parameter(Mandatory = $true)]
-        [int]$FilteredCount
-    )
+#         [Parameter(Mandatory = $true)]
+#         [int]$FilteredCount
+#     )
     
-    $excludedCount = $TotalCount - $FilteredCount
-    $exclusionRate = if ($TotalCount -gt 0) { [Math]::Round(($excludedCount / $TotalCount) * 100, 2) } else { 0 }
+#     $excludedCount = $TotalCount - $FilteredCount
+#     $exclusionRate = if ($TotalCount -gt 0) { [Math]::Round(($excludedCount / $TotalCount) * 100, 2) } else { 0 }
     
-    return @{
-        TotalCount    = $TotalCount
-        FilteredCount = $FilteredCount
-        ExcludedCount = $excludedCount
-        ExclusionRate = $exclusionRate
-    }
-}
+#     return @{
+#         TotalCount    = $TotalCount
+#         FilteredCount = $FilteredCount
+#         ExcludedCount = $excludedCount
+#         ExclusionRate = $exclusionRate
+#     }
+# }
 
 Export-ModuleMember -Function @(
     'Show-FilterConfig',
     'Show-FilteringStatistics',
-    'New-FilteringResult',
+    # 'New-FilteringResult',
     'New-TempTableName'
 )

@@ -73,8 +73,6 @@ function Copy-InputFileToHistory {
     Copy-Item -Path $SourceFilePath -Destination $historyFilePath -Force
     
     Write-Host "ファイルを履歴に保存しました: $historyFilePath" -ForegroundColor Green
-    
-    return $historyFilePath
 }
 
 # ファイルパス解決（パラメータ優先、設定ファイル）

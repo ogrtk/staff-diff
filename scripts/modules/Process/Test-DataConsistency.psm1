@@ -8,7 +8,7 @@ function Test-DataConsistency {
         [string]$DatabasePath
     )
     
-    $result = Invoke-WithErrorHandling -ScriptBlock {
+    Invoke-WithErrorHandling -ScriptBlock {
         # 複合キー対応のGROUP BY句生成
         $groupByClause = New-GroupByClause -TableName "sync_result"
         $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
@@ -35,18 +35,12 @@ HAVING COUNT(*) > 1;
                 $keyString = $keyValues -join ', '
                 Write-Warning "  ($keyString): $($dup.count)件"
             }
-            return $false
+            throw "重複したキー（$($syncResultKeys -join ', ')）が見つかりました:"
         }
         
         Write-SystemLog "データ整合性チェック完了: 問題なし" -Level "Success"
-        return $true
         
     } -Operation "データ整合性チェック" -Category External -SuppressThrow:$true
-
-    if ($null -eq $result) {
-        return $false
-    }
-    return $result
 }
 
 Export-ModuleMember -Function 'Test-DataConsistency'

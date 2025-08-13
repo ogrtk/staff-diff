@@ -36,8 +36,7 @@ try {
     Import-Module (Join-Path $ProcessModulePath "Invoke-CsvImport.psm1")
     Import-Module (Join-Path $ProcessModulePath "Invoke-DatabaseInitialization.psm1")
     Import-Module (Join-Path $ProcessModulePath "Invoke-DataSync.psm1")
-    Import-Module (Join-Path $ProcessModulePath "Get-SyncReport.psm1")
-    Import-Module (Join-Path $ProcessModulePath "Show-DatabaseInfo.psm1")
+    Import-Module (Join-Path $ProcessModulePath "Show-SyncResult.psm1")
     Import-Module (Join-Path $ProcessModulePath "Show-SyncStatistics.psm1")
     Import-Module (Join-Path $ProcessModulePath "Test-DataConsistency.psm1")
 
@@ -73,9 +72,8 @@ try {
     # 7. 同期結果のエクスポート
     Invoke-CsvExport -DatabasePath $params.DatabasePath -OutputFilePath $params.OutputFilePath
 
-    # 8. 統計とレポートの表示
-    Get-SyncReport -DatabasePath $params.DatabasePath
-    Show-DatabaseInfo -DatabasePath $params.DatabasePath
+    # 8. 統合同期結果の表示
+    Show-SyncResult -DatabasePath $params.DatabasePath -ProvidedDataFilePath $params.ProvidedDataFilePath -CurrentDataFilePath $params.CurrentDataFilePath
 
     # --- 処理終了 ---
     $endTime = Get-Date

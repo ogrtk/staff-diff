@@ -470,11 +470,29 @@
       }
     },
     "sync_action_labels": {
-      "description": "同期アクションの表示ラベル設定",
-      "ADD": "1",
-      "UPDATE": "2",
-      "DELETE": "3",
-      "KEEP": "9"
+      "description": "同期アクションの表示設定",
+      "mappings": {
+        "ADD": {
+          "action_name": "ADD",
+          "display_label": "1",
+          "description": "新規追加"
+        },
+        "UPDATE": {
+          "action_name": "UPDATE",
+          "display_label": "2", 
+          "description": "更新"
+        },
+        "DELETE": {
+          "action_name": "DELETE",
+          "display_label": "3",
+          "description": "削除"
+        },
+        "KEEP": {
+          "action_name": "KEEP",
+          "display_label": "9",
+          "description": "変更なし"
+        }
+      }
     }
   },
   "data_filters": {

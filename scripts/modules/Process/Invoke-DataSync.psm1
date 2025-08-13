@@ -9,7 +9,7 @@ function Invoke-DataSync {
     )
     
     $config = Get-DataSyncConfig
-    $syncActionLabels = $config.sync_rules.sync_action_labels
+    $syncActionLabels = $config.sync_rules.sync_action_labels.mappings
     
     # 冪等性確保: sync_resultテーブルクリア
     $cleanupScript = {
@@ -22,7 +22,7 @@ function Invoke-DataSync {
         }
     }
     
-    return Invoke-WithErrorHandling -Category External -Operation "データ同期処理" -CleanupScript $cleanupScript -Context @{
+    Invoke-WithErrorHandling -Category External -Operation "データ同期処理" -CleanupScript $cleanupScript -Context @{
         "DatabasePath" = $DatabasePath
     } -ScriptBlock {
         
@@ -32,28 +32,19 @@ function Invoke-DataSync {
         Clear-Table -DatabasePath $DatabasePath -TableName "sync_result"
         
         # 1. 現在データに存在しないレコード（新規追加対象）を特定
-        Invoke-WithErrorHandling -Category Data -Operation "新規レコード処理" -ScriptBlock {
-            Add-NewRecords -DatabasePath $DatabasePath
-        }
+        Add-NewRecords -DatabasePath $DatabasePath
         
         # 2. 更新があったレコードを処理
-        Invoke-WithErrorHandling -Category Data -Operation "更新レコード処理" -ScriptBlock {
-            Add-UpdateRecords -DatabasePath $DatabasePath
-        }
+        Add-UpdateRecords -DatabasePath $DatabasePath
         
         # 3. 現在データにしか存在しないレコード（削除対象）を特定
-        Invoke-WithErrorHandling -Category Data -Operation "削除レコード処理" -ScriptBlock {
-            Add-DeleteRecords -DatabasePath $DatabasePath
-        }
+        Add-DeleteRecords -DatabasePath $DatabasePath
         
         # 4. 変更のないレコードを保持
-        Invoke-WithErrorHandling -Category Data -Operation "保持レコード処理" -ScriptBlock {
-            Add-KeepRecords -DatabasePath $DatabasePath
-        }
+        Add-KeepRecords -DatabasePath $DatabasePath
         
         Write-SystemLog "データ同期処理が完了しました。" -Level "Success"
         
-        return "同期処理完了"
     }
 }
 
@@ -75,7 +66,7 @@ function script:Add-NewRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction $syncActionLabels.ADD
+    $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction $syncActionLabels.ADD.action_name
     
     $query = @"
 INSERT INTO sync_result ($insertColumnsString)
@@ -108,7 +99,7 @@ function script:Add-UpdateRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $syncActionLabels.UPDATE
+    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $syncActionLabels.UPDATE.action_name
     
     # 比較条件を動的に生成
     $whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "different" -Table1Name "provided_data" -Table2Name "current_data"
@@ -148,7 +139,7 @@ function script:Add-DeleteRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-SyncResultSelectClause -SourceTableName "current_data" -SourceTableAlias "cd" -SyncAction $syncActionLabels.DELETE
+    $selectClause = New-SyncResultSelectClause -SourceTableName "current_data" -SourceTableAlias "cd" -SyncAction $syncActionLabels.DELETE.action_name
     
     $query = @"
 INSERT INTO sync_result ($insertColumnsString)
@@ -193,7 +184,7 @@ function script:Add-KeepRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $syncActionLabels.KEEP
+    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $syncActionLabels.KEEP.action_name
     
     # 比較条件を動的に生成
     $whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "same" -Table1Name "provided_data" -Table2Name "current_data"

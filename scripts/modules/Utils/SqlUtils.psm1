@@ -74,21 +74,6 @@ function New-CreateTableSql {
     return $sql
 }
 
-# SQL値の保護（SQLインジェクション対策）
-function Protect-SqlValue {
-    param(
-        [string]$Value
-    )
-    
-    if ([string]::IsNullOrEmpty($Value)) {
-        return "NULL"
-    }
-    
-    # シングルクォートをエスケープ
-    $escapedValue = $Value -replace "'", "''"
-    return "'$escapedValue'"
-}
-
 # SELECT SQL生成
 function New-SelectSql {
     param(
@@ -297,7 +282,7 @@ function New-CreateIndexSql {
         
         # 自動最適化が有効な場合は件数で判定
         if ($autoOptimization -and $RecordCount -gt 0 -and $RecordCount -lt $threshold) {
-            Write-Host "テーブル '$TableName' は小規模データ ($RecordCount 件 < $threshold) のため、インデックス '$($index.name)' をスキップします" -ForegroundColor Yellow
+            Write-SystemLog "テーブル '$TableName' は小規模データ ($RecordCount 件 < $threshold) のため、インデックス '$($index.name)' をスキップします" -Level "Info"
             $shouldCreateIndex = $false
         }
         
@@ -305,7 +290,7 @@ function New-CreateIndexSql {
             $columnsStr = $index.columns -join ", "
             $indexSql = "CREATE INDEX IF NOT EXISTS $($index.name) ON $TableName ($columnsStr);"
             $indexSqls += $indexSql
-            Write-Host "インデックス '$($index.name)' を作成します: $TableName ($columnsStr)" -ForegroundColor Green
+            Write-SystemLog "インデックス '$($index.name)' を作成します: $TableName ($columnsStr)" -Level "Info"
         }
     }
     
@@ -616,7 +601,6 @@ function New-FilterWhereClause {
     
     return ""
 }
-
 
 # フィルタ付きINSERT SQL生成
 function New-FilteredInsertSql {

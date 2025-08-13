@@ -164,15 +164,25 @@ ps-sqlite/
 │   └── data-sync-config.json # データ同期ツール設定
 ├── scripts/                  # PowerShellスクリプト
 │   ├── main.ps1             # メインスクリプト（単一ファイルパス対応版）
-│   ├── database.ps1         # 動的データベース操作
-│   ├── sync-data.ps1        # 動的データ同期処理
-│   └── utils/               # ユーティリティスクリプト
-│       ├── common-utils.ps1     # 共通ユーティリティ（日本時間・ファイルパス解決）
-│       ├── config-utils.ps1     # 設定読み込み・検証
-│       ├── sql-utils.ps1        # SQL生成・実行ユーティリティ
-│       ├── file-utils.ps1       # ファイル操作ユーティリティ
-│       ├── data-filter-utils.ps1 # データフィルタリング
-│       └── csv-utils.ps1        # 設定ベースCSV処理（履歴保存対応）
+│   └── modules/             # モジュール化されたスクリプト
+│       ├── Process/         # 処理系モジュール
+│       │   ├── Get-SyncReport.psm1           # 同期レポート生成
+│       │   ├── Invoke-ConfigValidation.psm1  # 設定検証
+│       │   ├── Invoke-CsvExport.psm1         # CSV出力処理
+│       │   ├── Invoke-CsvImport.psm1         # CSV入力処理
+│       │   ├── Invoke-DataSync.psm1          # データ同期処理
+│       │   ├── Invoke-DatabaseInitialization.psm1 # データベース初期化
+│       │   ├── Show-DatabaseInfo.psm1        # データベース情報表示
+│       │   ├── Show-SyncStatistics.psm1      # 同期統計表示
+│       │   └── Test-DataConsistency.psm1     # データ整合性チェック
+│       └── Utils/           # ユーティリティモジュール
+│           ├── CommonUtils.psm1          # 共通ユーティリティ（日本時間・ファイルパス解決）
+│           ├── ConfigUtils.psm1          # 設定読み込み・検証
+│           ├── CsvUtils.psm1             # 設定ベースCSV処理（履歴保存対応）
+│           ├── DataFilterUtils.psm1      # データフィルタリング
+│           ├── ErrorHandlingUtils.psm1   # 統一エラーハンドリング
+│           ├── FileUtils.psm1            # ファイル操作ユーティリティ
+│           └── SqlUtils.psm1             # SQL生成・実行ユーティリティ
 ├── data/                    # 履歴保存ディレクトリ（自動生成）
 │   ├── provided-data/       # 提供データ履歴（タイムスタンプ付き）
 │   ├── current-data/        # 現在データ履歴（タイムスタンプ付き）
@@ -180,7 +190,28 @@ ps-sqlite/
 ├── database/                # SQLiteデータベース
 │   └── data-sync.db         # メインデータベース
 ├── logs/                    # ログファイル（自動生成）
-│   └── staff-management.log # 実行ログ
+│   └── data-sync-system.log # 実行ログ（ローテーション対応）
+├── tests/                   # テストスクリプト（Pester対応）
+│   ├── main.Tests.ps1       # メインスクリプトテスト
+│   ├── run-test.ps1         # テスト実行スクリプト
+│   ├── Process/             # 処理系モジュールテスト
+│   │   ├── Get-SyncReport.Tests.ps1
+│   │   ├── Invoke-ConfigValidation.Tests.ps1
+│   │   ├── Invoke-CsvExport.Tests.ps1
+│   │   ├── Invoke-CsvImport.Tests.ps1
+│   │   ├── Invoke-DataSync.Tests.ps1
+│   │   ├── Invoke-DatabaseInitialization.Tests.ps1
+│   │   ├── Show-DatabaseInfo.Tests.ps1
+│   │   ├── Show-SyncStatistics.Tests.ps1
+│   │   └── Test-DataConsistency.Tests.ps1
+│   └── Utils/               # ユーティリティモジュールテスト
+│       ├── CommonUtils.Tests.ps1
+│       ├── ConfigUtils.Tests.ps1
+│       ├── CsvUtils.Tests.ps1
+│       ├── DataFilterUtils.Tests.ps1
+│       ├── ErrorHandlingUtils.Tests.ps1
+│       ├── FileUtils.Tests.ps1
+│       └── SqlUtils.Tests.ps1
 ├── test-data/               # テスト用データ（外部ファイル例）
 │   ├── provided.csv         # 提供データサンプル
 │   ├── current.csv          # 現在データサンプル
@@ -423,6 +454,164 @@ pwsh ./scripts/main.ps1 -ProvidedDataFilePath "/data/provided.csv" -CurrentDataF
 3. **フィルタ追加**: ルールの追加のみ
 4. **新しいフィルタタイプ**: パターンマッチング関数の追加
 5. **ファイルパス管理**: 設定ファイルでの一元管理
+
+## テスト仕様
+
+### テストフレームワーク
+- **Pester 5.x** を使用したBDD（振る舞い駆動開発）スタイル
+- **自動テスト発見**: `*.Tests.ps1` パターンでテストファイルを識別
+- **モジュール別テスト**: Process、Utils ディレクトリに分離
+- **包括的カバレッジ**: コードカバレッジ測定とレポート生成
+
+### テスト実行方法
+
+#### A. 全テスト実行
+```powershell
+# 基本実行
+.\tests\run-test.ps1
+
+# カバレッジ付き実行
+.\tests\run-test.ps1 -ShowCoverage
+
+# HTML レポート生成
+.\tests\run-test.ps1 -OutputFormat HTML -ShowCoverage
+```
+
+#### B. 特定テスト実行
+```powershell
+# 特定モジュールのテスト
+.\tests\run-test.ps1 -TestPath "Utils\ErrorHandlingUtils.Tests.ps1"
+
+# 特定Process のテスト
+.\tests\run-test.ps1 -TestPath "Process\Invoke-DataSync.Tests.ps1"
+```
+
+#### C. CI/CD 統合
+```powershell
+# XML レポート出力（Jenkins、Azure DevOps 等）
+.\tests\run-test.ps1 -OutputFormat NUnitXml
+
+# JUnit レポート出力
+.\tests\run-test.ps1 -OutputFormat JUnitXml
+```
+
+### テストカテゴリ
+
+#### 1. ユニットテスト
+- **対象**: 個別モジュール、関数レベル
+- **範囲**: Utils/*、Process/* モジュール
+- **モック使用**: 外部依存（ファイル、データベース、外部コマンド）
+- **実行時間**: < 30秒
+
+#### 2. 統合テスト  
+- **対象**: モジュール間の連携、エンドツーエンド処理
+- **範囲**: main.ps1、データ同期プロセス全体
+- **実データ使用**: テスト用CSV、設定ファイル
+- **実行時間**: < 2分
+
+#### 3. パフォーマンステスト
+- **対象**: 大量データ処理、メモリ使用量
+- **範囲**: 1000+ レコード処理、長時間実行
+- **条件**: メモリリーク検出、処理時間測定
+- **実行時間**: < 5分
+
+### テスト設計パターン
+
+#### A. AAA パターン（Arrange-Act-Assert）
+```powershell
+It "データが正常に同期される" {
+    # Arrange: テストデータ準備
+    $providedData = @(...)
+    $currentData = @(...)
+    
+    # Act: 実際の処理実行
+    $result = Invoke-DataSync -ProvidedData $providedData -CurrentData $currentData
+    
+    # Assert: 結果検証
+    $result.SyncActions.ADD | Should -Be 2
+    $result.SyncActions.UPDATE | Should -Be 1
+    $result.SyncActions.DELETE | Should -Be 1
+}
+```
+
+#### B. モック化パターン
+```powershell
+BeforeAll {
+    # 外部依存をモック化
+    Mock Invoke-SqliteCommand { return @() }
+    Mock Write-SystemLog { }
+    Mock Test-Path { return $true }
+}
+```
+
+#### C. データ駆動テスト
+```powershell
+@(
+    @{ Input = "Z001"; Expected = $false; Description = "Z始まりは除外" },
+    @{ Input = "E001"; Expected = $true; Description = "E始まりは含む" },
+    @{ Input = "Y999"; Expected = $false; Description = "Y始まりは除外" }
+) | ForEach-Object {
+    It $_.Description {
+        Test-DataFilter -Value $_.Input | Should -Be $_.Expected
+    }
+}
+```
+
+### テストデータ管理
+
+#### テスト用ファイル構成
+```
+tests/
+├── TestData/                    # テスト専用データ（自動生成）
+│   ├── small-dataset.csv        # 軽量テスト用（< 100レコード）
+│   ├── large-dataset.csv        # パフォーマンステスト用（> 1000レコード） 
+│   ├── invalid-format.csv       # エラーハンドリング用
+│   ├── special-characters.csv   # 文字エンコーディング用
+│   └── filter-test.csv          # フィルタリング機能用
+├── MockData/                    # モックレスポンス
+│   ├── sqlite-responses.json    # データベースレスポンス
+│   └── config-variations.json   # 設定バリエーション
+└── Fixtures/                    # 期待値データ
+    ├── expected-sync-results.csv # 同期結果期待値
+    └── expected-filter-results.csv # フィルタリング結果期待値
+```
+
+#### データ生成ルール
+- **テスト実行毎に生成**: 一意性保証、副作用排除
+- **日本語データ**: 実際のデータ特性に近い日本語名、部署名
+- **エッジケース**: 空文字、NULL、特殊文字、境界値
+- **フィルタリング対象**: Z始まり、Y始まりの職員ID
+
+### 継続的インテグレーション
+
+#### テスト自動実行トリガー
+- **コミット前**: Pre-commit hook でユニットテスト実行
+- **プルリクエスト**: 全テストスイート + カバレッジ測定
+- **マージ後**: 統合テスト + パフォーマンステスト
+- **定期実行**: 夜間バッチで大量データテスト
+
+#### 品質ゲート
+- **カバレッジ**: 最低 80% 必須、推奨 90%+
+- **テスト成功率**: 100% 必須（一切のテスト失敗不可）
+- **パフォーマンス**: 既定時間内完了必須
+- **メモリリーク**: 増加量制限内
+
+### テストレポート
+
+#### 出力ファイル
+```
+tests/
+├── TestResults.xml              # NUnit/JUnit レポート
+├── Coverage.xml                 # JaCoCo カバレッジレポート
+├── TestReport.html             # HTML 可視化レポート
+└── PerformanceReport.json      # パフォーマンス測定結果
+```
+
+#### レポート内容
+- **実行サマリー**: 成功/失敗/スキップ件数、実行時間
+- **カバレッジ詳細**: ファイル別、関数別カバレッジ率
+- **パフォーマンス**: 処理時間、メモリ使用量推移
+- **エラー詳細**: スタックトレース、エラーカテゴリ分析
 
 ## 重要な注意事項
 

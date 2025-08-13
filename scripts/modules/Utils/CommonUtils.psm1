@@ -275,6 +275,42 @@ function Invoke-SqliteCsvQuery {
     }
 }
 
+# SQLite CSV出力専用関数
+function Invoke-SqliteCsvExport {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$Query,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$OutputPath
+    )
+    
+    try {
+        # SQLite3で直接CSV出力（ヘッダー付き）
+        $csvArgs = @($DatabasePath, "-csv", "-header", $Query)
+        $result = & sqlite3 @csvArgs 2>&1
+                
+        if ($LASTEXITCODE -ne 0) {
+            throw "sqlite3 CSV出力エラー (終了コード: $LASTEXITCODE): $result"
+        }
+                
+        # 結果を指定されたファイルに書き込み
+        $encoding = Get-CrossPlatformEncoding
+        $result | Out-File -FilePath $OutputPath -Encoding $encoding
+                
+        $recordCount = if ($result -is [array]) { $result.Count - 1 } else { 0 }  # ヘッダー行を除いた件数
+        Write-SystemLog "SQLite CSV出力完了: $OutputPath ($recordCount 件)" -Level "Success"
+        
+        return $recordCount
+    }
+    catch {
+        throw "SQLite3 CSV出力の実行に失敗しました: $($_.Exception.Message)"
+    }
+}
+
 # SQLiteコマンド実行（汎用）
 function Invoke-SqliteCommand {
     param(
@@ -284,86 +320,33 @@ function Invoke-SqliteCommand {
         [Parameter(Mandatory = $true)]
         [string]$Query,
         
-        [hashtable]$Parameters = @{},
-        
-        [string]$CsvOutputPath = "",
-        
-        [switch]$CsvOutput
+        [hashtable]$Parameters = @{}
     )
     
-    $context = @{
-        "コマンド名" = "sqlite3"
-        "操作種別"  = "SQLiteコマンド実行"
-    }
-    
-    $cleanupScript = {
-        Write-SystemLog "外部コマンドの終了コード: $LASTEXITCODE" -Level "Info"
-        
-        $commandPath = Get-Command "sqlite3" -ErrorAction SilentlyContinue
-        if ($commandPath) {
-            Write-SystemLog "コマンドパス: $($commandPath.Source)" -Level "Info"
-        }
-        else {
-            Write-SystemLog "コマンドが見つかりません: sqlite3" -Level "Warning"
-        }
-    }
-    
-    return Invoke-WithErrorHandling -ScriptBlock {
+    try {
+        # 通常のSQLite3コマンド実行
+        $tempFile = [System.IO.Path]::GetTempFileName()
         try {
-            $sqlite3Path = Get-Sqlite3Path
-            # CSV出力モードの処理
-            if ($CsvOutput -and -not [string]::IsNullOrEmpty($CsvOutputPath)) {
-                $csvResult = Invoke-WithErrorHandling -ScriptBlock {
-                    # SQLite3で直接CSV出力（ヘッダー付き）
-                    $csvArgs = @($DatabasePath, "-csv", "-header", $Query)
-                    $result = & sqlite3 @csvArgs 2>&1
+            $encoding = Get-CrossPlatformEncoding
+            $Query | Out-File -FilePath $tempFile -Encoding $encoding
                     
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "sqlite3 CSV出力エラー (終了コード: $LASTEXITCODE): $result"
-                    }
+            $result = & sqlite3 $DatabasePath ".read $tempFile" 2>&1
                     
-                    # 結果を指定されたファイルに書き込み
-                    $encoding = Get-CrossPlatformEncoding
-                    $result | Out-File -FilePath $CsvOutputPath -Encoding $encoding
-                    
-                    Write-SystemLog "SQLite直接CSV出力完了: $CsvOutputPath ($(if ($result -is [array]) { $result.Count - 1 } else { 0 })件)" -Level "Success"
-                    return $result.Count - 1  # ヘッダー行を除いた件数を返す
-                } -Category External -Operation "SQLite CSV出力" -SuppressThrow
-                
-                if ($null -ne $csvResult) {
-                    return $csvResult
-                }
-                else {
-                    Write-SystemLog "SQLite直接CSV出力に失敗しました。通常処理を続行します。" -Level "Warning"
-                }
+            if ($LASTEXITCODE -ne 0) {
+                throw "sqlite3コマンドエラー (終了コード: $LASTEXITCODE): $result"
             }
-            
-            # 通常のSQLite3コマンド実行
-            return Invoke-WithErrorHandling -ScriptBlock {
-                $tempFile = [System.IO.Path]::GetTempFileName()
-                try {
-                    $encoding = Get-CrossPlatformEncoding
-                    $Query | Out-File -FilePath $tempFile -Encoding $encoding
                     
-                    $result = & sqlite3 $DatabasePath ".read $tempFile" 2>&1
-                    
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "sqlite3コマンドエラー (終了コード: $LASTEXITCODE): $result"
-                    }
-                    
-                    return $result
-                }
-                finally {
-                    if (Test-Path $tempFile) {
-                        Remove-Item -Path $tempFile -Force
-                    }
-                }
-            } -Category External -Operation "SQLite一時ファイル処理"
+            return $result
         }
-        catch {
-            throw "SQLite3の実行に失敗しました: $($_.Exception.Message)"
+        finally {
+            if (Test-Path $tempFile) {
+                Remove-Item -Path $tempFile -Force
+            }
         }
-    } -Category External -Operation "SQLiteコマンド実行" -Context $context -CleanupScript $cleanupScript
+    }
+    catch {
+        throw "SQLite3の実行に失敗しました: $($_.Exception.Message)"
+    }
 }
 
 Export-ModuleMember -Function @(
@@ -375,5 +358,6 @@ Export-ModuleMember -Function @(
     'Write-LogToFile',
     'Write-SystemLog',
     'Invoke-SqliteCsvQuery',
+    'Invoke-SqliteCsvExport',
     'Invoke-SqliteCommand'
 )

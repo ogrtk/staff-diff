@@ -183,53 +183,6 @@ function ConvertFrom-SqliteStringResult {
     }
 }
 
-# 設定ベースCSVエクスポート関数
-# 統合されたCSVエクスポート関数（責務分割によるリファクタリング）
-function Export-CsvWithFormat {
-    param(
-        [Parameter(Mandatory = $true)]
-        $Data,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$OutputPath,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$TableName,
-        
-        [switch]$SuppressDetailedLog,
-        
-        [switch]$SkipConversion
-    )
-    
-    try {
-        if (-not $SuppressDetailedLog) {
-            Write-SystemLog "CSVファイルを出力中: $OutputPath (テーブル: $TableName)" -Level "Info"
-        }
-        
-        # 1. データの前処理・変換
-        $processedData = Convert-DataForExport -Data $Data -TableName $TableName -SkipConversion:$SkipConversion -SuppressDetailedLog:$SuppressDetailedLog
-        
-        # 2. CSVフォーマット設定の取得
-        $formatConfig = Get-CsvFormatConfig -TableName $TableName
-        
-        if (-not $SuppressDetailedLog) {
-            Write-SystemLog "使用設定 - エンコーディング: $($formatConfig.encoding), 区切り文字: '$($formatConfig.delimiter)', ヘッダー出力: $($formatConfig.include_header)" -Level "Info"
-        }
-        
-        # 3. CSVファイル出力処理
-        Write-CsvWithEncoding -Data $processedData -OutputPath $OutputPath -FormatConfig $formatConfig
-        
-        if (-not $SuppressDetailedLog) {
-            Write-SystemLog "CSVファイル出力完了: $($processedData.Count)行" -Level "Success"
-        }
-        
-    }
-    catch {
-        Write-SystemLog "CSVファイルの出力に失敗しました: $($_.Exception.Message)" -Level "Error"
-        throw
-    }
-}
-
 # データのエクスポート用前処理（責務の分離）
 function Convert-DataForExport {
     param(

@@ -37,7 +37,7 @@ function Invoke-DatabaseInitialization {
         }
     }
     
-    return Invoke-WithErrorHandling -Category External -Operation "データベース初期化処理" -CleanupScript $cleanupScript -Context @{
+    Invoke-WithErrorHandling -Category External -Operation "データベース初期化処理" -CleanupScript $cleanupScript -Context @{
         "DatabasePath" = $DatabasePath
     } -ScriptBlock {
         
@@ -47,7 +47,7 @@ function Invoke-DatabaseInitialization {
             Invoke-WithErrorHandling -ScriptBlock {
                 New-Item -ItemType Directory -Path $dbDir -Force | Out-Null
                 Write-SystemLog "データベースディレクトリを作成しました: $dbDir" -Level "Info"
-            } -Category External -Operation "ディレクトリ作成" -Context @{"ファイルパス" = $dbDir; "操作種別" = "ディレクトリ作成"} -CleanupScript {
+            } -Category External -Operation "ディレクトリ作成" -Context @{"ファイルパス" = $dbDir; "操作種別" = "ディレクトリ作成" } -CleanupScript {
                 # ファイル操作特有のクリーンアップ
                 if (Test-Path $dbDir -ErrorAction SilentlyContinue) {
                     $fileInfo = Get-Item $dbDir -ErrorAction SilentlyContinue
@@ -66,7 +66,7 @@ function Invoke-DatabaseInitialization {
         # 2. SQL文の実行（外部コマンド依存）
         Invoke-WithErrorHandling -ScriptBlock {
             Invoke-DatabaseInitializationInternal -DatabasePath $DatabasePath -SqlStatements $sqlStatements
-        } -Category External -Operation "データベーススキーマ作成" -Context @{"コマンド名" = "sqlite3"; "操作種別" = "データベーススキーマ作成"} -CleanupScript {
+        } -Category External -Operation "データベーススキーマ作成" -Context @{"コマンド名" = "sqlite3"; "操作種別" = "データベーススキーマ作成" } -CleanupScript {
             # 外部コマンド特有のクリーンアップ
             Write-SystemLog "外部コマンドの終了コード: $LASTEXITCODE" -Level "Info"
             
@@ -81,8 +81,6 @@ function Invoke-DatabaseInitialization {
         }
         
         Write-SystemLog "データベースが正常に初期化されました: $DatabasePath" -Level "Success"
-        
-        return $DatabasePath
     }
 }
 
