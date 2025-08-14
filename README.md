@@ -96,27 +96,61 @@ ps-sqlite/
 ├── config/                   # 設定ファイル
 │   └── data-sync-config.json # データ同期ツール設定
 ├── scripts/                  # PowerShellスクリプト
-│   ├── main.ps1             # メインスクリプト
-│   ├── common-utils.ps1     # 共通ユーティリティ
-│   ├── config-utils.ps1     # 設定読み込み・検証
-│   ├── sql-utils.ps1        # SQL生成・実行ユーティリティ
-│   ├── file-utils.ps1       # ファイル操作ユーティリティ
-│   ├── data-filter-utils.ps1 # データフィルタリング
-│   ├── database.ps1         # データベース操作
-│   ├── csv-utils.ps1        # CSV処理
-│   └── sync-data.ps1        # データ同期処理
-├── data/                    # 履歴保存ディレクトリ
-│   ├── provided-data/       # 提供データ履歴
-│   ├── current-data/        # 現在データ履歴
-│   └── output/              # 同期結果履歴
+│   ├── main.ps1             # メインスクリプト（単一ファイルパス対応版）
+│   └── modules/             # モジュール化されたスクリプト
+│       ├── Process/         # 処理系モジュール
+│       │   ├── Invoke-ConfigValidation.psm1  # 設定検証
+│       │   ├── Invoke-CsvExport.psm1         # CSV出力処理
+│       │   ├── Invoke-CsvImport.psm1         # CSV入力処理
+│       │   ├── Invoke-DataSync.psm1          # データ同期処理
+│       │   ├── Invoke-DatabaseInitialization.psm1 # データベース初期化
+│       │   ├── Show-SyncResult.psm1          # 同期結果表示
+│       │   ├── Show-SyncStatistics.psm1      # 同期統計表示
+│       │   └── Test-DataConsistency.psm1     # データ整合性チェック
+│       └── Utils/           # ユーティリティモジュール
+│           ├── CommonUtils.psm1          # 共通ユーティリティ（日本時間・ファイルパス解決）
+│           ├── ConfigUtils.psm1          # 設定読み込み・検証
+│           ├── CsvUtils.psm1             # 設定ベースCSV処理（履歴保存対応）
+│           ├── DataFilterUtils.psm1      # データフィルタリング
+│           ├── ErrorHandlingUtils.psm1   # 統一エラーハンドリング
+│           ├── FileUtils.psm1            # ファイル操作ユーティリティ
+│           └── SqlUtils.psm1             # SQL生成・実行ユーティリティ
+├── data/                    # 履歴保存ディレクトリ（自動生成）
+│   ├── provided-data/       # 提供データ履歴（タイムスタンプ付き）
+│   ├── current-data/        # 現在データ履歴（タイムスタンプ付き）
+│   └── output/              # 同期結果履歴（タイムスタンプ付き）
 ├── database/                # SQLiteデータベース
 │   └── data-sync.db         # メインデータベース
-├── logs/                    # ログファイル
-│   └── staff-management.log # 実行ログ
-└── test-data/               # テスト用データ
-    ├── provided.csv         # 提供データサンプル
-    ├── current.csv          # 現在データサンプル
-    └── sync-result.csv      # 同期結果サンプル
+├── logs/                    # ログファイル（自動生成）
+│   └── data-sync-system.log # 実行ログ（ローテーション対応）
+├── tests/                   # テストスクリプト（Pester対応）
+│   ├── main.Tests.ps1       # メインスクリプトテスト
+│   ├── run-test.ps1         # テスト実行スクリプト
+│   ├── create-utf8-tests.ps1 # UTF-8テスト作成
+│   ├── encoding-fix.ps1     # エンコーディング修正
+│   ├── Integration/         # 統合テスト
+│   │   └── FullSystem.Tests.ps1 # システム全体テスト
+│   ├── Process/             # 処理系モジュールテスト
+│   │   └── ... (各モジュールのテスト)
+│   ├── TestHelpers/         # テストヘルパー
+│   │   ├── MockHelpers.psm1     # モック機能
+│   │   └── TestDataGenerator.psm1 # テストデータ生成
+│   └── Utils/               # ユーティリティモジュールテスト
+│       └── ... (各ユーティリティのテスト)
+├── test-data/               # テスト用データ（外部ファイル例）
+│   ├── provided.csv         # 提供データサンプル
+│   ├── current.csv          # 現在データサンプル
+│   ├── large-provided.csv   # 大量データテスト用
+│   ├── large-current.csv    # 大量データテスト用
+│   └── sync-result.csv      # 同期結果サンプル
+├── dependency.md            # 依存関係説明書
+├── gemini.md               # Gemini関連ドキュメント
+├── review.txt              # レビュー記録
+├── test.db                 # テスト用データベース
+├── package.json            # Node.js依存関係（開発用）
+├── package-lock.json       # Node.js依存関係ロック
+├── node_modules/           # Node.js依存関係（自動生成）
+└── run.bat                 # Windows実行バッチ
 ```
 
 ## データ項目
@@ -189,14 +223,14 @@ ps-sqlite/
       "rules": [
         {
           "field": "employee_id",
-          "type": "exclude_pattern",
-          "pattern": "^Z.*",
+          "type": "exclude",
+          "glob": "Z*",
           "description": "Z始まりの職員番号を除外"
         },
         {
           "field": "employee_id",
-          "type": "exclude_pattern", 
-          "pattern": "^Y.*",
+          "type": "exclude", 
+          "glob": "Y*",
           "description": "Y始まりの職員番号を除外"
         }
       ]
@@ -206,8 +240,8 @@ ps-sqlite/
       "rules": [
         {
           "field": "user_id",
-          "type": "exclude_pattern",
-          "pattern": "^Z.*",
+          "type": "exclude",
+          "glob": "Z*",
           "description": "Z始まりの利用者IDを除外"
         }
       ]
@@ -220,10 +254,14 @@ ps-sqlite/
 
 | タイプ | 説明 | 例 |
 |--------|------|-----|
-| `exclude_pattern` | 正規表現に一致するデータを除外 | `"^Z.*"` (Z始まり除外) |
-| `include_pattern` | 正規表現に一致するデータのみ処理 | `"^E.*"` (E始まりのみ) |
-| `exclude_value` | 特定の値を除外 | `"TEMP"` (TEMP値除外) |
-| `include_value` | 特定の値のみ処理 | `"ACTIVE"` (ACTIVE値のみ) |
+| `exclude` | GLOBパターンに一致するデータを除外 | `"Z*"` (Z始まり除外), `"TEMP"` (TEMP値除外) |
+| `include` | GLOBパターンに一致するデータのみ処理 | `"E*"` (E始まりのみ), `"ACTIVE"` (ACTIVE値のみ) |
+
+#### GLOBパターンの記法
+- `*` : 0文字以上の任意の文字列
+- `?` : 1文字の任意の文字
+- `[abc]` : a, b, c のいずれか1文字
+- `[!abc]` : a, b, c 以外の1文字
 
 ## 同期処理の仕様
 
@@ -318,14 +356,25 @@ Remove-Item ".\database\data-sync.db" -Force
 ### 共通ライブラリ
 
 提供される主要機能：
-- **config-utils.ps1**: 設定読み込み・検証
-- **sql-utils.ps1**: 動的SQL生成・実行
-- **data-filter-utils.ps1**: データフィルタリング
-- **file-utils.ps1**: ファイル操作・履歴保存
-- **common-utils.ps1**: 統一ログシステム・日本時間タイムスタンプ生成
-- **csv-utils.ps1**: 設定ベースCSV処理
-- **database.ps1**: データベース操作
-- **sync-data.ps1**: データ同期処理
+
+#### ユーティリティモジュール (Utils/)
+- **CommonUtils.psm1**: 統一ログシステム・日本時間タイムスタンプ生成
+- **ConfigUtils.psm1**: 設定読み込み・検証
+- **SqlUtils.psm1**: 動的SQL生成・実行
+- **DataFilterUtils.psm1**: データフィルタリング
+- **FileUtils.psm1**: ファイル操作・履歴保存
+- **CsvUtils.psm1**: 設定ベースCSV処理
+- **ErrorHandlingUtils.psm1**: 統一エラーハンドリング
+
+#### 処理系モジュール (Process/)
+- **Invoke-DatabaseInitialization.psm1**: データベース初期化
+- **Invoke-DataSync.psm1**: データ同期処理
+- **Invoke-CsvImport.psm1**: CSV入力処理
+- **Invoke-CsvExport.psm1**: CSV出力処理
+- **Show-SyncResult.psm1**: 同期結果表示
+- **Show-SyncStatistics.psm1**: 同期統計表示
+- **Test-DataConsistency.psm1**: データ整合性チェック
+- **Invoke-ConfigValidation.psm1**: 設定検証
 
 ## ライセンス
 
