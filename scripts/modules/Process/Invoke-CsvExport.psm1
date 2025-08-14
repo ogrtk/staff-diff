@@ -1,7 +1,7 @@
 # PowerShell & SQLite データ同期システム
 # CSV結果エクスポート処理モジュール
 
-# 同期結果をCSVファイルにエクスポート（外部パス出力 + 履歴保存対応）
+# 同期結果をCSVファイルにエクスポート（外部パス出力 + 履歴保存）
 function Invoke-CsvExport {
     param(
         [Parameter(Mandatory = $true)]

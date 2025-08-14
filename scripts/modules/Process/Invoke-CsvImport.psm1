@@ -36,12 +36,12 @@ function Invoke-CsvImport {
     }
         
     Write-SystemLog "$($config.Description)のインポート処理を開始します" -Level "Info"
-    Import-CsvToTable -CsvPath $CsvPath -DatabasePath $DatabasePath -TableName $config.TableName -HistoryDirectory $config.HistoryDirectory -FileTypeDescription $config.Description
+    Invoke-CsvImportMain -CsvPath $CsvPath -DatabasePath $DatabasePath -TableName $config.TableName -HistoryDirectory $config.HistoryDirectory -FileTypeDescription $config.Description
     Write-SystemLog "$($config.Description)のインポート処理が完了しました" -Level "Success"
 }
 
 # 汎用CSVインポート関数（単一ファイル + 履歴保存対応）
-function script:Import-CsvToTable {
+function script:Invoke-CsvImportMain {
     param(
         [Parameter(Mandatory = $true)]
         [string]$CsvPath,
@@ -64,10 +64,11 @@ function script:Import-CsvToTable {
     }
         
     Write-SystemLog "処理対象ファイル ${FileTypeDescription}CSV: $CsvPath" -Level "Info"
-            
-    # 履歴ディレクトリにコピー保存
+    
+    $historyFilePath = ""
+    # 履歴ディレクトリにコピー保存(リトライ考慮無し)
     Invoke-WithErrorHandling -Category External -Operation "履歴ファイルコピー" -ScriptBlock {
-        Copy-InputFileToHistory -SourceFilePath $CsvPath -HistoryDirectory $HistoryDirectory
+        $historyFilePath = Copy-InputFileToHistory -SourceFilePath $CsvPath -HistoryDirectory $HistoryDirectory
     }
 
     # ヘッダー無しCSVの場合、ヘッダーを付与した一時ファイルを作成
@@ -76,38 +77,22 @@ function script:Import-CsvToTable {
 
     $formatConfig = Get-CsvFormatConfig -TableName $TableName
     if ($formatConfig.has_header -eq $false) {
-        $tempHeaderFile = Invoke-WithErrorHandling -Category External -Operation "ヘッダ付きCSVファイル作成" -ScriptBlock {
-            Add-CsvHeader -CsvPath $CsvPath -TableName $TableName
+        $tempHeaderFile = Invoke-WithErrorHandling -Category External -Operation "ヘッダ付き一時CSVファイル作成" -ScriptBlock {
+            New-TempCsvWithHeader -CsvPath $CsvPath -TableName $TableName
         }
         $processingCsvPath = $tempHeaderFile
         Write-SystemLog "ヘッダー付きファイル作成完了: $processingCsvPath" -Level "Info"
     }
-            
-    # 一時ファイルのクリーンアップ処理（冪等性対応強化）
+
+    # 作成したファイルのクリーンアップ処理（冪等性対応）
     $csvCleanupScript = {
-        # 一時ヘッダーファイルのクリーンアップ
+        if ($historyFilePath -and (Test-Path $historyFilePath)) {
+            Remove-Item $historyFilePath -Force -ErrorAction SilentlyContinue
+            Write-SystemLog "履歴ファイルを削除しました: $historyFilePath" -Level "Info"
+        }
         if ($tempHeaderFile -and (Test-Path $tempHeaderFile)) {
             Remove-Item $tempHeaderFile -Force -ErrorAction SilentlyContinue
             Write-SystemLog "一時ヘッダーファイルを削除しました: $tempHeaderFile" -Level "Info"
-        }
-            
-        # 同名パターンの孤立一時ファイルもクリーンアップ
-        try {
-            $tempDir = [System.IO.Path]::GetTempPath()
-            $baseFileName = [System.IO.Path]::GetFileNameWithoutExtension($CsvPath)
-            $tempPattern = "${baseFileName}_with_header_*.csv"
-            $orphanFiles = Get-ChildItem -Path $tempDir -Filter $tempPattern -ErrorAction SilentlyContinue
-                
-            foreach ($file in $orphanFiles) {
-                # 作成から1時間以上経過した孤立ファイルを削除
-                if ($file.CreationTime -lt (Get-Date).AddHours(-1)) {
-                    Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue
-                    Write-SystemLog "孤立一時ファイルを削除しました: $($file.FullName)" -Level "Info"
-                }
-            }
-        }
-        catch {
-            Write-SystemLog "一時ファイルクリーンアップ中にエラー: $($_.Exception.Message)" -Level "Warning"
         }
     }
 
@@ -129,11 +114,10 @@ function script:Import-CsvToTable {
     & $csvCleanupScript
 
     Write-SystemLog "${FileTypeDescription}CSVのインポートが完了しました。処理件数: $($statistics.FilteredCount) / 読み込み件数: $($statistics.TotalCount)" -Level "Success"
-    return $statistics
 }
 
-# ヘッダー無しCSVファイルにヘッダーを付与する関数
-function script:Add-CsvHeader {
+# ヘッダー付き一時CSVファイルを作成する関数（クリーンアップ機能付き）
+function script:New-TempCsvWithHeader {
     param(
         [Parameter(Mandatory = $true)]
         [string]$CsvPath,
@@ -142,7 +126,26 @@ function script:Add-CsvHeader {
         [string]$TableName
     )
     
-    Write-SystemLog "ヘッダ無しCSVファイルにヘッダーを付与。付与対象ファイル: $CsvPath (テーブル: $TableName)" -Level "Info"
+    Write-SystemLog "ヘッダー付き一時CSVファイルを作成。元ファイル: $CsvPath (テーブル: $TableName)" -Level "Info"
+    
+    # 古い一時ファイルのクリーンアップ（処理開始時）
+    try {
+        $tempDir = [System.IO.Path]::GetTempPath()
+        $baseFileName = [System.IO.Path]::GetFileNameWithoutExtension($CsvPath)
+        $tempPattern = "${baseFileName}_with_header_*.csv"
+        $orphanFiles = Get-ChildItem -Path $tempDir -Filter $tempPattern -ErrorAction SilentlyContinue
+
+        foreach ($file in $orphanFiles) {
+            # 作成から1時間以上経過した孤立ファイルを削除
+            if ($file.CreationTime -lt (Get-Date).AddHours(-1)) {
+                Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue
+                Write-SystemLog "古い一時ファイルを削除しました: $($file.FullName)" -Level "Info"
+            }
+        }
+    }
+    catch {
+        Write-SystemLog "古い一時ファイルクリーンアップ中にエラー: $($_.Exception.Message)" -Level "Warning"
+    }
     
     # テーブル定義からCSVカラムを取得
     $tableColumns = Get-CsvColumns -TableName $TableName
@@ -190,7 +193,7 @@ function script:Add-CsvHeader {
         $originalContent | Out-File -FilePath $tempPath -Encoding $encoding -Append -NoNewline
     }
     
-    Write-SystemLog "ヘッダー付きCSVファイルを作成完了: $tempPath" -Level "Success"
+    Write-SystemLog "ヘッダー付き一時CSVファイルを作成完了: $tempPath" -Level "Success"
     
     return $tempPath
 }
@@ -216,10 +219,7 @@ function script:Invoke-Filtering {
         Show-FilterConfig -TableName $TableName
     }
         
-    Write-SystemLog "フィルタリング用に一時テーブルへCSVをインポートする: $TableName ($CsvFilePath)" -Level "Info"
-
-    # 一時テーブル名
-    $tempTableName = New-TempTableName -BaseTableName $TableName
+    Write-SystemLog "フィルタリング用に一時テーブルへCSVをインポート: $TableName ($CsvFilePath)" -Level "Info"
 
     # リトライ対応: 既存データをクリア
     Clear-Table -DatabasePath $DatabasePath -TableName $TableName
@@ -227,30 +227,26 @@ function script:Invoke-Filtering {
     # CSVファイルの件数を事前に取得
     $csvData = Import-Csv -Path $CsvFilePath
     $totalRecords = $csvData.Count
-        
-    Write-Host "CSVファイル読み込み完了: $totalRecords 件" -ForegroundColor Green
+    Write-SystemLog "フィルタリング前: $totalRecords 件" -Level "Success"
         
     # 1. 一時テーブル作成
+    # 一時テーブル名
+    $tempTableName = New-TempTableName -BaseTableName $TableName
     # 既存の一時テーブルがある場合はDROP
     $dropTempTableIfExistsSql = "DROP TABLE IF EXISTS $tempTableName;"
     Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $dropTempTableIfExistsSql
-    Write-SystemLog "既存の一時テーブルを削除しました (もしあれば): $tempTableName" -Level "Info"
+    Write-SystemLog "既存の一時テーブルを削除しました: $tempTableName" -Level "Info"
 
     $createTempTableSql = New-CreateTempTableSql -BaseTableName $TableName -TempTableName $tempTableName
-    Write-SystemLog "一時テーブル作成: $tempTableName" -Level "Info"
     Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $createTempTableSql
+    Write-SystemLog "一時テーブルを作成しました: $tempTableName" -Level "Info"
 
-    # 2. CSVデータを一時テーブルに直接インポート
-    Write-Host "CSVデータを一時テーブルに直接インポート中..." -ForegroundColor Cyan
-    $importResult = Import-CsvToSqliteTable -CsvFilePath $CsvFilePath -DatabasePath $DatabasePath -TableName $tempTableName
-    if (-not $importResult) {
-        throw "CSVファイルの一時テーブルへのインポートに失敗しました"
-    }
+    # 2. CSVデータを一時テーブルにインポート
+    Import-CsvToSqliteTable -CsvFilePath $CsvFilePath -DatabasePath $DatabasePath -TableName $tempTableName
+    Write-SystemLog "CSVデータを一時テーブルにインポートしました: $tempTableName" -Level "Info"
         
-    # 3. フィルタ用WHERE句生成
+    # 3. フィルタ済みデータ移行
     $whereClause = New-FilterWhereClause -TableName $TableName
-        
-    # 4-6. フィルタ済みデータ移行、統計取得、クリーンアップ
     $filteredInsertSql = New-FilteredInsertSql -TargetTableName $TableName -SourceTableName $tempTableName -WhereClause $whereClause
     $statisticsSql = "SELECT COUNT(*) as filtered_count FROM $TableName;"
     $dropTempTableSql = "DROP TABLE $tempTableName;"
@@ -278,21 +274,7 @@ COMMIT;
     # 動的インデックス作成（レコード数に基づく判定）
     $indexSqls = New-CreateIndexSql -TableName $TableName -RecordCount $filteredCount
     foreach ($indexSql in $indexSqls) {
-        Invoke-WithErrorHandling -ScriptBlock {
-            Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $indexSql
-        } -Category External -Operation "インデックス作成" -Context @{"コマンド名" = "sqlite3"; "操作種別" = "インデックス作成" } -CleanupScript {
-            # 外部コマンド特有のクリーンアップ
-            Write-SystemLog "外部コマンドの終了コード: $LASTEXITCODE" -Level "Info"
-            
-            # コマンド可用性チェック
-            $commandPath = Get-Command "sqlite3" -ErrorAction SilentlyContinue
-            if ($commandPath) {
-                Write-SystemLog "コマンドパス: $($commandPath.Source)" -Level "Info"
-            }
-            else {
-                Write-SystemLog "コマンドが見つかりません: sqlite3" -Level "Warning"
-            }
-        }
+        Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $indexSql
     }
         
     # 統計表示
@@ -302,6 +284,13 @@ COMMIT;
     }
         
     Write-SystemLog "SQLベースフィルタリング完了: $filteredCount 件を $TableName に挿入" -Level "Success"
+    
+    # 統計情報を返す
+    return @{
+        TotalCount = $totalRecords
+        FilteredCount = $filteredCount
+        TableName = $TableName
+    }
 }
 
 # CSV直接インポート関数（SQLite .importコマンド使用）
@@ -317,39 +306,19 @@ function script:Import-CsvToSqliteTable {
         [string]$TableName
     )
     
-    $context = @{
-        "コマンド名" = "sqlite3"
-        "操作種別"  = "CSV直接インポート ($TableName)"
-    }
     
-    $cleanupScript = {
-        Write-SystemLog "外部コマンドの終了コード: $LASTEXITCODE" -Level "Info"
-        
-        $commandPath = Get-Command "sqlite3" -ErrorAction SilentlyContinue
-        if ($commandPath) {
-            Write-SystemLog "コマンドパス: $($commandPath.Source)" -Level "Info"
-        }
-        else {
-            Write-SystemLog "コマンドが見つかりません: sqlite3" -Level "Warning"
-        }
+    if (-not (Test-Path $CsvFilePath)) {
+        throw "CSVファイルが見つかりません: $CsvFilePath"
     }
-    
-    return Invoke-WithErrorHandling -ScriptBlock {
-        if (-not (Test-Path $CsvFilePath)) {
-            throw "CSVファイルが見つかりません: $CsvFilePath"
-        }
         
-        # SQLite3の.importコマンドを使用した直接インポート
-        $result = & sqlite3 $DatabasePath ".mode csv" ".import `"$CsvFilePath`" $TableName" 2>&1
+    # SQLite3の.importコマンドを使用した直接インポート
+    $result = & sqlite3 $DatabasePath ".mode csv" ".import `"$CsvFilePath`" $TableName" 2>&1
         
-        if ($LASTEXITCODE -ne 0) {
-            throw "SQLite .import エラー (終了コード: $LASTEXITCODE): $result"
-        }
+    if ($LASTEXITCODE -ne 0) {
+        throw "SQLite .import エラー (終了コード: $LASTEXITCODE): $result"
+    }
         
-        Write-SystemLog "CSV直接インポート完了: $TableName" -Level "Success"
-        return $true
-        
-    } -Category External -Operation "CSV直接インポート ($TableName)" -Context $context -CleanupScript $cleanupScript
+    Write-SystemLog "CSV直接インポート完了: $TableName" -Level "Success"
 }
 
 # 一時テーブル作成SQL生成

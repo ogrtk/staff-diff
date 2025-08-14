@@ -210,19 +210,4 @@ Describe "Invoke-SqliteCsvExport" {
 #     }
 # }
 
-# Describe "Get-MinimalJapanTimestamp" {
-#     It "should return a timestamp in the specified format" {
-#         $timestamp = Get-MinimalJapanTimestamp -Format "yyyy-MM-dd HH:mm:ss"
-#         $timestamp | Should -Match "^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$"
-#     }
-
-#     It "should return a timestamp approximately in Japan time (UTC+9)" {
-#         $timestamp = Get-MinimalJapanTimestamp -Format "HH"
-#         $currentUtcHour = (Get-Date).ToUniversalTime().Hour
-#         $expectedJapanHour = ($currentUtcHour + 9) % 24
-        
-#         # Allow for a small time difference due to execution time
-#         [int]$actualJapanHour = $timestamp
-#         ($actualJapanHour -eq $expectedJapanHour -or $actualJapanHour -eq (($expectedJapanHour + 1) % 24)) | Should -Be $true
-#     }
-# }
+# Get-MinimalJapanTimestamp関数は削除されました。Get-JapanTimestamp を使用してください。

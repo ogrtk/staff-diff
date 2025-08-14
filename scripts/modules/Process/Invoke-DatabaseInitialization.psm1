@@ -70,14 +70,7 @@ function Invoke-DatabaseInitialization {
             # 外部コマンド特有のクリーンアップ
             Write-SystemLog "外部コマンドの終了コード: $LASTEXITCODE" -Level "Info"
             
-            # コマンド可用性チェック
-            $commandPath = Get-Command "sqlite3" -ErrorAction SilentlyContinue
-            if ($commandPath) {
-                Write-SystemLog "コマンドパス: $($commandPath.Source)" -Level "Info"
-            }
-            else {
-                Write-SystemLog "コマンドが見つかりません: sqlite3" -Level "Warning"
-            }
+            # sqlite3コマンドは設定検証で確認済み
         }
         
         Write-SystemLog "データベースが正常に初期化されました: $DatabasePath" -Level "Success"
@@ -119,9 +112,6 @@ function script:Invoke-DatabaseInitializationInternal {
     )
     
     $combinedSql = $SqlStatements -join "`n`n"
-    
-    # sqlite3コマンドが利用可能かチェック
-    $sqlite3Path = Get-Sqlite3Path
     
     Invoke-SqliteSchemaCommand -DatabasePath $DatabasePath -SqlContent $combinedSql
 }

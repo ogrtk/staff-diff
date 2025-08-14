@@ -1,7 +1,7 @@
 # PowerShell & SQLite データ同期システム
 # ファイル・CSV操作ユーティリティライブラリ
 
-# 日本時間でタイムスタンプを取得（依存性を最小限に）
+# 日本時間でタイムスタンプを取得
 function Get-JapanTimestamp {
     param(
         [string]$Format = "yyyyMMdd_HHmmss"
@@ -61,7 +61,7 @@ function Copy-InputFileToHistory {
     # 履歴ディレクトリの作成
     if (-not (Test-Path $HistoryDirectory)) {
         New-Item -ItemType Directory -Path $HistoryDirectory -Force | Out-Null
-        Write-Host "履歴ディレクトリを作成しました: $HistoryDirectory" -ForegroundColor Green
+        Write-SystemLog "履歴ディレクトリを作成しました: $HistoryDirectory" -Level "Success"
     }
     
     # 履歴ファイル名の生成
@@ -72,7 +72,9 @@ function Copy-InputFileToHistory {
     # ファイルのコピー
     Copy-Item -Path $SourceFilePath -Destination $historyFilePath -Force
     
-    Write-Host "ファイルを履歴に保存しました: $historyFilePath" -ForegroundColor Green
+    Write-SystemLog "ファイルを履歴に保存しました: $historyFilePath" -Level "Success"
+
+    return $historyFilePath
 }
 
 # ファイルパス解決（パラメータ優先、設定ファイル）
@@ -90,7 +92,7 @@ function Resolve-FilePath {
     # 1. パラメータ指定を優先
     if (-not [string]::IsNullOrEmpty($ParameterPath)) {
         $resolvedPath = $ParameterPath
-        Write-Host "$Description パス（パラメータ指定）: $resolvedPath" -ForegroundColor Yellow
+        Write-SystemLog "$Description パス（パラメータ指定）: $resolvedPath" -Level "Warning"
     }
     # 2. 設定ファイルから取得
     elseif (-not [string]::IsNullOrEmpty($ConfigKey)) {
@@ -98,7 +100,7 @@ function Resolve-FilePath {
         
         if ($config.$ConfigKey -and -not [string]::IsNullOrEmpty($config.$ConfigKey)) {
             $resolvedPath = $config.$ConfigKey
-            Write-Host "$Description パス（設定ファイル）: $resolvedPath" -ForegroundColor Cyan
+            Write-SystemLog "$Description パス（設定ファイル）: $resolvedPath" -Level "Info"
         }
     }
     

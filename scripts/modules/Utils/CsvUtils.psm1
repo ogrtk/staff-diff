@@ -183,118 +183,7 @@ function ConvertFrom-SqliteStringResult {
     }
 }
 
-# データのエクスポート用前処理（責務の分離）
-function Convert-DataForExport {
-    param(
-        [Parameter(Mandatory = $true)]
-        $Data,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$TableName,
-        
-        [switch]$SkipConversion,
-        
-        [switch]$SuppressDetailedLog
-    )
-    
-    # データ型とサイズのチェック
-    if ($null -eq $Data) {
-        throw "データがnullです"
-    }
-    
-    # データが配列でない場合は配列に変換
-    if ($Data -isnot [array]) {
-        $Data = @($Data)
-    }
-    
-    if (-not $SuppressDetailedLog) {
-        Write-SystemLog "データ型: $($Data.GetType().Name), 要素数: $($Data.Count)" -Level "Info"
-        if ($Data.Count -gt 0) {
-            Write-SystemLog "最初の要素の型: $($Data[0].GetType().Name)" -Level "Info"
-        }
-    }
-    
-    # 文字列データの検出と自動変換（SkipConversionが指定されていない場合のみ）
-    if (-not $SkipConversion -and $Data.Count -gt 0 -and $Data[0] -is [string]) {
-        if (-not $SuppressDetailedLog) {
-            Write-SystemLog "SQLite結果の文字列データを検出しました。PSCustomObjectに自動変換します。" -Level "Info"
-        }
-        $Data = ConvertFrom-SqliteStringResult -StringArray $Data -TableName $TableName
-        
-        # 変換後のデータチェック
-        if (-not $SuppressDetailedLog) {
-            if ($Data.Count -gt 0) {
-                Write-SystemLog "SQLite結果変換完了: $($Data.Count)件のPSCustomObjectに変換" -Level "Info"
-                Write-SystemLog "変換後のデータ型: $($Data[0].GetType().Name), 要素数: $($Data.Count)" -Level "Info"
-            }
-            else {
-                Write-SystemLog "変換後のデータが空です" -Level "Warning"
-            }
-        }
-    }
-    elseif ($SkipConversion -and -not $SuppressDetailedLog) {
-        Write-SystemLog "変換をスキップします（既に変換済みデータを使用）" -Level "Info"
-    }
-    
-    return $Data
-}
 
-# CSVファイル書き込み処理（エンコーディング・フォーマット対応）
-function Write-CsvWithEncoding {
-    param(
-        [Parameter(Mandatory = $true)]
-        $Data,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$OutputPath,
-        
-        [Parameter(Mandatory = $true)]
-        $FormatConfig
-    )
-    
-    # PowerShell用エンコーディング名に変換
-    $encoding = ConvertTo-PowerShellEncoding -EncodingName $FormatConfig.encoding
-    
-    # 出力ディレクトリが存在しない場合は作成
-    $outputDir = Split-Path -Parent $OutputPath
-    if (-not (Test-Path $outputDir)) {
-        New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-    }
-    
-    # Export-Csvパラメータ準備
-    $exportParams = @{
-        Path              = $OutputPath
-        Encoding          = $encoding
-        NoTypeInformation = $true
-    }
-    
-    # 区切り文字設定
-    if ($FormatConfig.delimiter -ne ",") {
-        $exportParams.Delimiter = $FormatConfig.delimiter
-    }
-    
-    # ヘッダー設定による出力分岐
-    if ($FormatConfig.include_header -eq $false) {
-        # ヘッダーなし出力の場合、一時的にヘッダー付きで出力してからヘッダー行を削除
-        $tempPath = "$OutputPath.tmp"
-        $Data | Export-Csv @exportParams -Path $tempPath
-        
-        $content = Get-Content $tempPath -Encoding $encoding | Select-Object -Skip 1
-        $content | Out-File -FilePath $OutputPath -Encoding $encoding
-        Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
-    }
-    else {
-        # 通常のヘッダー付き出力
-        $Data | Export-Csv @exportParams
-    }
-    
-    # 改行コード変換（必要な場合）
-    if ($FormatConfig.newline -and $FormatConfig.newline.ToUpper() -ne "CRLF") {
-        $content = Get-Content $OutputPath -Raw -Encoding $encoding
-        $convertedContent = ConvertTo-NewlineFormat -Content $content -NewlineFormat $FormatConfig.newline
-        $convertedContent | Out-File -FilePath $OutputPath -Encoding $encoding -NoNewline
-    }
-}
 
 # CSVファイルのバリデーション（設定ベース版）
 function Test-CsvFormat {
@@ -363,7 +252,6 @@ function Test-CsvFormat {
 
 Export-ModuleMember -Function @(
     'Import-CsvWithFormat',
-    'Export-CsvWithFormat',
     'Test-CsvFormat',
     'Get-CsvFormatConfig', 'ConvertTo-PowerShellEncoding'
 )

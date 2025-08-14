@@ -28,15 +28,22 @@ function Invoke-ConfigValidation {
             Write-SystemLog "DatabasePathが未指定のため、デフォルトパスを使用します: $resolvedDatabasePath" -Level "Info"
         }
     
-        # 1. 設定の検証
+        # 1. 外部依存関係の検証
+        Write-SystemLog "外部依存関係を検証中..." -Level "Info"
+        Invoke-WithErrorHandling -ScriptBlock {
+            $sqlite3Path = Get-Sqlite3Path
+            Write-SystemLog "SQLite3コマンドが利用可能です: $($sqlite3Path.Source)" -Level "Success"
+        } -Category System -Operation "SQLite3コマンド検証" -Context @{"コマンド名" = "sqlite3" }
+        
+        # 2. 設定の検証
         Write-SystemLog "システム設定を検証中..." -Level "Info"
         Invoke-WithErrorHandling -ScriptBlock {
             if (-not (Test-DataSyncConfig)) {
                 throw "設定の検証に失敗しました"
             }
-        } -Category System -Operation "設定の検証" -Context @{"設定セクション" = "システム全体設定"}
+        } -Category System -Operation "設定の検証" -Context @{"設定セクション" = "システム全体設定" }
         
-        # 2. 入力ファイルパスの解決
+        # 3. 入力ファイルパスの解決
         Write-SystemLog "ファイルパス解決処理を開始..." -Level "Info"
         
         $resolvedProvidedDataPath = Invoke-WithErrorHandling -Category System -Operation "提供データファイルパス解決" -ScriptBlock {
@@ -51,7 +58,7 @@ function Invoke-ConfigValidation {
             Resolve-FilePath -ParameterPath $OutputFilePath -ConfigKey "output_file_path" -Description "出力ファイル"
         }
         
-        # 3. 処理パラメータのログ出力
+        # 4. 処理パラメータのログ出力
         Write-SystemLog "=== 処理パラメータ ===" -Level "Info"
         Write-SystemLog "Database Path: $resolvedDatabasePath" -Level "Info"
         Write-SystemLog "Provided Data File: $resolvedProvidedDataPath" -Level "Info"
@@ -59,7 +66,7 @@ function Invoke-ConfigValidation {
         Write-SystemLog "Output File: $resolvedOutputPath" -Level "Info"
         Write-SystemLog "========================" -Level "Info"
         
-        # 4. 解決されたパラメータのファイル存在チェック
+        # 5. 解決されたパラメータのファイル存在チェック
         $resolvedParams = @{
             DatabasePath         = $resolvedDatabasePath
             ProvidedDataFilePath = $resolvedProvidedDataPath
@@ -70,7 +77,7 @@ function Invoke-ConfigValidation {
         Write-SystemLog "入力ファイルの存在チェックを実行中..." -Level "Info"
         $null = Test-ResolvedFilePaths -ResolvedPaths $resolvedParams -SkipOutputFileCheck
         
-        # 5. 解決されたパラメータを返す
+        # 6. 解決されたパラメータを返す
         return $resolvedParams
     }
 }

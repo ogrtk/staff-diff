@@ -1,31 +1,6 @@
 # PowerShell & SQLite データ同期システム
 # 共通ユーティリティライブラリ（基盤機能）
 
-# 必要な場合のみファイルユーティリティを読み込み
-# 循環参照回避のため、config-utils.ps1のインポートを削除
-
-# 循環参照回避のための最小限の設定取得（内部使用のみ）
-function script:Get-MinimalLoggingConfig {
-    # 最小限のデフォルト設定（ハードコーディング）
-    return @{
-        enabled          = $true
-        log_directory    = "./logs/"
-        log_file_name    = "data-sync-system.log"
-        max_file_size_mb = 10
-        max_files        = 5
-        levels           = @("Info", "Warning", "Error", "Success")
-    }
-}
-
-# 循環参照回避のための最小限の日本時間取得（内部使用のみ）
-function script:Get-MinimalJapanTimestamp {
-    param([string]$Format = "yyyy-MM-dd HH:mm:ss")
-    
-    # 簡単なUTC+9時間計算
-    $japanTime = [DateTime]::UtcNow.AddHours(9)
-    return $japanTime.ToString($Format)
-}
-
 # SQLite3コマンドパス取得（DRY原則による統一関数）
 function Get-Sqlite3Path {
     try {
@@ -61,7 +36,7 @@ function Clear-Table {
         [Parameter(Mandatory = $true)]
         [string]$TableName,
         
-        [switch]$ShowStatistics = $true
+        [bool]$ShowStatistics = $true
     )
     
     # テーブルの存在確認
@@ -94,41 +69,6 @@ WHERE type='table' AND name='$TableName';
     else {
         Write-SystemLog "テーブル '$TableName' は存在しないため、スキップします" -Level "Info"
     }
-}
-
-# ログファイルの初期化（ユーティリティ関数）
-function Initialize-LogFile {
-    $logConfig = Get-MinimalLoggingConfig
-    
-    if (-not $logConfig.enabled) {
-        return
-    }
-    
-    $logDir = $logConfig.log_directory
-    $logFileName = $logConfig.log_file_name
-    
-    # ログディレクトリの作成
-    if (-not (Test-Path $logDir)) {
-        New-Item -ItemType Directory -Path $logDir -Force | Out-Null
-    }
-    
-    $logPath = Join-Path $logDir $logFileName
-    
-    # ログローテーション
-    if (Test-Path $logPath) {
-        $logInfo = Get-Item $logPath
-        $maxSizeMB = $logConfig.max_file_size_mb
-        $maxFiles = $logConfig.max_files
-        
-        if ($logInfo.Length -gt ($maxSizeMB * 1MB)) {
-            Move-LogFile -LogPath $logPath -MaxFiles $maxFiles
-        }
-    }
-    
-    # ログファイルの初期化メッセージ
-    $timestamp = Get-MinimalJapanTimestamp -Format "yyyy-MM-dd HH:mm:ss"
-    $initMessage = "[$timestamp] [SYSTEM] ログファイルを初期化しました"
-    Add-Content -Path $logPath -Value $initMessage -Encoding UTF8 -ErrorAction SilentlyContinue
 }
 
 # ログファイルのローテーション（ユーティリティ関数）
@@ -166,6 +106,7 @@ function Move-LogFile {
     }
 }
 
+
 # ログファイルへの書き込み（ユーティリティ関数）
 function Write-LogToFile {
     param(
@@ -175,7 +116,8 @@ function Write-LogToFile {
         [string]$Level = "Info"
     )
     
-    $logConfig = Get-MinimalLoggingConfig
+    # 設定ファイルベースのログ設定を使用
+    $logConfig = Get-LoggingConfig
     
     if (-not $logConfig.enabled -or $Level -notin $logConfig.levels) {
         return
@@ -185,7 +127,20 @@ function Write-LogToFile {
     $logFileName = $logConfig.log_file_name
     $logPath = Join-Path $logDir $logFileName
     
-    $timestamp = Get-MinimalJapanTimestamp -Format "yyyy-MM-dd HH:mm:ss"
+    # ログディレクトリの確認と作成
+    if (-not (Test-Path $logDir)) {
+        New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+    }
+    
+    # ログファイルサイズチェックとローテーション
+    if (Test-Path $logPath) {
+        $fileSizeMB = (Get-Item $logPath).Length / 1MB
+        if ($fileSizeMB -gt $logConfig.max_file_size_mb) {
+            Move-LogFile -LogPath $logPath -MaxFiles $logConfig.max_files
+        }
+    }
+    
+    $timestamp = Get-JapanTimestamp -Format "yyyy-MM-dd HH:mm:ss"
     $logEntry = "[$timestamp] [$Level] $Message"
     
     Add-Content -Path $logPath -Value $logEntry -Encoding UTF8 -ErrorAction SilentlyContinue
@@ -318,34 +273,32 @@ function Invoke-SqliteCommand {
         [string]$DatabasePath,
         
         [Parameter(Mandatory = $true)]
-        [string]$Query,
-        
-        [hashtable]$Parameters = @{}
+        [string]$Query
     )
     
+    # SQLite3コマンドをファイルに格納して実行
+    # (複数行のコマンドはファイルから実行する必要あり)
     try {
-        # 通常のSQLite3コマンド実行
         $tempFile = [System.IO.Path]::GetTempFileName()
-        try {
-            $encoding = Get-CrossPlatformEncoding
-            $Query | Out-File -FilePath $tempFile -Encoding $encoding
+        $encoding = Get-CrossPlatformEncoding
+        $Query | Out-File -FilePath $tempFile -Encoding $encoding
                     
-            $result = & sqlite3 $DatabasePath ".read $tempFile" 2>&1
-                    
-            if ($LASTEXITCODE -ne 0) {
-                throw "sqlite3コマンドエラー (終了コード: $LASTEXITCODE): $result"
-            }
-                    
-            return $result
+        $result = & sqlite3 $DatabasePath ".read $tempFile" 2>&1
+
+        if ($LASTEXITCODE -ne 0) {
+            throw "sqlite3コマンドエラー (終了コード: $LASTEXITCODE ,クエリ：$Query ,結果：$result ）"
         }
-        finally {
-            if (Test-Path $tempFile) {
-                Remove-Item -Path $tempFile -Force
-            }
-        }
+                    
+        return $result
     }
     catch {
         throw "SQLite3の実行に失敗しました: $($_.Exception.Message)"
+    }
+    finally {
+        # クリーンアップ
+        if (Test-Path $tempFile) {
+            Remove-Item -Path $tempFile -Force
+        }
     }
 }
 
@@ -353,7 +306,6 @@ Export-ModuleMember -Function @(
     'Get-Sqlite3Path',
     'Get-CrossPlatformEncoding',
     'Clear-Table',
-    'Initialize-LogFile',
     'Move-LogFile',
     'Write-LogToFile',
     'Write-SystemLog',

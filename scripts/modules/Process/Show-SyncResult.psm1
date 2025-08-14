@@ -14,7 +14,7 @@ function Show-SyncResult {
         [string]$CurrentDataFilePath
     )
     
-    $result = Invoke-WithErrorHandling -ScriptBlock {
+    Invoke-WithErrorHandling  -Operation "同期レポート生成" -Category External -SuppressThrow:$true -ScriptBlock {
         Write-SystemLog "=== 同期処理完了レポート ===" -Level "Info"
         
         # 1. 実行情報セクション
@@ -52,6 +52,21 @@ SELECT 'sync_result' as table_name, COUNT(*) as count FROM sync_result;
         # 3. 同期結果セクション
         Write-SystemLog "--- 同期結果 ---" -Level "Info"
         
+        # 設定から動的にORDER BY句を生成
+        $syncActionLabels = $config.sync_rules.sync_action_labels.mappings
+        
+        $orderByCases = @()
+        $displayOrder = 1
+        
+        foreach ($actionKey in $syncActionLabels.PSObject.Properties.Name) {
+            $actionConfig = $syncActionLabels.$actionKey
+            $actionName = $actionConfig.action_name
+            $orderByCases += "        WHEN '$actionName' THEN $displayOrder"
+            $displayOrder++
+        }
+        
+        $orderByClause = $orderByCases -join "`n"
+        
         $syncResultQuery = @"
 SELECT 
     sync_action,
@@ -60,11 +75,8 @@ FROM sync_result
 GROUP BY sync_action
 ORDER BY 
     CASE sync_action 
-        WHEN 'ADD' THEN 1
-        WHEN 'UPDATE' THEN 2  
-        WHEN 'DELETE' THEN 3
-        WHEN 'KEEP' THEN 4
-        ELSE 5
+$orderByClause
+        ELSE 999
     END;
 "@
         
@@ -103,17 +115,14 @@ ORDER BY
                 $displayLabel = $cleanAction
                 $actionDescription = $cleanAction
             }
-            
+
             Write-SystemLog "$displayLabel ($actionDescription): $count 件" -Level "Info"
         }
-        
+
         if ($totalSyncRecords -gt 0) {
             Write-SystemLog "同期処理総件数: $totalSyncRecords 件" -Level "Info"
         }
-        
-        Write-SystemLog "===============================" -Level "Info"
-        
-    } -Operation "同期レポート生成" -Category External -SuppressThrow:$true
+    }
 }
 
 Export-ModuleMember -Function 'Show-SyncResult'

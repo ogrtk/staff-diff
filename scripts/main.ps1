@@ -37,7 +37,6 @@ try {
     Import-Module (Join-Path $ProcessModulePath "Invoke-DatabaseInitialization.psm1")
     Import-Module (Join-Path $ProcessModulePath "Invoke-DataSync.psm1")
     Import-Module (Join-Path $ProcessModulePath "Show-SyncResult.psm1")
-    Import-Module (Join-Path $ProcessModulePath "Show-SyncStatistics.psm1")
     Import-Module (Join-Path $ProcessModulePath "Test-DataConsistency.psm1")
 
     # --- 初期設定: 設定ファイルの読み込み ---

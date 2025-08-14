@@ -39,7 +39,7 @@ function Get-DataSyncConfig {
         $configContent = Get-Content -Path $ConfigPath -Raw -Encoding $encoding
         $script:DataSyncConfig = $configContent | ConvertFrom-Json
         
-        Write-Host "設定を読み込みました: $ConfigPath" -ForegroundColor Green
+        Write-SystemLog "設定を読み込みました: $ConfigPath" -Level "Success"
         
         return $script:DataSyncConfig
     }
@@ -56,7 +56,7 @@ function Get-FilePathConfig {
     # file_pathsセクションが存在しない場合、デフォルト値を生成（内部動作）
     if (-not $config.file_paths) {
         # Write-SystemLogを使うと無限ループの可能性があるため、直接出力
-        Write-Host "file_paths設定が見つかりません。デフォルト値を使用します。" -ForegroundColor Yellow
+        Write-SystemLog "file_paths設定が見つかりません。デフォルト値を使用します。" -Level "Warning"
         $defaultPaths = @{
             provided_data_history_directory = "./data/provided-data/"
             current_data_history_directory  = "./data/current-data/"
@@ -109,18 +109,45 @@ function Test-DataSyncConfig {
             if (-not $idColumn) {
                 Write-Warning "テーブル '$tableName' にidカラムがありません"
             }
+            
+            # table_constraints の検証
+            if ($table.table_constraints) {
+                Test-TableConstraintsConfig -TableName $tableName -TableConstraints $table.table_constraints -TableColumns $table.columns
+            }
         }
+        
+        # 必須テーブル存在確認
+        $requiredTables = @("provided_data", "current_data", "sync_result")
+        foreach ($requiredTable in $requiredTables) {
+            if (-not $config.tables.$requiredTable) {
+                throw "必須テーブル '$requiredTable' の定義が見つかりません"
+            }
+        }
+        Write-SystemLog "必須テーブル定義確認完了" -Level "Info"
         
         # 同期ルールの基本検証
         if ($config.sync_rules) {
             if (-not $config.sync_rules.column_mappings -or -not $config.sync_rules.column_mappings.mappings) {
-                Write-Warning "column_mappings が設定されていません"
+                throw "column_mappings の設定が必要です"
             }
+            
+            # 同期ルール整合性検証
+            Test-SyncRulesConsistency -Config $config
             
             # sync_result_mappingの検証
             if ($config.sync_rules.sync_result_mapping) {
                 Test-SyncResultMappingConfig -SyncResultMappingConfig $config.sync_rules.sync_result_mapping
             }
+        } else {
+            throw "sync_rules セクションが見つかりません"
+        }
+        
+        # キーカラム検証
+        Test-KeyColumnsValidation -Config $config
+        
+        # データフィルタ設定検証
+        if ($config.data_filters) {
+            Test-DataFilterConsistency -Config $config
         }
         
         # CSVフォーマット設定の検証
@@ -128,7 +155,16 @@ function Test-DataSyncConfig {
             Test-CsvFormatConfig -CsvFormatConfig $config.csv_format
         }
         
-        Write-Host "設定の検証が完了しました: 問題なし" -ForegroundColor Green
+        # ログ設定の検証
+        try {
+            $loggingConfig = Get-LoggingConfig
+            Test-LoggingConfigInternal -LoggingConfig $loggingConfig
+        }
+        catch {
+            Write-Warning "ログ設定の検証で問題が発生しました: $($_.Exception.Message)"
+        }
+        
+        Write-SystemLog "設定の検証が完了しました: 問題なし" -Level "Success"
         return $true
         
     }
@@ -202,7 +238,7 @@ function Get-LoggingConfig {
     
     if (-not $config.logging) {
         # Write-SystemLogを使うと無限ループするため、直接出力
-        Write-Host "ログ設定が見つかりません。デフォルト値を使用します。" -ForegroundColor Yellow
+        Write-SystemLog "ログ設定が見つかりません。デフォルト値を使用します。" -Level "Warning"
         # デフォルトログ設定を生成（内部動作）
         $defaultLogging = @{
             enabled          = $true
@@ -305,7 +341,7 @@ function Test-SyncResultMappingConfig {
         }
     }
     
-    Write-Host "sync_result_mapping設定の検証が完了しました" -ForegroundColor Green
+    Write-SystemLog "sync_result_mapping設定の検証が完了しました" -Level "Success"
 }
 
 # sync_result_mappingの取得
@@ -319,6 +355,323 @@ function Get-SyncResultMappingConfig {
     return $config.sync_rules.sync_result_mapping
 }
 
+# テーブル制約設定の検証
+function Test-TableConstraintsConfig {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TableName,
+        
+        [Parameter(Mandatory = $true)]
+        [array]$TableConstraints,
+        
+        [Parameter(Mandatory = $true)]
+        [array]$TableColumns
+    )
+    
+    $validConstraintTypes = @("UNIQUE", "PRIMARY KEY", "CHECK", "FOREIGN KEY")
+    $columnNames = $TableColumns | ForEach-Object { $_.name }
+    
+    foreach ($constraint in $TableConstraints) {
+        # 必須項目の検証
+        if (-not $constraint.name) {
+            throw "テーブル '$TableName' の制約に名前が設定されていません"
+        }
+        
+        if (-not $constraint.type) {
+            throw "テーブル '$TableName' の制約 '$($constraint.name)' にタイプが設定されていません"
+        }
+        
+        # 制約タイプの検証
+        if ($constraint.type -notin $validConstraintTypes) {
+            throw "テーブル '$TableName' の制約 '$($constraint.name)' に無効なタイプが設定されています: $($constraint.type). 有効な値: $($validConstraintTypes -join ', ')"
+        }
+        
+        # enabled プロパティの検証（設定されている場合）
+        if ($constraint.PSObject.Properties.Name -contains "enabled" -and $constraint.enabled -isnot [bool]) {
+            throw "テーブル '$TableName' の制約 '$($constraint.name)' のenabledプロパティはbool型である必要があります"
+        }
+        
+        # 制約タイプ別の詳細検証
+        switch ($constraint.type) {
+            "UNIQUE" {
+                Test-UniqueConstraintConfig -TableName $TableName -Constraint $constraint -ColumnNames $columnNames
+            }
+            "PRIMARY KEY" {
+                Test-PrimaryKeyConstraintConfig -TableName $TableName -Constraint $constraint -ColumnNames $columnNames
+            }
+            "CHECK" {
+                Test-CheckConstraintConfig -TableName $TableName -Constraint $constraint
+            }
+            "FOREIGN KEY" {
+                Test-ForeignKeyConstraintConfig -TableName $TableName -Constraint $constraint -ColumnNames $columnNames
+            }
+        }
+    }
+    
+    Write-SystemLog "テーブル '$TableName' の制約設定の検証が完了しました" -Level "Info"
+}
+
+# UNIQUE制約の検証
+function Test-UniqueConstraintConfig {
+    param(
+        [string]$TableName,
+        [object]$Constraint,
+        [array]$ColumnNames
+    )
+    
+    if (-not $Constraint.columns -or $Constraint.columns.Count -eq 0) {
+        throw "テーブル '$TableName' のUNIQUE制約 '$($Constraint.name)' にカラムが設定されていません"
+    }
+    
+    foreach ($columnName in $Constraint.columns) {
+        if ($columnName -notin $ColumnNames) {
+            throw "テーブル '$TableName' のUNIQUE制約 '$($Constraint.name)' に存在しないカラムが指定されています: $columnName"
+        }
+    }
+}
+
+# PRIMARY KEY制約の検証
+function Test-PrimaryKeyConstraintConfig {
+    param(
+        [string]$TableName,
+        [object]$Constraint,
+        [array]$ColumnNames
+    )
+    
+    if (-not $Constraint.columns -or $Constraint.columns.Count -eq 0) {
+        throw "テーブル '$TableName' のPRIMARY KEY制約 '$($Constraint.name)' にカラムが設定されていません"
+    }
+    
+    foreach ($columnName in $Constraint.columns) {
+        if ($columnName -notin $ColumnNames) {
+            throw "テーブル '$TableName' のPRIMARY KEY制約 '$($Constraint.name)' に存在しないカラムが指定されています: $columnName"
+        }
+    }
+}
+
+# CHECK制約の検証
+function Test-CheckConstraintConfig {
+    param(
+        [string]$TableName,
+        [object]$Constraint
+    )
+    
+    if (-not $Constraint.check_expression -or [string]::IsNullOrWhiteSpace($Constraint.check_expression)) {
+        throw "テーブル '$TableName' のCHECK制約 '$($Constraint.name)' にcheck_expressionが設定されていません"
+    }
+}
+
+# FOREIGN KEY制約の検証
+function Test-ForeignKeyConstraintConfig {
+    param(
+        [string]$TableName,
+        [object]$Constraint,
+        [array]$ColumnNames
+    )
+    
+    if (-not $Constraint.columns -or $Constraint.columns.Count -eq 0) {
+        throw "テーブル '$TableName' のFOREIGN KEY制約 '$($Constraint.name)' にカラムが設定されていません"
+    }
+    
+    if (-not $Constraint.foreign_key) {
+        throw "テーブル '$TableName' のFOREIGN KEY制約 '$($Constraint.name)' にforeign_key設定が必要です"
+    }
+    
+    $foreignKey = $Constraint.foreign_key
+    
+    # 参照テーブルの検証
+    if (-not $foreignKey.reference_table) {
+        throw "テーブル '$TableName' のFOREIGN KEY制約 '$($Constraint.name)' にreference_tableが設定されていません"
+    }
+    
+    # 参照カラムの検証
+    if (-not $foreignKey.reference_columns -or $foreignKey.reference_columns.Count -eq 0) {
+        throw "テーブル '$TableName' のFOREIGN KEY制約 '$($Constraint.name)' にreference_columnsが設定されていません"
+    }
+    
+    # カラム数の一致確認
+    if ($Constraint.columns.Count -ne $foreignKey.reference_columns.Count) {
+        throw "テーブル '$TableName' のFOREIGN KEY制約 '$($Constraint.name)' で、カラム数と参照カラム数が一致しません"
+    }
+    
+    # 制約対象カラムの存在確認
+    foreach ($columnName in $Constraint.columns) {
+        if ($columnName -notin $ColumnNames) {
+            throw "テーブル '$TableName' のFOREIGN KEY制約 '$($Constraint.name)' に存在しないカラムが指定されています: $columnName"
+        }
+    }
+    
+    # オプション設定の検証
+    if ($foreignKey.PSObject.Properties.Name -contains "on_delete") {
+        $validActions = @("CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT", "NO ACTION")
+        if ($foreignKey.on_delete -notin $validActions) {
+            throw "テーブル '$TableName' のFOREIGN KEY制約 '$($Constraint.name)' の無効なon_deleteアクション: $($foreignKey.on_delete). 有効な値: $($validActions -join ', ')"
+        }
+    }
+    
+    if ($foreignKey.PSObject.Properties.Name -contains "on_update") {
+        $validActions = @("CASCADE", "SET NULL", "SET DEFAULT", "RESTRICT", "NO ACTION")
+        if ($foreignKey.on_update -notin $validActions) {
+            throw "テーブル '$TableName' のFOREIGN KEY制約 '$($Constraint.name)' の無効なon_updateアクション: $($foreignKey.on_update). 有効な値: $($validActions -join ', ')"
+        }
+    }
+}
+
+# 同期ルール整合性検証
+function Test-SyncRulesConsistency {
+    param(
+        [Parameter(Mandatory = $true)]
+        $Config
+    )
+    
+    $mappings = $Config.sync_rules.column_mappings.mappings
+    $providedColumns = $Config.tables.provided_data.columns | ForEach-Object { $_.name }
+    $currentColumns = $Config.tables.current_data.columns | ForEach-Object { $_.name }
+    
+    # column_mappingsのキー（provided_data側）の存在確認
+    foreach ($providedColumn in $mappings.PSObject.Properties.Name) {
+        if ($providedColumn -notin $providedColumns) {
+            throw "column_mappings のキー '$providedColumn' がprovided_dataテーブルに存在しません"
+        }
+    }
+    
+    # column_mappingsの値（current_data側）の存在確認
+    foreach ($property in $mappings.PSObject.Properties) {
+        $currentColumn = $property.Value
+        if ($currentColumn -notin $currentColumns) {
+            throw "column_mappings の値 '$currentColumn' がcurrent_dataテーブルに存在しません (キー: $($property.Name))"
+        }
+    }
+    
+    Write-SystemLog "同期ルール整合性検証完了" -Level "Info"
+}
+
+# キーカラム検証
+function Test-KeyColumnsValidation {
+    param(
+        [Parameter(Mandatory = $true)]
+        $Config
+    )
+    
+    if (-not $Config.sync_rules.key_columns) {
+        throw "key_columns の設定が見つかりません"
+    }
+    
+    $keyColumns = $Config.sync_rules.key_columns
+    
+    # 各テーブルのキーカラム存在確認
+    foreach ($tableName in @("provided_data", "current_data", "sync_result")) {
+        if (-not $keyColumns.$tableName) {
+            throw "テーブル '$tableName' のkey_columnsが設定されていません"
+        }
+        
+        $tableColumns = $Config.tables.$tableName.columns | ForEach-Object { $_.name }
+        
+        foreach ($keyColumn in $keyColumns.$tableName) {
+            if ($keyColumn -notin $tableColumns) {
+                throw "テーブル '$tableName' にキーカラム '$keyColumn' が存在しません"
+            }
+            
+            # UNIQUE制約の確認（推奨）
+            $column = $Config.tables.$tableName.columns | Where-Object { $_.name -eq $keyColumn }
+            $hasUniqueInColumn = $column.constraints -like "*UNIQUE*" -or $column.constraints -like "*PRIMARY KEY*"
+            
+            # テーブル制約からUNIQUE制約をチェック
+            $hasUniqueInTableConstraints = $false
+            if ($Config.tables.$tableName.table_constraints) {
+                foreach ($constraint in $Config.tables.$tableName.table_constraints) {
+                    if ($constraint.type -eq "UNIQUE" -and $keyColumn -in $constraint.columns -and $constraint.enabled -ne $false) {
+                        $hasUniqueInTableConstraints = $true
+                        break
+                    }
+                }
+            }
+            
+            if (-not $hasUniqueInColumn -and -not $hasUniqueInTableConstraints) {
+                Write-Warning "キーカラム '$keyColumn' (テーブル: $tableName) にUNIQUE制約がありません。データ整合性のためUNIQUE制約を推奨します"
+            }
+        }
+    }
+    
+    Write-SystemLog "キーカラム検証完了" -Level "Info"
+}
+
+# データフィルタ設定整合性検証
+function Test-DataFilterConsistency {
+    param(
+        [Parameter(Mandatory = $true)]
+        $Config
+    )
+    
+    foreach ($tableName in @("provided_data", "current_data")) {
+        if ($Config.data_filters.$tableName -and $Config.data_filters.$tableName.enabled) {
+            $tableColumns = $Config.tables.$tableName.columns | ForEach-Object { $_.name }
+            $filterRules = $Config.data_filters.$tableName.rules
+            
+            foreach ($rule in $filterRules) {
+                # フィルタ対象フィールドの存在確認
+                if ($rule.field -notin $tableColumns) {
+                    throw "テーブル '$tableName' のデータフィルタで、存在しないフィールド '$($rule.field)' が指定されています"
+                }
+                
+                # フィルタタイプの妥当性確認
+                if ($rule.type -notin @("include", "exclude")) {
+                    throw "テーブル '$tableName' のデータフィルタで、無効なフィルタタイプ '$($rule.type)' が指定されています。有効な値: include, exclude"
+                }
+                
+                # GLOBパターンの基本的な妥当性確認
+                if ([string]::IsNullOrWhiteSpace($rule.glob)) {
+                    Write-Warning "テーブル '$tableName' のデータフィルタでGLOBパターンが空です (フィールド: $($rule.field))"
+                }
+                
+                # 危険なパターンの警告
+                if ($rule.glob -eq "*") {
+                    Write-Warning "テーブル '$tableName' のデータフィルタで全件一致パターン '*' が使用されています (フィールド: $($rule.field))"
+                }
+            }
+        }
+    }
+    
+    Write-SystemLog "データフィルタ整合性検証完了" -Level "Info"
+}
+
+# ログ設定の内部検証（循環参照回避）
+function Test-LoggingConfigInternal {
+    param(
+        [Parameter(Mandatory = $true)]
+        $LoggingConfig
+    )
+    
+    # ログレベルの妥当性確認
+    $validLevels = @("Info", "Warning", "Error", "Success")
+    foreach ($level in $LoggingConfig.levels) {
+        if ($level -notin $validLevels) {
+            Write-Warning "無効なログレベルが指定されています: $level. 有効な値: $($validLevels -join ', ')"
+        }
+    }
+    
+    # ファイルサイズとファイル数の妥当性確認
+    if ($LoggingConfig.max_file_size_mb -le 0) {
+        Write-Warning "ログファイルの最大サイズが無効です: $($LoggingConfig.max_file_size_mb)MB. 正の数値を指定してください"
+    }
+    
+    if ($LoggingConfig.max_files -le 0) {
+        Write-Warning "ログファイルの保持数が無効です: $($LoggingConfig.max_files). 正の数値を指定してください"
+    }
+    
+    # ログディレクトリパスの検証
+    if ([string]::IsNullOrWhiteSpace($LoggingConfig.log_directory)) {
+        Write-Warning "ログディレクトリパスが空です"
+    }
+    
+    # ログファイル名の検証
+    if ([string]::IsNullOrWhiteSpace($LoggingConfig.log_file_name)) {
+        Write-Warning "ログファイル名が空です"
+    }
+    
+    Write-SystemLog "ログ設定検証完了" -Level "Info"
+}
+
 Export-ModuleMember -Function @(
     'Get-DataSyncConfig',
     'Get-FilePathConfig',
@@ -327,5 +680,9 @@ Export-ModuleMember -Function @(
     'Get-LoggingConfig',
     'Get-DataFilterConfig',
     'Test-SyncResultMappingConfig',
-    'Get-SyncResultMappingConfig'
+    'Get-SyncResultMappingConfig',
+    'Test-TableConstraintsConfig',
+    'Test-SyncRulesConsistency',
+    'Test-KeyColumnsValidation',
+    'Test-DataFilterConsistency'
 )

@@ -11,33 +11,33 @@ function Show-FilterConfig {
     $filterConfig = Get-DataFilterConfig -TableName $TableName
     
     if (-not $filterConfig) {
-        Write-Host "テーブル '$TableName' にフィルタ設定がありません" -ForegroundColor Yellow
+        Write-SystemLog "テーブル '$TableName' にフィルタ設定がありません" -Level "Warning"
         return
     }
     
-    Write-Host "=== フィルタ設定: $TableName ===" -ForegroundColor Cyan
-    Write-Host "有効: $($filterConfig.enabled)" -ForegroundColor Green
+    Write-SystemLog "=== フィルタ設定: $TableName ===" -Level "Info"
+    Write-SystemLog "有効: $($filterConfig.enabled)" -Level "Info"
     
     if ($filterConfig.rules -and $filterConfig.rules.Count -gt 0) {
-        Write-Host "ルール数: $($filterConfig.rules.Count)" -ForegroundColor Green
+        Write-SystemLog "ルール数: $($filterConfig.rules.Count)" -Level "Info"
         
         for ($i = 0; $i -lt $filterConfig.rules.Count; $i++) {
             $rule = $filterConfig.rules[$i]
-            Write-Host "  [$($i + 1)] フィールド: $($rule.field)" -ForegroundColor White
-            Write-Host "       タイプ: $($rule.type)" -ForegroundColor White
+            Write-SystemLog "  [$($i + 1)] フィールド: $($rule.field)" -Level "Info"
+            Write-SystemLog "       タイプ: $($rule.type)" -Level "Info"
             
             if ($rule.pattern) {
-                Write-Host "       パターン: $($rule.pattern)" -ForegroundColor White
+                Write-SystemLog "       パターン: $($rule.pattern)" -Level "Info"
             }
             if ($rule.value) {
-                Write-Host "       値: $($rule.value)" -ForegroundColor White
+                Write-SystemLog "       値: $($rule.value)" -Level "Info"
             }
             
-            Write-Host "       説明: $($rule.description)" -ForegroundColor Gray
+            Write-SystemLog "       説明: $($rule.description)" -Level "Info"
         }
     }
     else {
-        Write-Host "ルールが設定されていません" -ForegroundColor Yellow
+        Write-SystemLog "ルールが設定されていません" -Level "Warning"
     }
 }
 
@@ -81,30 +81,8 @@ function Show-FilteringStatistics {
     }
 }
 
-# # フィルタリング結果の返却形式（utils関数）
-# function New-FilteringResult {
-#     param(
-#         [Parameter(Mandatory = $true)]
-#         [int]$TotalCount,
-        
-#         [Parameter(Mandatory = $true)]
-#         [int]$FilteredCount
-#     )
-    
-#     $excludedCount = $TotalCount - $FilteredCount
-#     $exclusionRate = if ($TotalCount -gt 0) { [Math]::Round(($excludedCount / $TotalCount) * 100, 2) } else { 0 }
-    
-#     return @{
-#         TotalCount    = $TotalCount
-#         FilteredCount = $FilteredCount
-#         ExcludedCount = $excludedCount
-#         ExclusionRate = $exclusionRate
-#     }
-# }
-
 Export-ModuleMember -Function @(
     'Show-FilterConfig',
     'Show-FilteringStatistics',
-    # 'New-FilteringResult',
     'New-TempTableName'
 )

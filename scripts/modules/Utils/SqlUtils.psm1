@@ -49,7 +49,7 @@ function Get-RequiredColumns {
     return $requiredColumns
 }
 
-# CREATE TABLE SQL生成
+# CREATE TABLE SQL生成（table_constraints対応）
 function New-CreateTableSql {
     param(
         [Parameter(Mandatory = $true)]
@@ -58,6 +58,7 @@ function New-CreateTableSql {
     
     $tableDefinition = Get-TableDefinition -TableName $TableName
     
+    # カラム定義の生成
     $columns = @()
     foreach ($column in $tableDefinition.columns) {
         $columnDef = "$($column.name) $($column.type)"
@@ -67,9 +68,70 @@ function New-CreateTableSql {
         $columns += $columnDef
     }
     
+    # テーブル制約の生成
+    $tableConstraints = @()
+    if ($tableDefinition.table_constraints) {
+        foreach ($constraint in $tableDefinition.table_constraints) {
+            # enabled プロパティが false の場合はスキップ
+            if ($constraint.enabled -eq $false) {
+                Write-SystemLog "テーブル制約 '$($constraint.name)' は無効のためスキップします" -Level "Info"
+                continue
+            }
+            
+            switch ($constraint.type) {
+                "UNIQUE" {
+                    $columnsStr = $constraint.columns -join ", "
+                    $constraintDef = "CONSTRAINT $($constraint.name) UNIQUE ($columnsStr)"
+                    $tableConstraints += $constraintDef
+                    Write-SystemLog "UNIQUE制約を追加: $($constraint.name) ($columnsStr)" -Level "Info"
+                }
+                "PRIMARY KEY" {
+                    $columnsStr = $constraint.columns -join ", "
+                    $constraintDef = "CONSTRAINT $($constraint.name) PRIMARY KEY ($columnsStr)"
+                    $tableConstraints += $constraintDef
+                    Write-SystemLog "PRIMARY KEY制約を追加: $($constraint.name) ($columnsStr)" -Level "Info"
+                }
+                "CHECK" {
+                    if ($constraint.check_expression) {
+                        $constraintDef = "CONSTRAINT $($constraint.name) CHECK ($($constraint.check_expression))"
+                        $tableConstraints += $constraintDef
+                        Write-SystemLog "CHECK制約を追加: $($constraint.name)" -Level "Info"
+                    }
+                }
+                "FOREIGN KEY" {
+                    if ($constraint.foreign_key) {
+                        $fkColumns = $constraint.columns -join ", "
+                        $refColumns = $constraint.foreign_key.reference_columns -join ", "
+                        $constraintDef = "CONSTRAINT $($constraint.name) FOREIGN KEY ($fkColumns) REFERENCES $($constraint.foreign_key.reference_table) ($refColumns)"
+                        
+                        if ($constraint.foreign_key.on_delete) {
+                            $constraintDef += " ON DELETE $($constraint.foreign_key.on_delete)"
+                        }
+                        if ($constraint.foreign_key.on_update) {
+                            $constraintDef += " ON UPDATE $($constraint.foreign_key.on_update)"
+                        }
+                        
+                        $tableConstraints += $constraintDef
+                        Write-SystemLog "FOREIGN KEY制約を追加: $($constraint.name)" -Level "Info"
+                    }
+                }
+                default {
+                    Write-SystemLog "未対応の制約タイプです: $($constraint.type)" -Level "Warning"
+                }
+            }
+        }
+    }
+    
+    # SQL文の構築
     $sql = "CREATE TABLE IF NOT EXISTS $TableName (`n"
-    $sql += "    " + ($columns -join ",`n    ") + "`n"
-    $sql += ");"
+    $sql += "    " + ($columns -join ",`n    ")
+    
+    # テーブル制約がある場合は追加
+    if ($tableConstraints.Count -gt 0) {
+        $sql += ",`n    " + ($tableConstraints -join ",`n    ")
+    }
+    
+    $sql += "`n);"
     
     return $sql
 }

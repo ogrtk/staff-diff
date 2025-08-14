@@ -48,6 +48,14 @@
   "tables": {
     "provided_data": {
       "description": "提供データテーブル",
+      "table_constraints": [
+        {
+          "name": "uk_provided_employee_id",
+          "type": "UNIQUE",
+          "columns": ["employee_id"],
+          "description": "職員IDの一意制約（明示的定義）"
+        }
+      ],
       "columns": [
         {
           "name": "id",
@@ -59,7 +67,7 @@
         {
           "name": "employee_id",
           "type": "TEXT",
-          "constraints": "NOT NULL UNIQUE",
+          "constraints": "NOT NULL",
           "csv_include": true,
           "required": true,
           "description": "職員ID"
@@ -133,6 +141,14 @@
     },
     "current_data": {
       "description": "現在データテーブル",
+      "table_constraints": [
+        {
+          "name": "uk_current_user_id",
+          "type": "UNIQUE",
+          "columns": ["user_id"],
+          "description": "利用者IDの一意制約（明示的定義）"
+        }
+      ],
       "columns": [
         {
           "name": "id",
@@ -144,7 +160,7 @@
         {
           "name": "user_id",
           "type": "TEXT",
-          "constraints": "NOT NULL UNIQUE",
+          "constraints": "NOT NULL",
           "csv_include": true,
           "required": true,
           "description": "利用者ID"
@@ -218,6 +234,21 @@
     },
     "sync_result": {
       "description": "同期結果テーブル",
+      "table_constraints": [
+        {
+          "name": "uk_sync_result_syokuin_no",
+          "type": "UNIQUE",
+          "columns": ["syokuin_no"],
+          "description": "職員番号の一意制約（重複レコード防止）"
+        },
+        {
+          "name": "uk_sync_result_composite",
+          "type": "UNIQUE",
+          "columns": ["syokuin_no", "sync_action"],
+          "description": "職員番号+同期アクションの複合一意制約（例：同一人物の重複処理防止）",
+          "enabled": false
+        }
+      ],
       "columns": [
         {
           "name": "id",
