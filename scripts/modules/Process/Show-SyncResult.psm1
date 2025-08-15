@@ -60,7 +60,7 @@ SELECT 'sync_result' as table_name, COUNT(*) as count FROM sync_result;
         
         foreach ($actionKey in $syncActionLabels.PSObject.Properties.Name) {
             $actionConfig = $syncActionLabels.$actionKey
-            $actionName = $actionConfig.action_name
+            $actionName = $actionConfig.value
             $orderByCases += "        WHEN '$actionName' THEN $displayOrder"
             $displayOrder++
         }
@@ -93,21 +93,18 @@ $orderByClause
             
             # sync_action_labelsから設定を取得
             $actionConfig = $null
-            if ($syncActionLabels -and $syncActionLabels.$cleanAction) {
-                $actionConfig = $syncActionLabels.$cleanAction
-            }
-            else {
-                # 文字列のアクション名から検索（ADD, UPDATE等で格納されている場合）
-                foreach ($key in $syncActionLabels.Keys) {
-                    if ($syncActionLabels.$key.action_name -eq $cleanAction) {
-                        $actionConfig = $syncActionLabels.$key
-                        break
-                    }
+            
+            # データベースには数値（1, 2等）が格納されているので、
+            # 設定ファイルのvalueと一致するものを検索
+            foreach ($key in $syncActionLabels.PSObject.Properties.Name) {
+                if ($syncActionLabels.$key.value -eq $cleanAction) {
+                    $actionConfig = $syncActionLabels.$key
+                    break
                 }
             }
             
             if ($actionConfig) {
-                $displayLabel = $actionConfig.display_label
+                $displayLabel = $actionConfig.value
                 $actionDescription = $actionConfig.description
             }
             else {
@@ -116,7 +113,7 @@ $orderByClause
                 $actionDescription = $cleanAction
             }
 
-            Write-SystemLog "$displayLabel ($actionDescription): $count 件" -Level "Info"
+            Write-SystemLog "$actionDescription ($displayLabel): $count 件" -Level "Info"
         }
 
         if ($totalSyncRecords -gt 0) {

@@ -3,7 +3,7 @@
 
 BeforeAll {
     $script:TestRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-    $script:ModulePath = Join-Path $TestRoot 'scripts/modules/Utils/ErrorHandlingUtils.psm1'
+    $script:ModulePath = Join-Path $TestRoot 'scripts/modules/Utils/Infrastructure/ErrorHandlingUtils.psm1'
     
     # Import module for testing
     Import-Module $script:ModulePath -Force

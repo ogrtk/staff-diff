@@ -4,8 +4,8 @@
 BeforeAll {
     # テスト対象モジュールのインポート
     $ModuleRoot = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "scripts/modules"
-    Import-Module (Join-Path $ModuleRoot "Utils/CommonUtils.psm1") -Force
-    Import-Module (Join-Path $ModuleRoot "Utils/ConfigUtils.psm1") -Force
+    Import-Module (Join-Path $ModuleRoot "Utils/Foundation/CoreUtils.psm1") -Force
+    Import-Module (Join-Path $ModuleRoot "Utils/Infrastructure/ConfigurationUtils.psm1") -Force
     Import-Module (Join-Path $ModuleRoot "Process/Show-SyncResult.psm1") -Force
 }
 

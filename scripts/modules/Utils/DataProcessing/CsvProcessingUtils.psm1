@@ -1,5 +1,7 @@
-# PowerShell & SQLite 職員データ管理システム
-# CSV処理ユーティリティスクリプト（設定ベース版）
+# PowerShell & SQLite データ同期システム
+# Layer 4: CSV Processing ユーティリティライブラリ（CSV処理専用）
+
+# Layer 1, 2, 3への依存は実行時に解決
 
 # CSVフォーマット設定取得関数
 function Get-CsvFormatConfig {
@@ -183,8 +185,6 @@ function ConvertFrom-SqliteStringResult {
     }
 }
 
-
-
 # CSVファイルのバリデーション（設定ベース版）
 function Test-CsvFormat {
     param(
@@ -250,8 +250,64 @@ function Test-CsvFormat {
     }
 }
 
+# CSVエクスポート関数（設定ベース）
+function Export-CsvWithFormat {
+    param(
+        [Parameter(Mandatory = $true)]
+        [array]$Data,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$CsvPath,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$TableName
+    )
+    
+    try {
+        $formatConfig = Get-CsvFormatConfig -TableName $TableName
+        
+        Write-SystemLog "CSVファイルを出力中: $CsvPath (テーブル: $TableName)" -Level "Info"
+        Write-SystemLog "使用設定 - エンコーディング: $($formatConfig.encoding), 区切り文字: '$($formatConfig.delimiter)'" -Level "Info"
+        
+        # PowerShell用エンコーディング名に変換
+        $encoding = ConvertTo-PowerShellEncoding -EncodingName $formatConfig.encoding
+        
+        # Export-Csvパラメータ準備
+        $exportParams = @{
+            Path     = $CsvPath
+            Encoding = $encoding
+            Force    = $true
+            NoTypeInformation = $true
+        }
+        
+        # 区切り文字設定（PowerShellのデフォルトはカンマ）
+        if ($formatConfig.delimiter -ne ",") {
+            $exportParams.Delimiter = $formatConfig.delimiter
+        }
+        
+        # ヘッダー設定
+        if ($formatConfig.include_header -eq $false) {
+            $exportParams.NoHeader = $true
+        }
+        
+        # CSVデータエクスポート
+        $Data | Export-Csv @exportParams
+        
+        Write-SystemLog "CSVファイル出力完了: $CsvPath ($($Data.Count)行)" -Level "Success"
+        
+    }
+    catch {
+        Write-SystemLog "CSVファイルの出力に失敗しました: $($_.Exception.Message)" -Level "Error"
+        throw
+    }
+}
+
 Export-ModuleMember -Function @(
+    'Get-CsvFormatConfig',
+    'ConvertTo-PowerShellEncoding',
+    'ConvertTo-NewlineFormat',
     'Import-CsvWithFormat',
+    'ConvertFrom-SqliteStringResult',
     'Test-CsvFormat',
-    'Get-CsvFormatConfig', 'ConvertTo-PowerShellEncoding'
+    'Export-CsvWithFormat'
 )

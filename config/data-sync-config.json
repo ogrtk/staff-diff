@@ -52,7 +52,9 @@
         {
           "name": "uk_provided_employee_id",
           "type": "UNIQUE",
-          "columns": ["employee_id"],
+          "columns": [
+            "employee_id"
+          ],
           "description": "職員IDの一意制約（明示的定義）"
         }
       ],
@@ -145,7 +147,9 @@
         {
           "name": "uk_current_user_id",
           "type": "UNIQUE",
-          "columns": ["user_id"],
+          "columns": [
+            "user_id"
+          ],
           "description": "利用者IDの一意制約（明示的定義）"
         }
       ],
@@ -238,13 +242,18 @@
         {
           "name": "uk_sync_result_syokuin_no",
           "type": "UNIQUE",
-          "columns": ["syokuin_no"],
+          "columns": [
+            "syokuin_no"
+          ],
           "description": "職員番号の一意制約（重複レコード防止）"
         },
         {
           "name": "uk_sync_result_composite",
           "type": "UNIQUE",
-          "columns": ["syokuin_no", "sync_action"],
+          "columns": [
+            "syokuin_no",
+            "sync_action"
+          ],
           "description": "職員番号+同期アクションの複合一意制約（例：同一人物の重複処理防止）",
           "enabled": false
         }
@@ -504,23 +513,19 @@
       "description": "同期アクションの表示設定",
       "mappings": {
         "ADD": {
-          "action_name": "ADD",
-          "display_label": "1",
+          "value": "1",
           "description": "新規追加"
         },
         "UPDATE": {
-          "action_name": "UPDATE",
-          "display_label": "2", 
+          "value": "2",
           "description": "更新"
         },
         "DELETE": {
-          "action_name": "DELETE",
-          "display_label": "3",
+          "value": "3",
           "description": "削除"
         },
         "KEEP": {
-          "action_name": "KEEP",
-          "display_label": "9",
+          "value": "9",
           "description": "変更なし"
         }
       }

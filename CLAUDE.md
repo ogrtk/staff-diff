@@ -81,19 +81,47 @@ GLOBパターンによるフィルタリング：
 ### ファイルパス解決
 優先順位: コマンドパラメータ → 設定ファイル → デフォルト
 
-## モジュール依存関係と読み込み順序
+## モジュール依存関係と読み込み順序（レイヤアーキテクチャ）
 
-### 重要な読み込み順序
-1. **CommonUtils.psm1** - 最初に読み込み必須（ログ、時間関数）
-2. **ConfigUtils.psm1** - 設定読み込み（CommonUtilsに依存）
-3. **ErrorHandlingUtils.psm1** - 統一エラーハンドリング
-4. **その他Utilsモジュール** - 専門ユーティリティ
-5. **Processモジュール** - ビジネスロジック
+### ディレクトリ構造
+```
+scripts/modules/Utils/
+├── Foundation/          # Layer 1: 基盤層
+│   └── CoreUtils.psm1
+├── Infrastructure/      # Layer 2: インフラ層
+│   ├── ConfigurationUtils.psm1
+│   ├── LoggingUtils.psm1
+│   └── ErrorHandlingUtils.psm1
+├── DataAccess/         # Layer 3: データアクセス層
+│   ├── DatabaseUtils.psm1
+│   └── FileSystemUtils.psm1
+└── DataProcessing/     # Layer 4: データ処理層
+    ├── CsvProcessingUtils.psm1
+    └── DataFilteringUtils.psm1
+```
 
-### モジュール間相互作用
-- **Utilsモジュール** はステートレスで再利用可能
-- **Processモジュール** は複雑なワークフローを統制
-- **エラーハンドリング** は集中化されているが操作タイプ別に設定可能
+### Layer 1: Foundation（基盤層）- 設定非依存
+1. **Foundation/CoreUtils.psm1** - 最初に読み込み必須（SQLite基本操作、エンコーディング、基本ログ）
+
+### Layer 2: Infrastructure（インフラ層）- 設定依存
+2. **Infrastructure/ConfigurationUtils.psm1** - 設定管理専用（CoreUtilsに依存）
+3. **Infrastructure/LoggingUtils.psm1** - 高度なログ機能（CoreUtils、ConfigurationUtilsに依存）
+4. **Infrastructure/ErrorHandlingUtils.psm1** - 統一エラーハンドリング（CoreUtils、ConfigurationUtilsに依存）
+
+### Layer 3: Data Access（データアクセス層）
+5. **DataAccess/DatabaseUtils.psm1** - SQL生成、テーブル定義（Layer 1, 2に依存）
+6. **DataAccess/FileSystemUtils.psm1** - ファイル操作、履歴管理（Layer 1, 2に依存）
+
+### Layer 4: Data Processing（データ処理層）
+7. **DataProcessing/CsvProcessingUtils.psm1** - CSV処理専用（Layer 1-3に依存）
+8. **DataProcessing/DataFilteringUtils.psm1** - データフィルタ処理（Layer 1, 2に依存）
+
+### レイヤアーキテクチャの利点
+- **依存関係の明確化**: 下位レイヤのみに依存、循環依存を回避
+- **責任分離の明確化**: 各レイヤが単一責任を持つ
+- **テスト容易性**: 各レイヤを独立してテスト可能
+- **保守性向上**: 変更の影響範囲が明確
+- **ディレクトリ分離**: 機能別の物理的分離によりナビゲーションが容易
 
 ## データ処理フロー
 
@@ -173,9 +201,57 @@ Invoke-FileOperationWithErrorHandling -FileOperation {
 } -FilePath $path -OperationType "操作種別"
 ```
 
-### 重要な注意事項
+## デバッグとメンテナンス
+
+### ログファイルの確認
+```bash
+# システムログの確認
+tail -f logs/data-sync-system.log
+
+# PowerShellでログ確認
+Get-Content logs/data-sync-system.log -Tail 20
+```
+
+### データベース直接確認
+```bash
+# SQLiteデータベースに接続
+sqlite3 database/data-sync.db
+
+# テーブル一覧表示
+.tables
+
+# スキーマ確認
+.schema sync_result
+
+# データ確認例
+SELECT COUNT(*) FROM provided_data;
+SELECT sync_action, COUNT(*) FROM sync_result GROUP BY sync_action;
+```
+
+### パフォーマンス最適化
+- データ量が多い場合（10万件以上）は performance_settings の調整を検討
+- sqlite_pragmas設定でWALモードとキャッシュサイズを最適化済み
+- バッチサイズは設定で調整可能（デフォルト1000件）
+
+## 重要な注意事項
 - 何か変更を行う際は、必ず設定ベースアーキテクチャを維持すること
 - 新機能追加時は config/data-sync-config.json での設定可能性を検討すること
 - ハードコーディングは避け、動的生成を優先すること
 - すべての変更には適切なログとエラーハンドリングを含めること
 - **エラーハンドリングは統一関数を使用し、適切なカテゴリを選択すること**
+- **レイヤアーキテクチャの依存関係を維持し、上位レイヤから下位レイヤへの依存のみ許可**
+
+## クイック開発ワークフロー
+
+### 新機能開発時の手順
+1. 設定ファイル更新: `config/data-sync-config.json`
+2. テスト作成: `tests/` ディレクトリに対応するテストファイル
+3. 実装: レイヤアーキテクチャに従ってモジュール選択
+4. テスト実行: `pwsh ./tests/run-test.ps1`
+5. 統合テスト: `pwsh ./tests/run-test.ps1 -TestPath "Integration\FullSystem.Tests.ps1"`
+
+### 設定変更のテスト
+```bash
+# 設定変更後の検証
+pwsh ./scripts/main.ps1 -ProvidedDataFilePath "./test-data/provided.csv" -CurrentDataFilePath "./test-data/current.csv" -OutputFilePath "./test-data/test-output.csv"
+```

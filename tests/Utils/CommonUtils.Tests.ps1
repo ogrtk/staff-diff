@@ -17,14 +17,23 @@ BeforeAll {
         }
     }
     
-    # モジュールをインポート
-    Import-Module (Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'scripts/modules/Utils/CommonUtils.psm1') -Force
+    # Mock Write-SystemLog function to avoid dependency issues
+    function Global:Write-SystemLog {
+        param(
+            [string]$Message,
+            [string]$Level = "Info"
+        )
+        Write-Host "Mock Log [$Level]: $Message"
+    }
+    
+    # モジュールをインポート（新しいレイヤ構造）
+    Import-Module (Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'scripts/modules/Utils/Foundation/CoreUtils.psm1') -Force
 }
 
 Describe "Get-CrossPlatformEncoding" {
     It "should return UTF8 encoding for PowerShell Core (version 6+)" {
         # Mock $PSVersionTable for testing PowerShell Core behavior
-        Mock -ModuleName CommonUtils -CommandName Get-Variable -ParameterFilter { $Name -eq 'PSVersionTable' } -MockWith {
+        Mock -ModuleName CoreUtils -CommandName Get-Variable -ParameterFilter { $Name -eq 'PSVersionTable' } -MockWith {
             return [PSCustomObject]@{
                 PSVersion = [Version]'6.0.0'
             }
@@ -36,7 +45,7 @@ Describe "Get-CrossPlatformEncoding" {
 
     It "should return UTF8 encoding with BOM for Windows PowerShell (version < 6)" {
         # Mock $PSVersionTable for testing Windows PowerShell behavior
-        Mock -ModuleName CommonUtils -CommandName Get-Variable -ParameterFilter { $Name -eq 'PSVersionTable' } -MockWith {
+        Mock -ModuleName CoreUtils -CommandName Get-Variable -ParameterFilter { $Name -eq 'PSVersionTable' } -MockWith {
             return [PSCustomObject]@{
                 PSVersion = [Version]'5.1.0'
             }
@@ -51,7 +60,7 @@ Describe "Get-CrossPlatformEncoding" {
 
 Describe "Get-Sqlite3Path" {
     It "should return the sqlite3 command path if found" {
-        Mock -ModuleName CommonUtils -CommandName Get-Command -ParameterFilter { $Name -eq 'sqlite3' } -MockWith {
+        Mock -ModuleName CoreUtils -CommandName Get-Command -ParameterFilter { $Name -eq 'sqlite3' } -MockWith {
             return [PSCustomObject]@{
                 Name = 'sqlite3'
                 Source = '/usr/bin/sqlite3'
@@ -63,7 +72,7 @@ Describe "Get-Sqlite3Path" {
     }
 
     It "should throw an error if sqlite3 command is not found" {
-        Mock -ModuleName CommonUtils -CommandName Get-Command -ParameterFilter { $Name -eq 'sqlite3' } -MockWith {
+        Mock -ModuleName CoreUtils -CommandName Get-Command -ParameterFilter { $Name -eq 'sqlite3' } -MockWith {
             return $null
         }
         {
@@ -76,22 +85,22 @@ Describe "Clear-Table" {
     Context "Table exists" {
         It "should clear the table and log statistics when ShowStatistics is true" {
             # Mock Invoke-SqliteCommand for table existence check
-            Mock -ModuleName CommonUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'SELECT name FROM sqlite_master%' } -MockWith {
+            Mock -ModuleName CoreUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'SELECT name FROM sqlite_master%' } -MockWith {
                 return @{ name = 'test_table' }
             } -Verifiable
 
             # Mock Invoke-SqliteCommand for count query
-            Mock -ModuleName CommonUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'SELECT COUNT(*)%' } -MockWith {
+            Mock -ModuleName CoreUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'SELECT COUNT(*)%' } -MockWith {
                 return @( @{ count = 10 } )
             } -Verifiable
 
             # Mock Invoke-SqliteCommand for delete query
-            Mock -ModuleName CommonUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'DELETE FROM%' } -MockWith {
+            Mock -ModuleName CoreUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'DELETE FROM%' } -MockWith {
                 # Do nothing, just verify it's called
             } -Verifiable
 
             # Mock Write-SystemLog
-            Mock -ModuleName CommonUtils -CommandName Write-SystemLog -MockWith {
+            Mock -ModuleName CoreUtils -CommandName Write-SystemLog -MockWith {
                 # Capture logs for assertion
             } -Verifiable
 
@@ -106,17 +115,17 @@ Describe "Clear-Table" {
 
         It "should clear the table and log without statistics when ShowStatistics is false" {
             # Mock Invoke-SqliteCommand for table existence check
-            Mock -ModuleName CommonUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'SELECT name FROM sqlite_master%' } -MockWith {
+            Mock -ModuleName CoreUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'SELECT name FROM sqlite_master%' } -MockWith {
                 return @{ name = 'test_table' }
             } -Verifiable
 
             # Mock Invoke-SqliteCommand for delete query
-            Mock -ModuleName CommonUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'DELETE FROM%' } -MockWith {
+            Mock -ModuleName CoreUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'DELETE FROM%' } -MockWith {
                 # Do nothing, just verify it's called
             } -Verifiable
 
             # Mock Write-SystemLog
-            Mock -ModuleName CommonUtils -CommandName Write-SystemLog -MockWith {
+            Mock -ModuleName CoreUtils -CommandName Write-SystemLog -MockWith {
                 # Capture logs for assertion
             } -Verifiable
 
@@ -133,17 +142,17 @@ Describe "Clear-Table" {
     Context "Table does not exist" {
         It "should skip clearing the table and log a message" {
             # Mock Invoke-SqliteCommand for table existence check to return empty
-            Mock -ModuleName CommonUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'SELECT name FROM sqlite_master%' } -MockWith {
+            Mock -ModuleName CoreUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'SELECT name FROM sqlite_master%' } -MockWith {
                 return @()
             } -Verifiable
 
             # Mock Invoke-SqliteCommand for delete query (should not be called)
-            Mock -ModuleName CommonUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'DELETE FROM%' } -MockWith {
+            Mock -ModuleName CoreUtils -CommandName Invoke-SqliteCommand -ParameterFilter { $Query -like 'DELETE FROM%' } -MockWith {
                 # This mock should not be called
             } -Verifiable
 
             # Mock Write-SystemLog
-            Mock -ModuleName CommonUtils -CommandName Write-SystemLog -MockWith {
+            Mock -ModuleName CoreUtils -CommandName Write-SystemLog -MockWith {
                 # Capture logs for assertion
             } -Verifiable
 
@@ -159,21 +168,21 @@ Describe "Clear-Table" {
 Describe "Invoke-SqliteCsvExport" {
     BeforeAll {
         # Mock external dependencies
-        Mock -ModuleName CommonUtils -CommandName Get-CrossPlatformEncoding -MockWith {
+        Mock -ModuleName CoreUtils -CommandName Get-CrossPlatformEncoding -MockWith {
             return [System.Text.Encoding]::UTF8
         }
-        Mock -ModuleName CommonUtils -CommandName Write-SystemLog -MockWith {}
+        Mock -ModuleName CoreUtils -CommandName Write-SystemLog -MockWith {}
     }
 
     Context "正常なCSV出力" {
         It "SQLite3コマンドでCSVを出力し、件数を返す" {
             # Mock sqlite3 command execution
-            Mock -ModuleName CommonUtils -CommandName & -MockWith {
+            Mock -ModuleName CoreUtils -CommandName & -MockWith {
                 return @("header1,header2", "value1,value2", "value3,value4")
             }
             
             # Mock Out-File
-            Mock -ModuleName CommonUtils -CommandName Out-File -MockWith {}
+            Mock -ModuleName CoreUtils -CommandName Out-File -MockWith {}
 
             $result = Invoke-SqliteCsvExport -DatabasePath "test.db" -Query "SELECT * FROM test" -OutputPath "output.csv"
 
@@ -186,7 +195,7 @@ Describe "Invoke-SqliteCsvExport" {
         It "SQLite3コマンドエラー時に適切な例外を投げる" {
             # Mock sqlite3 command failure
             $global:LASTEXITCODE = 1
-            Mock -ModuleName CommonUtils -CommandName & -MockWith {
+            Mock -ModuleName CoreUtils -CommandName & -MockWith {
                 return "SQL error: syntax error"
             }
 
@@ -210,4 +219,4 @@ Describe "Invoke-SqliteCsvExport" {
 #     }
 # }
 
-# Get-MinimalJapanTimestamp関数は削除されました。Get-JapanTimestamp を使用してください。
+# Get-MinimalJapanTimestamp関数は削除されました。Get-Timestamp を使用してください。

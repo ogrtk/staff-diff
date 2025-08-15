@@ -66,7 +66,7 @@ function script:Add-NewRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction $syncActionLabels.ADD.action_name
+    $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction $syncActionLabels.ADD.value
     
     $query = @"
 INSERT INTO sync_result ($insertColumnsString)
@@ -99,7 +99,7 @@ function script:Add-UpdateRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $syncActionLabels.UPDATE.action_name
+    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $syncActionLabels.UPDATE.value
     
     # 比較条件を動的に生成
     $whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "different" -Table1Name "provided_data" -Table2Name "current_data"
@@ -139,7 +139,7 @@ function script:Add-DeleteRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-SyncResultSelectClause -SourceTableName "current_data" -SourceTableAlias "cd" -SyncAction $syncActionLabels.DELETE.action_name
+    $selectClause = New-SyncResultSelectClause -SourceTableName "current_data" -SourceTableAlias "cd" -SyncAction $syncActionLabels.DELETE.value
     
     $query = @"
 INSERT INTO sync_result ($insertColumnsString)
@@ -184,7 +184,7 @@ function script:Add-KeepRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $syncActionLabels.KEEP.action_name
+    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $syncActionLabels.KEEP.value
     
     # 比較条件を動的に生成
     $whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "same" -Table1Name "provided_data" -Table2Name "current_data"

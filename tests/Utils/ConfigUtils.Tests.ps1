@@ -3,7 +3,7 @@
 
 BeforeAll {
     $script:TestRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
-    $script:ModulePath = Join-Path $TestRoot 'scripts/modules/Utils/ConfigUtils.psm1'
+    $script:ModulePath = Join-Path $TestRoot 'scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1'
     $script:RealConfigPath = Join-Path $TestRoot 'config/data-sync-config.json'
     
     # Import module for testing
@@ -19,7 +19,7 @@ AfterAll {
         Remove-Item -Path $script:TempDir -Recurse -Force
     }
     
-    Remove-Module -Name ConfigUtils -Force -ErrorAction SilentlyContinue
+    Remove-Module -Name ConfigurationUtils -Force -ErrorAction SilentlyContinue
 }
 
 Describe "ConfigUtils Tests" {

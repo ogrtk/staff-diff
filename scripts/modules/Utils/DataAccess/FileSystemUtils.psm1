@@ -1,34 +1,9 @@
 # PowerShell & SQLite データ同期システム
-# ファイル・CSV操作ユーティリティライブラリ
+# Layer 3: FileSystem ユーティリティライブラリ（ファイル操作・履歴管理）
+
+# Layer 1, 2への依存は実行時に解決
 
 # 日本時間でタイムスタンプを取得
-function Get-JapanTimestamp {
-    param(
-        [string]$Format = "yyyyMMdd_HHmmss"
-    )
-    
-    # config読み込みを遅延実行で行い、循環参照を回避
-    try {
-        $config = Get-DataSyncConfig
-        $timezone = if ($config.file_paths.timezone) { $config.file_paths.timezone } else { "Asia/Tokyo" }
-        
-        # .NET TimeZoneInfo を使用して日本時間を取得（フォールバック付き）
-        try {
-            $japanTimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById($timezone)
-            $japanTime = [System.TimeZoneInfo]::ConvertTimeFromUtc([DateTime]::UtcNow, $japanTimeZone)
-        }
-        catch {
-            # タイムゾーン取得に失敗した場合はUTC+9時間で計算
-            $japanTime = [DateTime]::UtcNow.AddHours(9)
-        }
-        return $japanTime.ToString($Format)
-    }
-    catch {
-        # 設定取得に失敗した場合のフォールバック
-        $japanTime = [DateTime]::UtcNow.AddHours(9)
-        return $japanTime.ToString($Format)
-    }
-}
 
 # 履歴用ファイル名の生成
 function New-HistoryFileName {
@@ -39,7 +14,7 @@ function New-HistoryFileName {
         [string]$Extension = ".csv"
     )
     
-    $timestamp = Get-JapanTimestamp
+    $timestamp = Get-Timestamp
     $nameWithoutExt = [System.IO.Path]::GetFileNameWithoutExtension($BaseFileName)
     return "${nameWithoutExt}_${timestamp}${Extension}"
 }
@@ -137,10 +112,103 @@ function ConvertTo-UnifiedLineEndings {
     return $unifiedContent
 }
 
+# ディレクトリ作成（存在チェック付き）
+function New-DirectoryIfNotExists {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$DirectoryPath,
+        
+        [string]$Description = "ディレクトリ"
+    )
+    
+    if (-not (Test-Path $DirectoryPath)) {
+        try {
+            New-Item -ItemType Directory -Path $DirectoryPath -Force | Out-Null
+            Write-SystemLog "$Description を作成しました: $DirectoryPath" -Level "Success"
+        }
+        catch {
+            throw "$Description の作成に失敗しました: $DirectoryPath - $($_.Exception.Message)"
+        }
+    }
+    else {
+        Write-SystemLog "$Description は既に存在します: $DirectoryPath" -Level "Info"
+    }
+    
+    return $DirectoryPath
+}
+
+# ファイル存在確認（詳細情報付き）
+function Test-FileExistsWithInfo {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath,
+        
+        [string]$Description = "ファイル"
+    )
+    
+    if (-not (Test-Path $FilePath)) {
+        Write-SystemLog "$Description が見つかりません: $FilePath" -Level "Error"
+        return $false
+    }
+    
+    $fileInfo = Get-Item $FilePath
+    $fileSizeMB = [math]::Round($fileInfo.Length / 1MB, 2)
+    
+    Write-SystemLog "$Description が見つかりました: $FilePath (サイズ: ${fileSizeMB}MB, 更新日時: $($fileInfo.LastWriteTime))" -Level "Info"
+    
+    return $true
+}
+
+# 出力ファイルの保存（履歴付き）
+function Save-OutputFileWithHistory {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Content,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$OutputPath,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$HistoryDirectory,
+        
+        [string]$Description = "出力ファイル",
+        
+        [string]$Encoding = "UTF8"
+    )
+    
+    try {
+        # メインの出力ファイルに保存
+        $Content | Out-File -FilePath $OutputPath -Encoding $Encoding -Force
+        Write-SystemLog "$Description を保存しました: $OutputPath" -Level "Success"
+        
+        # 履歴ディレクトリの作成
+        New-DirectoryIfNotExists -DirectoryPath $HistoryDirectory -Description "履歴ディレクトリ"
+        
+        # 履歴ファイル名の生成
+        $outputFileName = [System.IO.Path]::GetFileName($OutputPath)
+        $historyFileName = New-HistoryFileName -BaseFileName $outputFileName
+        $historyFilePath = Join-Path $HistoryDirectory $historyFileName
+        
+        # 履歴ファイルに保存
+        $Content | Out-File -FilePath $historyFilePath -Encoding $Encoding -Force
+        Write-SystemLog "$Description の履歴を保存しました: $historyFilePath" -Level "Success"
+        
+        return @{
+            OutputPath = $OutputPath
+            HistoryPath = $historyFilePath
+        }
+    }
+    catch {
+        throw "$Description の保存に失敗しました: $($_.Exception.Message)"
+    }
+}
+
 Export-ModuleMember -Function @(
-    'Get-JapanTimestamp',
     'New-HistoryFileName',
     'Copy-InputFileToHistory',
     'Resolve-FilePath',
-    'ConvertTo-UnifiedLineEndings'
+    'ConvertTo-UnifiedLineEndings',
+    'New-DirectoryIfNotExists',
+    'Test-FileExistsWithInfo',
+    'Save-OutputFileWithHistory'
 )

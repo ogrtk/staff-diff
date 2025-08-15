@@ -1,5 +1,7 @@
 # PowerShell & SQLite データ同期システム
-# エラーハンドリングユーティリティライブラリ
+# Layer 2: Error Handling ユーティリティライブラリ（エラーハンドリング専用）
+
+# Layer 1, 2への依存は実行時に解決（Import-Module不要、直接関数呼び出し）
 
 # エラー分類の定義
 enum ErrorCategory {
@@ -102,7 +104,7 @@ function Invoke-WithErrorHandling {
                 Write-SystemLog "$Operation を実行中... (試行 $attempt/$maxAttempts)" -Level "Info"
             }
             else {
-                Write-SystemLog "$Operation を実行中...（リトライなし）" -Level "Info"
+                Write-SystemLog "$Operation を実行中..." -Level "Info"
             }
             
             # スクリプトブロック実行

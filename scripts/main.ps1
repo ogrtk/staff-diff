@@ -20,15 +20,22 @@ $ProcessModulePath = Join-Path $ProjectRoot "scripts" "modules" "Process"
 $ErrorActionPreference = "Stop"
 
 try {
-    # --- モジュール読み込み ---
-    # ユーティリティモジュール
-    Import-Module (Join-Path $UtilsModulePath "CommonUtils.psm1")
-    Import-Module (Join-Path $UtilsModulePath "ConfigUtils.psm1")
-    Import-Module (Join-Path $UtilsModulePath "CsvUtils.psm1")
-    Import-Module (Join-Path $UtilsModulePath "DataFilterUtils.psm1")
-    Import-Module (Join-Path $UtilsModulePath "ErrorHandlingUtils.psm1")
-    Import-Module (Join-Path $UtilsModulePath "FileUtils.psm1")
-    Import-Module (Join-Path $UtilsModulePath "SqlUtils.psm1")
+    # --- モジュール読み込み（レイヤアーキテクチャ準拠） ---
+    # Layer 1: Foundation（基盤層）
+    Import-Module (Join-Path $UtilsModulePath "Foundation" "CoreUtils.psm1")
+    
+    # Layer 2: Infrastructure（インフラ層）
+    Import-Module (Join-Path $UtilsModulePath "Infrastructure" "ConfigurationUtils.psm1")
+    Import-Module (Join-Path $UtilsModulePath "Infrastructure" "LoggingUtils.psm1")
+    Import-Module (Join-Path $UtilsModulePath "Infrastructure" "ErrorHandlingUtils.psm1")
+    
+    # Layer 3: Data Access（データアクセス層）
+    Import-Module (Join-Path $UtilsModulePath "DataAccess" "DatabaseUtils.psm1")
+    Import-Module (Join-Path $UtilsModulePath "DataAccess" "FileSystemUtils.psm1")
+    
+    # Layer 4: Data Processing（データ処理層）
+    Import-Module (Join-Path $UtilsModulePath "DataProcessing" "CsvProcessingUtils.psm1")
+    Import-Module (Join-Path $UtilsModulePath "DataProcessing" "DataFilteringUtils.psm1")
 
     # プロセスモジュール
     Import-Module (Join-Path $ProcessModulePath "Invoke-ConfigValidation.psm1")
