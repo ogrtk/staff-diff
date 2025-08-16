@@ -127,40 +127,28 @@ function Get-SyncResultMappingConfig {
 
 # 設定の検証
 function Test-DataSyncConfig {
-    param([Parameter(Mandatory = $false)]$Config = $null)
+    param(
+        [Parameter(Mandatory = $true)]$Config
+    )
     
     try {
-        # Configが渡されなかった場合のみGet-DataSyncConfigを呼び出す（後方互換性）
-        if (-not $Config) {
-            $config = Get-DataSyncConfig
-        } else {
-            $config = $Config
-        }
-
         # 基本構造の検証
         if (-not $config.tables) {
             throw "テーブル定義が見つかりません"
         }
-        
+
         # 各テーブルの検証
         foreach ($tableName in $config.tables.PSObject.Properties.Name) {
             $table = $config.tables.$tableName
-            
             if (-not $table.columns -or $table.columns.Count -eq 0) {
-                throw "テーブル '$tableName' のカラム定義が不正です"
+                throw "テーブル '$tableName' のカラムが定義されていません。"
             }
-            
-            # 必須カラムの存在確認
-            $idColumn = $table.columns | Where-Object { $_.name -eq "id" }
-            if (-not $idColumn) {
-                Write-Warning "テーブル '$tableName' にidカラムがありません"
-            }
-            
             # table_constraints の検証
             if ($table.table_constraints) {
                 Test-TableConstraintsConfig -TableName $tableName -TableConstraints $table.table_constraints -TableColumns $table.columns
             }
         }
+        Write-SystemLog "各テーブルの検証完了" -Level "Info"
         
         # 必須テーブル存在確認
         $requiredTables = @("provided_data", "current_data", "sync_result")
@@ -169,55 +157,39 @@ function Test-DataSyncConfig {
                 throw "必須テーブル '$requiredTable' の定義が見つかりません"
             }
         }
-        Write-SystemLog "必須テーブル定義確認完了" -Level "Info"
+        Write-SystemLog "必須テーブルの検証完了" -Level "Info"
         
-        # 同期ルールの基本検証
-        if ($config.sync_rules) {
-            if (-not $config.sync_rules.column_mappings -or -not $config.sync_rules.column_mappings.mappings) {
-                throw "column_mappings の設定が必要です"
-            }
+        # 同期ルールの検証
+        Test-SyncRulesConsistency -Config $config
+        Write-SystemLog "同期ルールの検証完了" -Level "Info"
             
-            # 同期ルール整合性検証
-            Test-SyncRulesConsistency -Config $config
-            
-            # sync_result_mappingの検証
-            if ($config.sync_rules.sync_result_mapping) {
-                Test-SyncResultMappingConfig -Config $config
-            }
-        }
-        else {
-            throw "sync_rules セクションが見つかりません"
-        }
+        # sync_result_mappingの検証
+        Test-SyncResultMappingConfig -Config $config
+        Write-SystemLog "sync_result_mapping設定の検証完了" -Level "Info"
         
         # キーカラム検証
         Test-KeyColumnsValidation -Config $config
+        Write-SystemLog "key_columnsの検証完了" -Level "Info"
         
         # データフィルタ設定検証
         if ($config.data_filters) {
             Test-DataFilterConsistency -Config $config
+            Write-SystemLog "data_filtersの検証完了" -Level "Info"
         }
         
         # CSVフォーマット設定の検証
-        if ($config.csv_format) {
-            Test-CsvFormatConfig -CsvFormatConfig $config.csv_format
-        }
-        
+        Test-CsvFormatConfig -Config $config
+        Write-SystemLog "CSVフォーマット設定の検証完了" -Level "Info"
+
         # ログ設定の検証
-        try {
-            $loggingConfig = Get-LoggingConfig
-            Test-LoggingConfigInternal -Config $config
-        }
-        catch {
-            Write-Warning "ログ設定の検証で問題が発生しました: $($_.Exception.Message)"
-        }
+        Test-LoggingConfig -Config $config
+        Write-SystemLog "ログ設定の検証完了" -Level "Info"
         
-        Write-SystemLog "設定の検証が完了しました: 問題なし" -Level "Success"
-        return $true
+        Write-SystemLog "設定の検証が完了しました" -Level "Success"
         
     }
     catch {
-        Write-Error "設定の検証に失敗しました: $($_.Exception.Message)"
-        return $false
+        throw "設定の検証に失敗しました: $($_.Exception.Message)"
     }
 }
 
@@ -225,15 +197,21 @@ function Test-DataSyncConfig {
 function Test-CsvFormatConfig {
     param(
         [Parameter(Mandatory = $true)]
-        $CsvFormatConfig
+        $Config
     )
+
+    if (-not $config.csv_format) {
+        throw "csv_format設定が見つかりません"
+    }
+    
+    $csvFormatConfig = $Config.csv_format
     
     $validEncodings = @("UTF-8", "UTF-16", "UTF-16BE", "UTF-32", "SHIFT_JIS", "EUC-JP", "ASCII", "ISO-8859-1")
     $validNewlines = @("CRLF", "LF", "CR")
     
     foreach ($configType in @("provided_data", "current_data", "output")) {
-        if ($CsvFormatConfig.$configType) {
-            $config = $CsvFormatConfig.$configType
+        if ($csvFormatConfig.$configType) {
+            $config = $csvFormatConfig.$configType
             
             # エンコーディング検証
             if ($config.encoding -and $config.encoding -notin $validEncodings) {
@@ -279,15 +257,23 @@ function Test-CsvFormatConfig {
     }
 }
 
-# 他の検証関数もここに含める（省略版として主要なもののみ表示）
+# column_mappingsの整合性確認
 function Test-SyncRulesConsistency {
-    param([Parameter(Mandatory = $true)]$Config)
+    param(
+        [Parameter(Mandatory = $true)]$Config
+    )
+
+    if (-not $config.sync_rules) {
+        throw "sync_rules の設定が必要です"
+    }
+    if (-not $config.sync_rules.column_mappings -or -not $config.sync_rules.column_mappings.mappings) {
+        throw "column_mappings の設定が必要です"
+    }    
     
     $mappings = $Config.sync_rules.column_mappings.mappings
     $providedColumns = $Config.tables.provided_data.columns | ForEach-Object { $_.name }
     $currentColumns = $Config.tables.current_data.columns | ForEach-Object { $_.name }
     
-    # column_mappingsの整合性確認
     foreach ($providedColumn in $mappings.PSObject.Properties.Name) {
         if ($providedColumn -notin $providedColumns) {
             throw "column_mappings のキー '$providedColumn' がprovided_dataテーブルに存在しません"
@@ -300,12 +286,12 @@ function Test-SyncRulesConsistency {
             throw "column_mappings の値 '$currentColumn' がcurrent_dataテーブルに存在しません (キー: $($property.Name))"
         }
     }
-    
-    Write-SystemLog "同期ルール整合性検証完了" -Level "Info"
 }
 
 function Test-KeyColumnsValidation {
-    param([Parameter(Mandatory = $true)]$Config)
+    param(
+        [Parameter(Mandatory = $true)]$Config
+    )
     
     if (-not $Config.sync_rules.key_columns) {
         throw "key_columns の設定が見つかりません"
@@ -326,12 +312,12 @@ function Test-KeyColumnsValidation {
             }
         }
     }
-    
-    Write-SystemLog "key_columnsの検証完了" -Level "Info"
 }
 
 function Test-DataFilterConsistency {
-    param([Parameter(Mandatory = $true)]$Config)
+    param(
+        [Parameter(Mandatory = $true)]$Config
+    )
     
     foreach ($tableName in @("provided_data", "current_data")) {
         if ($Config.data_filters.$tableName -and $Config.data_filters.$tableName.enabled) {
@@ -348,9 +334,7 @@ function Test-DataFilterConsistency {
                 }
             }
         }
-    }
-    
-    Write-SystemLog "data_filtersの検証完了" -Level "Info"
+    }    
 }
 
 function Test-TableConstraintsConfig {
@@ -363,7 +347,7 @@ function Test-TableConstraintsConfig {
         [array]$TableColumns
     )
     
-    $validConstraintTypes = @("UNIQUE", "PRIMARY KEY", "CHECK", "FOREIGN KEY")
+    $validConstraintTypes = @("UNIQUE", "PRIMARY KEY", "FOREIGN KEY")
     
     foreach ($constraint in $TableConstraints) {
         if (-not $constraint.name) {
@@ -377,13 +361,32 @@ function Test-TableConstraintsConfig {
         if ($constraint.type -notin $validConstraintTypes) {
             throw "テーブル '$TableName' の制約 '$($constraint.name)' に無効なタイプが設定されています: $($constraint.type). 有効な値: $($validConstraintTypes -join ', ')"
         }
+        
+        # カラム設定の検証
+        if (-not $constraint.columns -or $constraint.columns.Count -eq 0) {
+            throw "テーブル '$TableName' の制約 '$($constraint.name)' ($($constraint.type)) にはcolumnsの設定が必要です"
+        }
+        
+        # カラム存在確認
+        $tableColumnNames = $TableColumns | ForEach-Object { $_.name }
+        foreach ($constraintColumn in $constraint.columns) {
+            if ($constraintColumn -notin $tableColumnNames) {
+                throw "テーブル '$TableName' の制約 '$($constraint.name)' で指定されたカラム '$constraintColumn' が存在しません"
+            }
+        }
     }
     
     Write-SystemLog "テーブル '$TableName' の制約設定の検証が完了しました" -Level "Info"
 }
 
 function Test-SyncResultMappingConfig {
-    param([Parameter(Mandatory = $true)]$Config)
+    param(
+        [Parameter(Mandatory = $true)]$Config
+    )
+
+    if (-not $config.sync_rules.sync_result_mapping) {
+        throw "sync_result_mapping設定が見つかりません"
+    }
     
     $syncResultMappingConfig = $Config.sync_rules.sync_result_mapping
     
@@ -410,27 +413,27 @@ function Test-SyncResultMappingConfig {
     Write-SystemLog "sync_result_mapping設定の検証が完了しました" -Level "info"
 }
 
-function Test-LoggingConfigInternal {
-    param([Parameter(Mandatory = $true)]$Config)
+function Test-LoggingConfig {
+    param(
+        [Parameter(Mandatory = $true)]$Config
+    )
     
     $loggingConfig = $Config.logging
     
     $validLevels = @("Info", "Warning", "Error", "Success")
     foreach ($level in $loggingConfig.levels) {
         if ($level -notin $validLevels) {
-            Write-Warning "無効なログレベルが指定されています: $level. 有効な値: $($validLevels -join ', ')"
+            throw "無効なログレベルが指定されています: $level. 有効な値: $($validLevels -join ', ')"
         }
     }
     
     if ($loggingConfig.max_file_size_mb -le 0) {
-        Write-Warning "ログファイルの最大サイズが無効です: $($loggingConfig.max_file_size_mb)MB. 正の数値を指定してください"
+        throw "ログファイルの最大サイズが無効です: $($loggingConfig.max_file_size_mb)MB. 正の数値を指定してください"
     }
     
     if ($loggingConfig.max_files -le 0) {
-        Write-Warning "ログファイルの保持数が無効です: $($loggingConfig.max_files). 正の数値を指定してください"
+        throw "ログファイルの保持数が無効です: $($loggingConfig.max_files). 正の数値を指定してください"
     }
-    
-    Write-SystemLog "ログ設定検証完了" -Level "Info"
 }
 
 Export-ModuleMember -Function @(
@@ -439,11 +442,5 @@ Export-ModuleMember -Function @(
     'Get-LoggingConfig',
     'Get-DataFilterConfig',
     'Get-SyncResultMappingConfig',
-    'Test-DataSyncConfig',
-    'Test-CsvFormatConfig',
-    'Test-SyncRulesConsistency',
-    'Test-KeyColumnsValidation',
-    'Test-DataFilterConsistency',
-    'Test-TableConstraintsConfig',
-    'Test-SyncResultMappingConfig'
+    'Test-DataSyncConfig'
 )

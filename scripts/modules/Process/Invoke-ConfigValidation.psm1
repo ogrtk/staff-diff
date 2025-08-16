@@ -5,8 +5,7 @@
 function Invoke-ConfigValidation {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$ProjectRoot,
-        
+        [string]$ProjectRoot, 
         [string]$DatabasePath = "",
         [string]$ProvidedDataFilePath = "",
         [string]$CurrentDataFilePath = "",
@@ -30,43 +29,21 @@ function Invoke-ConfigValidation {
     
         # 1. 外部依存関係の検証
         Write-SystemLog "外部依存関係を検証中..." -Level "Info"
-        Invoke-WithErrorHandling -ScriptBlock {
-            $sqlite3Path = Get-Sqlite3Path
-            Write-SystemLog "SQLite3コマンドが利用可能です: $($sqlite3Path.Source)" -Level "Success"
-        } -Category System -Operation "SQLite3コマンド検証" -Context @{"コマンド名" = "sqlite3" }
+        $sqlite3Path = Get-Sqlite3Path
+        Write-SystemLog "SQLite3コマンドが利用可能です: $($sqlite3Path.Source)" -Level "Success"
         
         # 2. 設定の検証
         Write-SystemLog "システム設定を検証中..." -Level "Info"
-        Invoke-WithErrorHandling -ScriptBlock {
-            if (-not (Test-DataSyncConfig)) {
-                throw "設定の検証に失敗しました"
-            }
-        } -Category System -Operation "設定の検証" -Context @{"設定セクション" = "システム全体設定" }
+        $config = Get-DataSyncConfig
+        Test-DataSyncConfig $config
         
-        # 3. 入力ファイルパスの解決
+        # 3. ファイルパスの解決
         Write-SystemLog "ファイルパス解決処理を開始..." -Level "Info"
+        $resolvedProvidedDataPath = Resolve-FilePath -ParameterPath $ProvidedDataFilePath -ConfigKey "provided_data_file_path" -Description "提供データファイル"
+        $resolvedCurrentDataPath = Resolve-FilePath -ParameterPath $CurrentDataFilePath -ConfigKey "current_data_file_path" -Description "現在データファイル"
+        $resolvedOutputPath = Resolve-FilePath -ParameterPath $OutputFilePath -ConfigKey "output_file_path" -Description "出力ファイル"
         
-        $resolvedProvidedDataPath = Invoke-WithErrorHandling -Category System -Operation "提供データファイルパス解決" -ScriptBlock {
-            Resolve-FilePath -ParameterPath $ProvidedDataFilePath -ConfigKey "provided_data_file_path" -Description "提供データファイル"
-        }
-        
-        $resolvedCurrentDataPath = Invoke-WithErrorHandling -Category System -Operation "現在データファイルパス解決" -ScriptBlock {
-            Resolve-FilePath -ParameterPath $CurrentDataFilePath -ConfigKey "current_data_file_path" -Description "現在データファイル"
-        }
-        
-        $resolvedOutputPath = Invoke-WithErrorHandling -Category System -Operation "出力ファイルパス解決" -ScriptBlock {
-            Resolve-FilePath -ParameterPath $OutputFilePath -ConfigKey "output_file_path" -Description "出力ファイル"
-        }
-        
-        # 4. 処理パラメータのログ出力
-        Write-SystemLog "=== 処理パラメータ ===" -Level "Info"
-        Write-SystemLog "Database Path: $resolvedDatabasePath" -Level "Info"
-        Write-SystemLog "Provided Data File: $resolvedProvidedDataPath" -Level "Info"
-        Write-SystemLog "Current Data File: $resolvedCurrentDataPath" -Level "Info"
-        Write-SystemLog "Output File: $resolvedOutputPath" -Level "Info"
-        Write-SystemLog "========================" -Level "Info"
-        
-        # 5. 解決されたパラメータのファイル存在チェック
+        # 4. 解決されたパラメータのファイル存在チェック
         $resolvedParams = @{
             DatabasePath         = $resolvedDatabasePath
             ProvidedDataFilePath = $resolvedProvidedDataPath
@@ -74,10 +51,18 @@ function Invoke-ConfigValidation {
             OutputFilePath       = $resolvedOutputPath
         }
         
-        Write-SystemLog "入力ファイルの存在チェックを実行中..." -Level "Info"
-        $null = Test-ResolvedFilePaths -ResolvedPaths $resolvedParams -SkipOutputFileCheck
-        
-        # 6. 解決されたパラメータを返す
+        Write-SystemLog "入力ファイル・出力フォルダの存在チェック中..." -Level "Info"
+        Test-ResolvedFilePaths -ResolvedPaths $resolvedParams
+        Write-SystemLog "ファイルパス存在チェックが完了しました" -Level "Success"
+
+        # 5. 処理パラメータのログ出力
+        Write-SystemLog "----- 処理パラメータ -----" -Level "Info"
+        Write-SystemLog "Database Path: $resolvedDatabasePath" -Level "Info"
+        Write-SystemLog "Provided Data File: $resolvedProvidedDataPath" -Level "Info"
+        Write-SystemLog "Current Data File: $resolvedCurrentDataPath" -Level "Info"
+        Write-SystemLog "Output File: $resolvedOutputPath" -Level "Info"
+        Write-SystemLog "-------------------------" -Level "Info"
+                        
         return $resolvedParams
     }
 }
@@ -86,39 +71,23 @@ function Invoke-ConfigValidation {
 function script:Test-ResolvedFilePaths {
     param(
         [Parameter(Mandatory = $true)]
-        [hashtable]$ResolvedPaths,
-        
-        [switch]$SkipOutputFileCheck
+        [hashtable]$ResolvedPaths       
     )
     
-    return Invoke-WithErrorHandling -Category External -Operation "ファイルパス存在チェック" -Context $ResolvedPaths -ScriptBlock {
-        
-        Write-SystemLog "入力ファイルの存在チェックを実行中..." -Level "Info"
-        
+    Invoke-WithErrorHandling -Category External -Operation "ファイルパス存在チェック" -Context $ResolvedPaths -ScriptBlock {
         # 提供データファイルの存在チェック
         if (-not (Test-Path $ResolvedPaths.ProvidedDataFilePath)) {
             throw "提供データファイルが見つかりません: $($ResolvedPaths.ProvidedDataFilePath)"
         }
-        Write-SystemLog "提供データファイル確認済み: $($ResolvedPaths.ProvidedDataFilePath)" -Level "Info"
-        
         # 現在データファイルの存在チェック
         if (-not (Test-Path $ResolvedPaths.CurrentDataFilePath)) {
             throw "現在データファイルが見つかりません: $($ResolvedPaths.CurrentDataFilePath)"
         }
-        Write-SystemLog "現在データファイル確認済み: $($ResolvedPaths.CurrentDataFilePath)" -Level "Info"
-        
         # 出力ファイルのディレクトリチェック（オプション）
-        if (-not $SkipOutputFileCheck) {
-            $outputDir = Split-Path -Path $ResolvedPaths.OutputFilePath -Parent
-            if (-not (Test-Path $outputDir)) {
-                Write-SystemLog "出力ディレクトリが存在しません。作成します: $outputDir" -Level "Warning"
-                New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-                Write-SystemLog "出力ディレクトリを作成しました: $outputDir" -Level "Info"
-            }
+        $outputDir = Split-Path -Path $ResolvedPaths.OutputFilePath -Parent
+        if (-not (Test-Path $outputDir)) {
+            throw  "出力ディレクトリが存在しません: $outputDir"
         }
-        
-        Write-SystemLog "ファイルパス存在チェックが完了しました" -Level "Success"
-        return $true
     }
 }
 

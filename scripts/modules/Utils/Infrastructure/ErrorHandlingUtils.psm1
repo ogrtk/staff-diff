@@ -118,7 +118,6 @@ function Invoke-WithErrorHandling {
         }
         catch {
             $lastException = $_
-            $errorLevel = Get-ErrorLevel -Category $Category -ErrorConfig $errorConfig
             
             # エラー情報のログ出力
             Write-ErrorDetails -Exception $_ -Category $Category -Operation $Operation -Context $Context -ErrorConfig $errorConfig
