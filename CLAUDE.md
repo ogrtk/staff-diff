@@ -33,6 +33,12 @@ pwsh ./scripts/main.ps1 -ProvidedDataFilePath "/path/to/provided.csv" -CurrentDa
 # 設定ファイルの値を使用
 pwsh ./scripts/main.ps1
 
+# カスタム設定ファイルを指定
+pwsh ./scripts/main.ps1 -ConfigFilePath "/path/to/custom-config.json"
+
+# 設定ファイルとパラメータを組み合わせ
+pwsh ./scripts/main.ps1 -ConfigFilePath "/path/to/custom-config.json" -OutputFilePath "/path/to/custom-output.csv"
+
 # Windows用ショートカット
 .\run.bat
 ```
@@ -80,6 +86,11 @@ GLOBパターンによるフィルタリング：
 
 ### ファイルパス解決
 優先順位: コマンドパラメータ → 設定ファイル → デフォルト
+
+### 設定ファイルの指定
+- `-ConfigFilePath`パラメータで任意の設定ファイルを指定可能
+- 指定されない場合は`config/data-sync-config.json`を使用
+- 複数環境（開発、テスト、本番）で異なる設定ファイルを使い分け可能
 
 ## モジュール依存関係と読み込み順序（レイヤアーキテクチャ）
 
