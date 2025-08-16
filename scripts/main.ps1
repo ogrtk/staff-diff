@@ -6,7 +6,8 @@ param(
     [string]$ProvidedDataFilePath = "",
     [string]$CurrentDataFilePath = "",
     [string]$OutputFilePath = "",
-    [string]$DatabasePath = ""
+    [string]$DatabasePath = "",
+    [string]$ConfigFilePath = ""
 )
 
 # スクリプトの場所を基準にプロジェクトルートを設定
@@ -48,7 +49,11 @@ try {
 
     # --- 初期設定: 設定ファイルの読み込み ---
     # 全ての処理に先立ち、設定ファイルを読み込んでキャッシュする
-    $configPath = Join-Path $ProjectRoot "config" "data-sync-config.json"
+    if ([string]::IsNullOrEmpty($ConfigFilePath)) {
+        $configPath = Join-Path $ProjectRoot "config" "data-sync-config.json"
+    } else {
+        $configPath = $ConfigFilePath
+    }
     Get-DataSyncConfig -ConfigPath $configPath | Out-Null
 
     # --- 処理開始 ---
@@ -58,7 +63,7 @@ try {
     $startTime = Get-Date
 
     # 1. 設定検証とパラメータ解決
-    $params = Invoke-ConfigValidation -ProjectRoot $ProjectRoot -DatabasePath $DatabasePath -ProvidedDataFilePath $ProvidedDataFilePath -CurrentDataFilePath $CurrentDataFilePath -OutputFilePath $OutputFilePath
+    $params = Invoke-ConfigValidation -ProjectRoot $ProjectRoot -DatabasePath $DatabasePath -ProvidedDataFilePath $ProvidedDataFilePath -CurrentDataFilePath $CurrentDataFilePath -OutputFilePath $OutputFilePath -ConfigFilePath $configPath
 
     # 2. データベースの初期化
     Invoke-DatabaseInitialization -DatabasePath $params.DatabasePath

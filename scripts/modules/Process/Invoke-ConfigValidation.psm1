@@ -9,7 +9,8 @@ function Invoke-ConfigValidation {
         [string]$DatabasePath = "",
         [string]$ProvidedDataFilePath = "",
         [string]$CurrentDataFilePath = "",
-        [string]$OutputFilePath = ""
+        [string]$OutputFilePath = "",
+        [string]$ConfigFilePath = ""
     )
     
     return Invoke-WithErrorHandling -Category System -Operation "設定検証・パラメータ解決処理" -Context @{
@@ -18,6 +19,7 @@ function Invoke-ConfigValidation {
         "ProvidedDataFilePath" = $ProvidedDataFilePath
         "CurrentDataFilePath"  = $CurrentDataFilePath
         "OutputFilePath"       = $OutputFilePath
+        "ConfigFilePath"       = $ConfigFilePath
     } -ScriptBlock {
         
         # DatabasePathが未指定の場合、デフォルトを設定

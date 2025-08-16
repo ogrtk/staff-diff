@@ -78,7 +78,7 @@ function Invoke-DatabaseInitialization {
 }
 
 # データベーススキーマのSQL文を生成（責務の分離）
-function script:New-DatabaseSchema {
+function New-DatabaseSchema {
     $config = Get-DataSyncConfig
     $allSqlStatements = @()
     
@@ -102,7 +102,7 @@ function script:New-DatabaseSchema {
 }
 
 # データベース初期化の実行（sqlite3コマンド必須）
-function script:Invoke-DatabaseInitializationInternal {
+function Invoke-DatabaseInitializationInternal {
     param(
         [Parameter(Mandatory = $true)]
         [string]$DatabasePath,
@@ -117,7 +117,7 @@ function script:Invoke-DatabaseInitializationInternal {
 }
 
 # SQLite3コマンドでのSQL実行（スキーマ初期化専用）
-function script:Invoke-SqliteSchemaCommand {
+function Invoke-SqliteSchemaCommand {
     param(
         [Parameter(Mandatory = $true)]
         [string]$DatabasePath,

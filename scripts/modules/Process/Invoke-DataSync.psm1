@@ -32,16 +32,16 @@ function Invoke-DataSync {
         Clear-Table -DatabasePath $DatabasePath -TableName "sync_result"
         
         # 1. 現在データに存在しないレコード（新規追加対象）を特定
-        Add-NewRecords -DatabasePath $DatabasePath
+        Add-NewRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
         
         # 2. 更新があったレコードを処理
-        Add-UpdateRecords -DatabasePath $DatabasePath
+        Add-UpdateRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
         
         # 3. 現在データにしか存在しないレコード（削除対象）を特定
-        Add-DeleteRecords -DatabasePath $DatabasePath
+        Add-DeleteRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
         
         # 4. 変更のないレコードを保持
-        Add-KeepRecords -DatabasePath $DatabasePath
+        Add-KeepRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
         
         Write-SystemLog "データ同期処理が完了しました。" -Level "Success"
         
@@ -49,10 +49,13 @@ function Invoke-DataSync {
 }
 
 # 新規追加対象レコードをsync_resultテーブルに追加
-function script:Add-NewRecords {
+function Add-NewRecords {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$DatabasePath
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$SyncActionLabels
     )
     
     # JOIN条件を動的に生成（エイリアス対応）
@@ -66,7 +69,7 @@ function script:Add-NewRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction $syncActionLabels.ADD.value
+    $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction $SyncActionLabels.ADD.value
     
     $query = @"
 INSERT INTO sync_result ($insertColumnsString)
@@ -80,14 +83,17 @@ WHERE cd.$currentDataKey IS NULL;
     Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
     
     # 追加されたレコード数を取得
-    Write-SystemLog "新規追加処理が完了しました" -Level "Success"
+    Write-SystemLog "新規レコード追加処理が完了しました" -Level "Success"
 }
 
 # 更新対象レコードをsync_resultテーブルに追加
-function script:Add-UpdateRecords {
+function Add-UpdateRecords {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$DatabasePath
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$SyncActionLabels
     )
     
     # JOIN条件を動的に生成（エイリアス対応）
@@ -99,7 +105,7 @@ function script:Add-UpdateRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $syncActionLabels.UPDATE.value
+    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $SyncActionLabels.UPDATE.value
     
     # 比較条件を動的に生成
     $whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "different" -Table1Name "provided_data" -Table2Name "current_data"
@@ -117,14 +123,17 @@ WHERE
     Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
     
     # 更新されたレコード数を取得
-    Write-SystemLog "更新処理が完了しました" -Level "Success"
+    Write-SystemLog "更新レコード追加処理が完了しました" -Level "Success"
 }
 
 # 削除対象レコードをsync_resultテーブルに追加
-function script:Add-DeleteRecords {
+function Add-DeleteRecords {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$DatabasePath
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$SyncActionLabels
     )
     
     # 複合キー対応のJOIN条件生成
@@ -139,7 +148,7 @@ function script:Add-DeleteRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-SyncResultSelectClause -SourceTableName "current_data" -SourceTableAlias "cd" -SyncAction $syncActionLabels.DELETE.value
+    $selectClause = New-SyncResultSelectClause -SourceTableName "current_data" -SourceTableAlias "cd" -SyncAction $SyncActionLabels.DELETE.value
     
     $query = @"
 INSERT INTO sync_result ($insertColumnsString)
@@ -153,14 +162,17 @@ WHERE pd.$providedDataKey IS NULL;
     Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
     
     # 削除されたレコード数を取得
-    Write-SystemLog "削除処理が完了しました" -Level "Success"
+    Write-SystemLog "削除レコード追加処理が完了しました" -Level "Success"
 }
 
 # 保持対象レコードをsync_resultテーブルに追加
-function script:Add-KeepRecords {
+function Add-KeepRecords {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$DatabasePath
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$SyncActionLabels
     )
     
     # 複合キー対応のJOIN条件とNOT IN条件生成
@@ -184,7 +196,7 @@ function script:Add-KeepRecords {
     $insertColumns = Get-SyncResultInsertColumns
     $insertColumnsString = $insertColumns -join ", "
     
-    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $syncActionLabels.KEEP.value
+    $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $SyncActionLabels.KEEP.value
     
     # 比較条件を動的に生成
     $whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "same" -Table1Name "provided_data" -Table2Name "current_data"
@@ -203,7 +215,7 @@ WHERE
     Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
     
     # 保持されたレコード数を取得
-    Write-SystemLog "保持処理が完了しました" -Level "Success"
+    Write-SystemLog "変更なしレコード追加処理が完了しました" -Level "Success"
 }
 
 Export-ModuleMember -Function 'Invoke-DataSync'

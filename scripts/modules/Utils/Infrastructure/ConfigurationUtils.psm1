@@ -9,10 +9,11 @@ $script:DataSyncConfig = $null
 # データ同期設定の読み込み（初回はパス指定が必須）
 function Get-DataSyncConfig {
     param(
-        [string]$ConfigPath
+        [string]$ConfigPath,
+        [switch]$Force
     )
 
-    if ($null -ne $script:DataSyncConfig) {
+    if ($null -ne $script:DataSyncConfig -and -not $Force) {
         return $script:DataSyncConfig
     }
 
@@ -436,11 +437,18 @@ function Test-LoggingConfig {
     }
 }
 
+# 設定のリセット（テスト用）
+function Reset-DataSyncConfig {
+    $script:DataSyncConfig = $null
+    Write-SystemLog "設定キャッシュをクリアしました" -Level "Info"
+}
+
 Export-ModuleMember -Function @(
     'Get-DataSyncConfig',
     'Get-FilePathConfig',
     'Get-LoggingConfig',
     'Get-DataFilterConfig',
     'Get-SyncResultMappingConfig',
-    'Test-DataSyncConfig'
+    'Test-DataSyncConfig',
+    'Reset-DataSyncConfig'
 )

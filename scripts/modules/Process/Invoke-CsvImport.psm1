@@ -16,7 +16,7 @@ function Invoke-CsvImport {
     )
     
     $filePathConfig = Get-FilePathConfig
-        
+    
     # データタイプに応じた設定を取得
     $config = switch ($DataType) {
         "provided_data" {
@@ -34,7 +34,7 @@ function Invoke-CsvImport {
             }
         }
     }
-        
+    
     Write-SystemLog "$($config.Description)のインポート処理を開始します" -Level "Info"
     Invoke-CsvImportMain -CsvPath $CsvPath -DatabasePath $DatabasePath -TableName $config.TableName -HistoryDirectory $config.HistoryDirectory -FileTypeDescription $config.Description
     Write-SystemLog "$($config.Description)のインポート処理が完了しました" -Level "Success"
@@ -65,10 +65,9 @@ function script:Invoke-CsvImportMain {
         
     Write-SystemLog "処理対象ファイル ${FileTypeDescription}CSV: $CsvPath" -Level "Info"
     
-    $historyFilePath = ""
     # 履歴ディレクトリにコピー保存(リトライ考慮無し)
-    Invoke-WithErrorHandling -Category External -Operation "履歴ファイルコピー" -ScriptBlock {
-        $historyFilePath = Copy-InputFileToHistory -SourceFilePath $CsvPath -HistoryDirectory $HistoryDirectory
+    $historyFilePath = Invoke-WithErrorHandling -Category External -Operation "履歴ファイルコピー" -ScriptBlock {
+        return Copy-InputFileToHistory -SourceFilePath $CsvPath -HistoryDirectory $HistoryDirectory
     }
 
     # ヘッダー無しCSVの場合、ヘッダーを付与した一時ファイルを作成
@@ -210,15 +209,9 @@ function script:Invoke-Filtering {
         [Parameter(Mandatory = $true)]
         [string]$CsvFilePath,
         
-        [bool]$ShowStatistics = $true,
-        [switch]$ShowConfig = $false
+        [bool]$ShowStatistics = $true
     )
     
-        
-    if ($ShowConfig) {
-        Show-FilterConfig -TableName $TableName
-    }
-        
     Write-SystemLog "フィルタリング用に一時テーブルへCSVをインポート: $TableName ($CsvFilePath)" -Level "Info"
 
     # リトライ対応: 既存データをクリア
@@ -287,9 +280,9 @@ COMMIT;
     
     # 統計情報を返す
     return @{
-        TotalCount = $totalRecords
+        TotalCount    = $totalRecords
         FilteredCount = $filteredCount
-        TableName = $TableName
+        TableName     = $TableName
     }
 }
 
@@ -347,6 +340,5 @@ function New-CreateTempTableSql {
     
     return $sql
 }
-
 
 Export-ModuleMember -Function 'Invoke-CsvImport'
