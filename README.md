@@ -33,6 +33,9 @@ pwsh ./scripts/main.ps1 -ConfigFilePath "/path/to/custom-config.json"
 
 # Windows用ショートカット
 .\run.bat
+
+# Windows用ショートカット（パラメータ付き）
+.\run.bat -ProvidedDataFilePath "C:\path\to\provided.csv" -CurrentDataFilePath "C:\path\to\current.csv" -OutputFilePath "C:\path\to\output.csv"
 ```
 
 ### 2. 設定ファイルでの実行
