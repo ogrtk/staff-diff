@@ -104,6 +104,26 @@ pwsh ./scripts/main.ps1
 | `exclude` | GLOBパターンに一致するデータを除外 | `"Z*"` (Z始まり除外) |
 | `include` | GLOBパターンに一致するデータのみ処理 | `"E*"` (E始まりのみ) |
 
+### 除外データのKEEP出力
+
+フィルタで除外されたデータを同期結果にKEEPアクションとして出力することが可能です：
+
+```json
+{
+  "data_filters": {
+    "current_data": {
+      "output_excluded_as_keep": {
+        "enabled": true,
+        "description": "除外データをKEEPとして出力"
+      }
+    }
+  }
+}
+```
+
+- `enabled: true`: 除外データもKEEPアクションで同期結果に出力
+- `enabled: false`: 除外データは同期結果に出力しない（デフォルト動作）
+
 ## テスト実行
 
 ```bash

@@ -82,6 +82,7 @@ pwsh ./tests/encoding-fix.ps1
 GLOBパターンによるフィルタリング：
 - `exclude`: マッチするデータを除外（`"Z*"` でZ始まりIDを除外）
 - `include`: マッチするデータのみ処理
+- `output_excluded_as_keep`: 除外データをKEEPアクションとして出力する機能
 - テーブル別適用、詳細ログ付き
 
 ### ファイルパス解決
