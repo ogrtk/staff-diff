@@ -212,6 +212,33 @@ function New-SelectSql {
     return $sql + ";"
 }
 
+# 一時テーブル作成SQL生成
+function New-CreateTempTableSql {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$BaseTableName,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$TempTableName
+    )
+    
+    $tableDefinition = Get-TableDefinition -TableName $BaseTableName
+    
+    $columns = @()
+    foreach ($column in $tableDefinition.columns) {
+        if ($column.csv_include -eq $true) {
+            $columnDef = "$($column.name) $($column.type)"
+            $columns += $columnDef
+        }
+    }
+    
+    $sql = "CREATE TABLE $TempTableName (`n"
+    $sql += "    " + ($columns -join ",`n    ") + "`n"
+    $sql += ");"
+    
+    return $sql
+}
+
 # カラムマッピングの取得
 function Get-ColumnMapping {
     param(
@@ -376,7 +403,6 @@ function New-FilterWhereClause {
         [Parameter(Mandatory = $true)]
         [string]$TableName
     )
-    
     $config = Get-DataSyncConfig
     
     if (-not $config.data_filters -or -not $config.data_filters.$TableName) {
@@ -760,6 +786,7 @@ Export-ModuleMember -Function @(
     'Get-RequiredColumns',
     'Clear-Table',
     'New-CreateTableSql',
+    'New-CreateTempTableSql',
     'New-SelectSql',
     'Get-ColumnMapping',
     'Get-TableKeyColumns',

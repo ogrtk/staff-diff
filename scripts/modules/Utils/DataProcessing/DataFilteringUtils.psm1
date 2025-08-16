@@ -50,7 +50,64 @@ function Show-FilteringStatistics {
     Write-SystemLog "----------------------------------" -Level "Info"
 }
 
+# フィルタ除外データをKEEP用テーブルに保存
+function Save-ExcludedDataForKeep {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$SourceTableName,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$ExcludedTableName,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$FilterConfigTableName
+    )
+    
+    # フィルタ条件を取得（除外データ特定用）
+    $whereClause = New-FilterWhereClause -TableName $FilterConfigTableName
+
+    if ([string]::IsNullOrWhiteSpace($whereClause)) {
+        Write-SystemLog "フィルタ条件がないため、除外データ保存をスキップします: $FilterConfigTableName" -Level "Info"
+        return
+    }
+    
+    # 除外データ用テーブルを作成（既存テーブルをクリーンアップしてから作成）
+    $dropTableSql = "DROP TABLE IF EXISTS $ExcludedTableName;"
+    Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $dropTableSql
+    
+    $createTableSql = New-CreateTempTableSql -BaseTableName $FilterConfigTableName -TempTableName $ExcludedTableName
+    Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $createTableSql
+    
+    Write-SystemLog "除外データ用テーブルを作成しました: $ExcludedTableName" -Level "Info"
+    
+    # 除外データをテーブルに保存（フィルタ条件の逆を使用）
+    $csvColumns = Get-CsvColumns -TableName $FilterConfigTableName
+    $columnsStr = $csvColumns -join ", "
+    
+    # フィルタ条件を反転（除外データを抽出）
+    $excludeWhereClause = "NOT ($whereClause)"
+    
+    $insertSql = @"
+INSERT INTO $ExcludedTableName ($columnsStr)
+SELECT $columnsStr FROM $SourceTableName
+WHERE $excludeWhereClause;
+"@
+    
+    Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $insertSql
+    
+    # 保存された除外データ数を取得
+    $countQuery = "SELECT COUNT(*) as count FROM $ExcludedTableName;"
+    $countResult = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $countQuery
+    $excludedCount = if ($countResult -and $countResult[0]) { $countResult[0].count } else { 0 }
+    
+    Write-SystemLog "除外データをKEEP用テーブルに保存しました: $ExcludedTableName ($excludedCount 件)" -Level "Success"
+}
+
 Export-ModuleMember -Function @(
     'New-TempTableName',
-    'Show-FilteringStatistics'
+    'Show-FilteringStatistics',
+    'Save-ExcludedDataForKeep'
 )

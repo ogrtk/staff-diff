@@ -1,5 +1,5 @@
 user_id,card_number,name,department,position,email,phone,hire_date
-E000001,C000001,既存ユーザー1,部署1,役職1,existing1@company.com,03-0001-0001,2019-01-01
+Z000001,C000001,既存ユーザー1,部署1,役職1,existing1@company.com,03-0001-0001,2019-01-01
 E000002,C000002,既存ユーザー2,部署2,役職2,existing2@company.com,03-0002-0002,2019-01-01
 E000003,C000003,既存ユーザー3,部署3,役職3,existing3@company.com,03-0003-0003,2019-01-01
 E000004,C000004,既存ユーザー4,部署4,役職0,existing4@company.com,03-0004-0004,2019-01-01

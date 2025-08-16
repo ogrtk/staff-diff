@@ -15,24 +15,24 @@ function Show-SyncResult {
     )
     
     Invoke-WithErrorHandling  -Operation "同期レポート生成" -Category External -SuppressThrow:$true -ScriptBlock {
-        Write-SystemLog "=== 同期処理完了レポート ===" -Level "Info"
+        Write-SystemLog "=== 同期処理完了レポート ===" -Level "Info" -ConsoleColor "Magenta" 
         
         # 1. 実行情報セクション
-        Write-SystemLog "--- 実行情報 ---" -Level "Info"
-        Write-SystemLog "データベースファイル: $DatabasePath" -Level "Info"
-        Write-SystemLog "提供データファイル: $ProvidedDataFilePath" -Level "Info"
-        Write-SystemLog "現在データファイル: $CurrentDataFilePath" -Level "Info"
+        Write-SystemLog "--- 実行情報 ---" -Level "Info" -ConsoleColor "Magenta" 
+        Write-SystemLog "データベースファイル: $DatabasePath" -Level "Info" -ConsoleColor "Magenta" 
+        Write-SystemLog "提供データファイル: $ProvidedDataFilePath" -Level "Info" -ConsoleColor "Magenta" 
+        Write-SystemLog "現在データファイル: $CurrentDataFilePath" -Level "Info" -ConsoleColor "Magenta" 
         
         $config = Get-DataSyncConfig
-        Write-SystemLog "設定バージョン: $($config.version)" -Level "Info"
-        $japanTime = [DateTime]::UtcNow.AddHours(9).ToString('yyyy-MM-dd HH:mm:ss')
-        Write-SystemLog "実行時刻: $japanTime" -Level "Info"
+        Write-SystemLog "設定バージョン: $($config.version)" -Level "Info" -ConsoleColor "Magenta" 
+        $japanTime = [DateTime]::UtcNow.AddHours(9).ToString('yyyy-MM-dd HH:mm:ss')  
+        Write-SystemLog "実行時刻: $japanTime" -Level "Info" -ConsoleColor "Magenta" 
         
         # sync_action_labels設定を取得
         $syncActionLabels = $config.sync_rules.sync_action_labels.mappings
         
         # 2. データ統計セクション
-        Write-SystemLog "--- データ統計 ---" -Level "Info"
+        Write-SystemLog "--- データ統計 ---" -Level "Info" -ConsoleColor "Magenta" 
         
         # 全テーブル件数を一括取得
         $allTablesQuery = @"
@@ -46,11 +46,11 @@ SELECT 'sync_result' as table_name, COUNT(*) as count FROM sync_result;
         $tableResults = Invoke-SqliteCsvQuery -DatabasePath $DatabasePath -Query $allTablesQuery
         
         foreach ($tableResult in $tableResults) {
-            Write-SystemLog "$($tableResult.table_name): $($tableResult.count) 件" -Level "Info"
+            Write-SystemLog "$($tableResult.table_name): $($tableResult.count) 件" -Level "Info" -ConsoleColor "Magenta" 
         }
         
         # 3. 同期結果セクション
-        Write-SystemLog "--- 同期結果 ---" -Level "Info"
+        Write-SystemLog "--- 同期結果 ---" -Level "Info" -ConsoleColor "Magenta" 
         
         # 設定から動的にORDER BY句を生成
         $syncActionLabels = $config.sync_rules.sync_action_labels.mappings
@@ -113,11 +113,11 @@ $orderByClause
                 $actionDescription = $cleanAction
             }
 
-            Write-SystemLog "$actionDescription ($displayLabel): $count 件" -Level "Info"
+            Write-SystemLog "$actionDescription ($displayLabel): $count 件" -Level "Info" -ConsoleColor "Magenta" 
         }
 
         if ($totalSyncRecords -gt 0) {
-            Write-SystemLog "同期処理総件数: $totalSyncRecords 件" -Level "Info"
+            Write-SystemLog "同期処理総件数: $totalSyncRecords 件" -Level "Info" -ConsoleColor "Magenta" 
         }
     }
 }

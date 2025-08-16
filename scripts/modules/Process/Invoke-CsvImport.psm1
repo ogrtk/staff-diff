@@ -238,7 +238,16 @@ function Invoke-Filtering {
     Import-CsvToSqliteTable -CsvFilePath $CsvFilePath -DatabasePath $DatabasePath -TableName $tempTableName
     Write-SystemLog "CSVデータを一時テーブルにインポートしました: $tempTableName" -Level "Info"
         
-    # 3. フィルタ済みデータ移行
+    # 3. フィルタ除外データをKEEP用に保存（current_dataのみ対象、設定有効時のみ）
+    if ($TableName -eq "current_data") {
+        $config = Get-DataSyncConfig
+        if ($config.data_filters.current_data.output_excluded_as_keep.enabled -eq $true) {
+            $excludedTableName = "${TableName}_excluded"
+            Save-ExcludedDataForKeep -DatabasePath $DatabasePath -SourceTableName $tempTableName -ExcludedTableName $excludedTableName -FilterConfigTableName $TableName
+        }
+    }
+    
+    # 4. フィルタ済みデータ移行
     $whereClause = New-FilterWhereClause -TableName $TableName
     $filteredInsertSql = New-FilteredInsertSql -TargetTableName $TableName -SourceTableName $tempTableName -WhereClause $whereClause
     $statisticsSql = "SELECT COUNT(*) as filtered_count FROM $TableName;"
@@ -286,7 +295,7 @@ COMMIT;
     }
 }
 
-# CSV直接インポート関数（SQLite .importコマンド使用）
+# CSV直接インポート関数（SQLite .importコマンド使用、ヘッダー行スキップ対応）
 function Import-CsvToSqliteTable {
     param(
         [Parameter(Mandatory = $true)]
@@ -303,42 +312,42 @@ function Import-CsvToSqliteTable {
     if (-not (Test-Path $CsvFilePath)) {
         throw "CSVファイルが見つかりません: $CsvFilePath"
     }
+    
+    # ヘッダー行をスキップしてインポートするため、一時ファイルを作成
+    $tempFile = [System.IO.Path]::GetTempFileName()
+    $tempCsvFile = $tempFile + ".csv"
+    
+    try {
+        # CSVファイルの内容を読み込み、ヘッダー行（1行目）をスキップ
+        $csvContent = Get-Content -Path $CsvFilePath
+        if ($csvContent.Count -gt 1) {
+            # ヘッダー行を除いた内容を一時ファイルに保存
+            $csvContent[1..($csvContent.Count - 1)] | Out-File -FilePath $tempCsvFile -Encoding UTF8
+            Write-SystemLog "ヘッダー行をスキップした一時ファイルを作成: $(Split-Path -Leaf $tempCsvFile)" -Level "Info"
+        } else {
+            Write-SystemLog "CSVファイルにデータ行がありません（ヘッダーのみ）: $CsvFilePath" -Level "Warning"
+            return
+        }
         
-    # SQLite3の.importコマンドを使用した直接インポート
-    $result = & sqlite3 $DatabasePath ".mode csv" ".import `"$CsvFilePath`" $TableName" 2>&1
-        
-    if ($LASTEXITCODE -ne 0) {
-        throw "SQLite .import エラー (終了コード: $LASTEXITCODE): $result"
+        # SQLite3の.importコマンドを使用した直接インポート（ヘッダー行除去済み）
+        $result = & sqlite3 $DatabasePath ".mode csv" ".import `"$tempCsvFile`" $TableName" 2>&1
+            
+        if ($LASTEXITCODE -ne 0) {
+            throw "SQLite .import エラー (終了コード: $LASTEXITCODE): $result"
+        }
+            
+        Write-SystemLog "CSV直接インポート完了: $TableName (ヘッダー行スキップ済み)" -Level "Success"
     }
-        
-    Write-SystemLog "CSV直接インポート完了: $TableName" -Level "Success"
-}
-
-# 一時テーブル作成SQL生成
-function New-CreateTempTableSql {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$BaseTableName,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$TempTableName
-    )
-    
-    $tableDefinition = Get-TableDefinition -TableName $BaseTableName
-    
-    $columns = @()
-    foreach ($column in $tableDefinition.columns) {
-        if ($column.csv_include -eq $true) {
-            $columnDef = "$($column.name) $($column.type)"
-            $columns += $columnDef
+    finally {
+        # 一時ファイルのクリーンアップ
+        if (Test-Path $tempFile) {
+            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+        }
+        if (Test-Path $tempCsvFile) {
+            Remove-Item $tempCsvFile -Force -ErrorAction SilentlyContinue
+            Write-SystemLog "一時ファイルを削除: $(Split-Path -Leaf $tempCsvFile)" -Level "Info"
         }
     }
-    
-    $sql = "CREATE TEMP TABLE $TempTableName (`n"
-    $sql += "    " + ($columns -join ",`n    ") + "`n"
-    $sql += ");"
-    
-    return $sql
 }
 
 Export-ModuleMember -Function 'Invoke-CsvImport'

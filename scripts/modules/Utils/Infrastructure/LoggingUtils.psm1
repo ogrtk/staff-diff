@@ -88,22 +88,32 @@ function Write-SystemLog {
         [string]$Message,
         
         [ValidateSet("Info", "Warning", "Error", "Success")]
-        [string]$Level = "Info"
+        [string]$Level = "Info",
+        
+        [Parameter()]
+        [AllowNull()]
+        [System.ConsoleColor]$ConsoleColor
     )
     
     # コンソール出力
-    switch ($Level) {
-        "Info" {
-            Write-Host $Message -ForegroundColor Cyan
-        }
-        "Warning" {
-            Write-Host $Message -ForegroundColor Yellow
-        }
-        "Error" {
-            Write-Host $Message -ForegroundColor Red
-        }
-        "Success" {
-            Write-Host $Message -ForegroundColor Green
+    if ($PSBoundParameters.ContainsKey('ConsoleColor') -and $ConsoleColor) {
+        # 明示的に色が指定された場合はそれを使用
+        Write-Host $Message -ForegroundColor $ConsoleColor
+    } else {
+        # 従来のログレベルベースの色指定
+        switch ($Level) {
+            "Info" {
+                Write-Host $Message -ForegroundColor Cyan
+            }
+            "Warning" {
+                Write-Host $Message -ForegroundColor Yellow
+            }
+            "Error" {
+                Write-Host $Message -ForegroundColor Red
+            }
+            "Success" {
+                Write-Host $Message -ForegroundColor Green
+            }
         }
     }
     

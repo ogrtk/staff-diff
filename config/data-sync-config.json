@@ -558,7 +558,7 @@
           "field": "user_id",
           "type": "exclude",
           "glob": "Z*",
-          "description": "Z始まりの職員番号を除外"
+          "description": "E始まりの職員番号を除外"
         },
         {
           "field": "user_id",
@@ -566,7 +566,11 @@
           "glob": "Y*",
           "description": "Y始まりの職員番号を除外"
         }
-      ]
+      ],
+      "output_excluded_as_keep": {
+        "enabled": true,
+        "description": "除外データをKEEPとして出力するかどうか（true: 除外データもKEEPアクションで出力、false: 除外データは出力しない）"
+      }
     }
   },
   "performance_settings": {

@@ -43,6 +43,15 @@ function Invoke-DataSync {
         # 4. 変更のないレコードを保持
         Add-KeepRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
         
+        # 5. フィルタ除外されたcurrent_dataをKEEPとして追加（設定有効時のみ）
+        $config = Get-DataSyncConfig
+        if ($config.data_filters.current_data.output_excluded_as_keep.enabled -eq $true) {
+            Add-ExcludedCurrentDataAsKeep -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
+        }
+        else {
+            Write-SystemLog "除外データのKEEP出力設定が無効のため、スキップします" -Level "Info"
+        }
+        
         Write-SystemLog "データ同期処理が完了しました。" -Level "Success"
         
     }
@@ -216,6 +225,71 @@ WHERE
     
     # 保持されたレコード数を取得
     Write-SystemLog "変更なしレコード追加処理が完了しました" -Level "Success"
+}
+
+# フィルタ除外されたcurrent_dataをKEEPアクションとして追加
+function Add-ExcludedCurrentDataAsKeep {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$DatabasePath,
+        
+        [Parameter(Mandatory = $true)]
+        [PSCustomObject]$SyncActionLabels
+    )
+    
+    $excludedTableName = "current_data_excluded"
+    
+    # 除外データテーブルの存在確認
+    $checkTableQuery = @"
+SELECT name FROM sqlite_master 
+WHERE type='table' AND name='$excludedTableName';
+"@
+    
+    $result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $checkTableQuery
+    
+    if (-not $result -or $result.Count -eq 0) {
+        Write-SystemLog "除外データテーブルが存在しないため、スキップします: $excludedTableName" -Level "Info"
+        return
+    }
+    
+    Write-SystemLog "フィルタ除外されたcurrent_dataをKEEPアクションとして追加中..." -Level "Info"
+    
+    # sync_result用の挿入カラム取得
+    $insertColumns = Get-CsvColumns -TableName "sync_result"
+    $insertColumnsString = $insertColumns -join ", "
+    
+    # 除外されたcurrent_dataから直接マッピングしてSELECT句を生成
+    $selectClauses = @()
+    foreach ($syncResultColumn in $insertColumns) {
+        if ($syncResultColumn -eq "sync_action") {
+            $selectClauses += "'$($SyncActionLabels.KEEP.value)'"
+        }
+        elseif ($syncResultColumn -eq "syokuin_no") {
+            # current_dataのuser_idをsyokuin_noにマッピング
+            $selectClauses += "ced.user_id"
+        }
+        else {
+            # その他のカラムは同名でマッピング
+            $selectClauses += "ced.$syncResultColumn"
+        }
+    }
+    $selectClause = $selectClauses -join ", "
+    
+    $query = @"
+INSERT OR IGNORE INTO sync_result ($insertColumnsString)
+SELECT 
+    $selectClause
+FROM $excludedTableName ced;
+"@
+    
+    Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query
+    
+    # 追加されたレコード数を取得
+    $countQuery = "SELECT COUNT(*) as count FROM $excludedTableName;"
+    $countResult = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $countQuery
+    $addedCount = if ($countResult -and $countResult[0]) { $countResult[0].count } else { 0 }
+    
+    Write-SystemLog "フィルタ除外データをKEEPアクションとして追加しました ($addedCount 件)" -Level "Success"
 }
 
 Export-ModuleMember -Function 'Invoke-DataSync'
