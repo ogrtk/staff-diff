@@ -41,7 +41,7 @@ function Invoke-CsvImport {
 }
 
 # 汎用CSVインポート関数（単一ファイル + 履歴保存対応）
-function script:Invoke-CsvImportMain {
+function Invoke-CsvImportMain {
     param(
         [Parameter(Mandatory = $true)]
         [string]$CsvPath,
@@ -116,7 +116,7 @@ function script:Invoke-CsvImportMain {
 }
 
 # ヘッダー付き一時CSVファイルを作成する関数（クリーンアップ機能付き）
-function script:New-TempCsvWithHeader {
+function New-TempCsvWithHeader {
     param(
         [Parameter(Mandatory = $true)]
         [string]$CsvPath,
@@ -198,7 +198,7 @@ function script:New-TempCsvWithHeader {
 }
 
 # SQLベースフィルタリング（processing層実装）
-function script:Invoke-Filtering {
+function Invoke-Filtering {
     param(
         [Parameter(Mandatory = $true)]
         [string]$DatabasePath,
@@ -287,7 +287,7 @@ COMMIT;
 }
 
 # CSV直接インポート関数（SQLite .importコマンド使用）
-function script:Import-CsvToSqliteTable {
+function Import-CsvToSqliteTable {
     param(
         [Parameter(Mandatory = $true)]
         [string]$CsvFilePath,

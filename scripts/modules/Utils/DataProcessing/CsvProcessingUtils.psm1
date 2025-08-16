@@ -51,30 +51,6 @@ function ConvertTo-PowerShellEncoding {
     }
 }
 
-# 改行コード変換関数
-function ConvertTo-NewlineFormat {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Content,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$NewlineFormat
-    )
-    
-    # 一旦すべての改行を統一
-    $normalized = $Content -replace "`r`n", "`n" -replace "`r", "`n"
-    
-    switch ($NewlineFormat.ToUpper()) {
-        "CRLF" { return $normalized -replace "`n", "`r`n" }
-        "LF" { return $normalized }
-        "CR" { return $normalized -replace "`n", "`r" }
-        default { 
-            Write-SystemLog "未サポートの改行コード: $NewlineFormat。CRLFを使用します。" -Level "Warning"
-            return $normalized -replace "`n", "`r`n"
-        }
-    }
-}
-
 # 設定ベースCSVインポート関数
 function Import-CsvWithFormat {
     param(
@@ -125,62 +101,6 @@ function Import-CsvWithFormat {
     }
     catch {
         Write-SystemLog "CSVファイルの読み込みに失敗しました: $($_.Exception.Message)" -Level "Error"
-        throw
-    }
-}
-
-# SQLite文字列結果をPSCustomObjectに変換
-function ConvertFrom-SqliteStringResult {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string[]]$StringArray,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$TableName
-    )
-    
-    try {
-        if ($StringArray.Count -eq 0) {
-            return @()
-        }
-        
-        # SQLite3のデフォルト出力は"|"区切り
-        # 最初の行をヘッダーとして扱う
-        $headers = $StringArray[0] -split '\|'
-        $headers = $headers | ForEach-Object { $_.Trim() }
-        
-        if ($StringArray.Count -eq 1) {
-            # ヘッダーのみでデータなし
-            return @()
-        }
-        
-        $dataRows = $StringArray[1..($StringArray.Count - 1)]
-        
-        $objects = foreach ($row in $dataRows) {
-            if ([string]::IsNullOrWhiteSpace($row)) { 
-                continue 
-            }
-            
-            $values = $row -split '\|'
-            $obj = [PSCustomObject]@{}
-            
-            for ($i = 0; $i -lt $headers.Count; $i++) {
-                $value = if ($i -lt $values.Count) { $values[$i].Trim() } else { "" }
-                # 空文字列をnullに変換
-                if ([string]::IsNullOrEmpty($value)) {
-                    $value = $null
-                }
-                $obj | Add-Member -NotePropertyName $headers[$i] -NotePropertyValue $value
-            }
-            $obj
-        }
-        
-        Write-SystemLog "SQLite結果変換完了: $($objects.Count)件のPSCustomObjectに変換" -Level "Success"
-        return $objects
-        
-    }
-    catch {
-        Write-SystemLog "SQLite結果の変換に失敗しました: $($_.Exception.Message)" -Level "Error"
         throw
     }
 }
@@ -249,65 +169,9 @@ function Test-CsvFormat {
         return $false
     }
 }
-
-# CSVエクスポート関数（設定ベース）
-function Export-CsvWithFormat {
-    param(
-        [Parameter(Mandatory = $true)]
-        [array]$Data,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$CsvPath,
-        
-        [Parameter(Mandatory = $true)]
-        [string]$TableName
-    )
-    
-    try {
-        $formatConfig = Get-CsvFormatConfig -TableName $TableName
-        
-        Write-SystemLog "CSVファイルを出力中: $CsvPath (テーブル: $TableName)" -Level "Info"
-        Write-SystemLog "使用設定 - エンコーディング: $($formatConfig.encoding), 区切り文字: '$($formatConfig.delimiter)'" -Level "Info"
-        
-        # PowerShell用エンコーディング名に変換
-        $encoding = ConvertTo-PowerShellEncoding -EncodingName $formatConfig.encoding
-        
-        # Export-Csvパラメータ準備
-        $exportParams = @{
-            Path     = $CsvPath
-            Encoding = $encoding
-            Force    = $true
-            NoTypeInformation = $true
-        }
-        
-        # 区切り文字設定（PowerShellのデフォルトはカンマ）
-        if ($formatConfig.delimiter -ne ",") {
-            $exportParams.Delimiter = $formatConfig.delimiter
-        }
-        
-        # ヘッダー設定
-        if ($formatConfig.include_header -eq $false) {
-            $exportParams.NoHeader = $true
-        }
-        
-        # CSVデータエクスポート
-        $Data | Export-Csv @exportParams
-        
-        Write-SystemLog "CSVファイル出力完了: $CsvPath ($($Data.Count)行)" -Level "Success"
-        
-    }
-    catch {
-        Write-SystemLog "CSVファイルの出力に失敗しました: $($_.Exception.Message)" -Level "Error"
-        throw
-    }
-}
-
 Export-ModuleMember -Function @(
     'Get-CsvFormatConfig',
     'ConvertTo-PowerShellEncoding',
-    'ConvertTo-NewlineFormat',
     'Import-CsvWithFormat',
-    'ConvertFrom-SqliteStringResult',
-    'Test-CsvFormat',
-    'Export-CsvWithFormat'
+    'Test-CsvFormat'
 )

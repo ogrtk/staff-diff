@@ -70,7 +70,7 @@ function Invoke-ConfigValidation {
 }
 
 # ファイル存在チェック（設定完了後の検証）
-function script:Test-ResolvedFilePaths {
+function Test-ResolvedFilePaths {
     param(
         [Parameter(Mandatory = $true)]
         [hashtable]$ResolvedPaths       

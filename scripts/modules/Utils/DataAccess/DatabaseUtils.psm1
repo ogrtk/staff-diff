@@ -137,13 +137,6 @@ function New-CreateTableSql {
                     $tableConstraints += $constraintDef
                     Write-SystemLog "PRIMARY KEY制約を追加: $($constraint.name) ($columnsStr)" -Level "Info"
                 }
-                "CHECK" {
-                    if ($constraint.check_expression) {
-                        $constraintDef = "CONSTRAINT $($constraint.name) CHECK ($($constraint.check_expression))"
-                        $tableConstraints += $constraintDef
-                        Write-SystemLog "CHECK制約を追加: $($constraint.name)" -Level "Info"
-                    }
-                }
                 "FOREIGN KEY" {
                     if ($constraint.foreign_key) {
                         $fkColumns = $constraint.columns -join ", "
