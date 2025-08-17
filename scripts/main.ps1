@@ -1,6 +1,22 @@
 # PowerShell & SQLite データ同期システム
 # メインスクリプト（エントリーポイント）
 
+using module ”./modules/Utils/Foundation/CoreUtils.psm1"
+using module ”./modules/Utils/Infrastructure/LoggingUtils.psm1"
+using module ”./modules/Utils/Infrastructure/ConfigurationUtils.psm1"
+using module ”./modules/Utils/Infrastructure/ErrorHandlingUtils.psm1"
+using module ”./modules/Utils/DataAccess/DatabaseUtils.psm1"
+using module ”./modules/Utils/DataAccess/FileSystemUtils.psm1"
+using module ”./modules/Utils/DataProcessing/CsvProcessingUtils.psm1"
+using module ”./modules/Utils/DataProcessing/DataFilteringUtils.psm1"
+using module ”./modules/Process/Invoke-ConfigValidation.psm1"
+using module ”./modules/Process/Invoke-CsvExport.psm1"
+using module ”./modules/Process/Invoke-CsvImport.psm1"
+using module ”./modules/Process/Invoke-DatabaseInitialization.psm1"
+using module ”./modules/Process/Invoke-DataSync.psm1"
+using module ”./modules/Process/Show-SyncResult.psm1"
+using module ”./modules/Process/Test-DataConsistency.psm1"
+
 # パラメータ定義
 param(
     [string]$ProvidedDataFilePath = "",
@@ -13,39 +29,10 @@ param(
 # スクリプトの場所を基準にプロジェクトルートを設定
 $ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.FullName
 
-# モジュールディレクトリのパス
-$UtilsModulePath = Join-Path $ProjectRoot "scripts" "modules" "Utils"
-$ProcessModulePath = Join-Path $ProjectRoot "scripts" "modules" "Process"
-
 # 堅牢なエラーハンドリング
 $ErrorActionPreference = "Stop"
 
 try {
-    # --- モジュール読み込み（レイヤアーキテクチャ準拠） ---
-    # Layer 1: Foundation（基盤層）
-    Import-Module (Join-Path $UtilsModulePath "Foundation" "CoreUtils.psm1")
-    
-    # Layer 2: Infrastructure（インフラ層）
-    Import-Module (Join-Path $UtilsModulePath "Infrastructure" "ConfigurationUtils.psm1")
-    Import-Module (Join-Path $UtilsModulePath "Infrastructure" "LoggingUtils.psm1")
-    Import-Module (Join-Path $UtilsModulePath "Infrastructure" "ErrorHandlingUtils.psm1")
-    
-    # Layer 3: Data Access（データアクセス層）
-    Import-Module (Join-Path $UtilsModulePath "DataAccess" "DatabaseUtils.psm1")
-    Import-Module (Join-Path $UtilsModulePath "DataAccess" "FileSystemUtils.psm1")
-    
-    # Layer 4: Data Processing（データ処理層）
-    Import-Module (Join-Path $UtilsModulePath "DataProcessing" "CsvProcessingUtils.psm1")
-    Import-Module (Join-Path $UtilsModulePath "DataProcessing" "DataFilteringUtils.psm1")
-
-    # プロセスモジュール
-    Import-Module (Join-Path $ProcessModulePath "Invoke-ConfigValidation.psm1")
-    Import-Module (Join-Path $ProcessModulePath "Invoke-CsvExport.psm1")
-    Import-Module (Join-Path $ProcessModulePath "Invoke-CsvImport.psm1")
-    Import-Module (Join-Path $ProcessModulePath "Invoke-DatabaseInitialization.psm1")
-    Import-Module (Join-Path $ProcessModulePath "Invoke-DataSync.psm1")
-    Import-Module (Join-Path $ProcessModulePath "Show-SyncResult.psm1")
-    Import-Module (Join-Path $ProcessModulePath "Test-DataConsistency.psm1")
     # --- 初期設定: 設定ファイルの読み込み ---
     # 全ての処理に先立ち、設定ファイルを読み込んでキャッシュする
     if ([string]::IsNullOrEmpty($ConfigFilePath)) {

@@ -1,10 +1,10 @@
 # PowerShell & SQLite データ同期システム
 # Layer 2: Configuration ユーティリティライブラリ（設定管理専用）
-
-# Layer 1への依存は実行時に解決
+using module ”../Foundation/CoreUtils.psm1"
 
 # モジュールスコープの変数で設定をキャッシュ
 $script:DataSyncConfig = $null
+
 
 # データ同期設定の読み込み（初回はパス指定が必須）
 function Get-DataSyncConfig {
@@ -18,54 +18,6 @@ function Get-DataSyncConfig {
     }
 
     if ([string]::IsNullOrEmpty($ConfigPath)) {
-        # テスト環境では設定なしでもフォールバックを提供
-        if ($env:PESTER_TEST -eq "1" -or (Get-Command "Describe" -ErrorAction SilentlyContinue)) {
-            Write-Warning "テスト環境で設定パスが指定されていません。デフォルト設定を使用します。"
-            $script:DataSyncConfig = [PSCustomObject]@{
-                tables = @{
-                    provided_data = @{
-                        columns = @(
-                            @{ name = "syokuin_no"; type = "TEXT"; required = $true },
-                            @{ name = "name"; type = "TEXT"; required = $true }
-                        )
-                    }
-                    current_data = @{
-                        columns = @(
-                            @{ name = "syokuin_no"; type = "TEXT"; required = $true },
-                            @{ name = "name"; type = "TEXT"; required = $true }
-                        )
-                    }
-                    output = @{
-                        columns = @(
-                            @{ name = "syokuin_no"; type = "TEXT"; required = $true },
-                            @{ name = "name"; type = "TEXT"; required = $true },
-                            @{ name = "sync_action"; type = "TEXT"; required = $true }
-                        )
-                    }
-                }
-                csv_format = @{
-                    provided_data = @{
-                        encoding = "UTF-8"
-                        delimiter = ","
-                        has_header = $true
-                        null_values = @("")
-                    }
-                    current_data = @{
-                        encoding = "UTF-8"
-                        delimiter = ","
-                        has_header = $true
-                        null_values = @("")
-                    }
-                    output = @{
-                        encoding = "UTF-8"
-                        delimiter = ","
-                        has_header = $true
-                        null_values = @("")
-                    }
-                }
-            }
-            return $script:DataSyncConfig
-        }
         throw "設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。"
     }
 
@@ -77,9 +29,7 @@ function Get-DataSyncConfig {
         $encoding = Get-CrossPlatformEncoding
         $configContent = Get-Content -Path $ConfigPath -Raw -Encoding $encoding
         $script:DataSyncConfig = $configContent | ConvertFrom-Json
-        
-        Write-SystemLog "設定を読み込みました: $ConfigPath" -Level "Success"
-        
+                
         return $script:DataSyncConfig
     }
     catch {
@@ -94,7 +44,6 @@ function Get-FilePathConfig {
     
     # file_pathsセクションが存在しない場合、デフォルト値を生成（内部動作）
     if (-not $config.file_paths) {
-        Write-SystemLog "file_paths設定が見つかりません。デフォルト値を使用します。" -Level "Warning"
         $defaultPaths = @{
             provided_data_history_directory = "./data/provided-data/"
             current_data_history_directory  = "./data/current-data/"
@@ -129,7 +78,6 @@ function Get-LoggingConfig {
     $config = Get-DataSyncConfig
     
     if (-not $config.logging) {
-        # 循環依存を避けるため、Write-SystemLogを使わずにHost出力のみ使用
         Write-Host "ログ設定が見つかりません。デフォルト値を使用します。" -ForegroundColor Yellow
         # デフォルトログ設定を生成（内部動作）
         $defaultLogging = @{
@@ -198,7 +146,6 @@ function Test-DataSyncConfig {
                 Test-TableConstraintsConfig -TableName $tableName -TableConstraints $table.table_constraints -TableColumns $table.columns
             }
         }
-        Write-SystemLog "各テーブルの検証完了" -Level "Info"
         
         # 必須テーブル存在確認
         $requiredTables = @("provided_data", "current_data", "sync_result")
@@ -207,35 +154,26 @@ function Test-DataSyncConfig {
                 throw "必須テーブル '$requiredTable' の定義が見つかりません"
             }
         }
-        Write-SystemLog "必須テーブルの検証完了" -Level "Info"
         
         # 同期ルールの検証
         Test-SyncRulesConsistency -Config $config
-        Write-SystemLog "同期ルールの検証完了" -Level "Info"
             
         # sync_result_mappingの検証
         Test-SyncResultMappingConfig -Config $config
-        Write-SystemLog "sync_result_mapping設定の検証完了" -Level "Info"
         
         # キーカラム検証
         Test-KeyColumnsValidation -Config $config
-        Write-SystemLog "key_columnsの検証完了" -Level "Info"
         
         # データフィルタ設定検証
         if ($config.data_filters) {
             Test-DataFilterConsistency -Config $config
-            Write-SystemLog "data_filtersの検証完了" -Level "Info"
         }
         
         # CSVフォーマット設定の検証
         Test-CsvFormatConfig -Config $config
-        Write-SystemLog "CSVフォーマット設定の検証完了" -Level "Info"
 
         # ログ設定の検証
         Test-LoggingConfig -Config $config
-        Write-SystemLog "ログ設定の検証完了" -Level "Info"
-        
-        Write-SystemLog "設定の検証が完了しました" -Level "Success"
         
     }
     catch {
@@ -426,7 +364,6 @@ function Test-TableConstraintsConfig {
         }
     }
     
-    Write-SystemLog "テーブル '$TableName' の制約設定の検証が完了しました" -Level "Info"
 }
 
 function Test-SyncResultMappingConfig {
@@ -460,7 +397,6 @@ function Test-SyncResultMappingConfig {
         }
     }
     
-    Write-SystemLog "sync_result_mapping設定の検証が完了しました" -Level "info"
 }
 
 function Test-LoggingConfig {
@@ -489,7 +425,6 @@ function Test-LoggingConfig {
 # 設定のリセット（テスト用）
 function Reset-DataSyncConfig {
     $script:DataSyncConfig = $null
-    Write-SystemLog "設定キャッシュをクリアしました" -Level "Info"
 }
 
 Export-ModuleMember -Function @(

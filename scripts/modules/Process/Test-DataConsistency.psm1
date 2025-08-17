@@ -1,6 +1,12 @@
 # PowerShell & SQLite データ同期システム
 # データ整合性チェックモジュール
 
+using module ”../Utils/Foundation/CoreUtils.psm1"
+using module ”../Utils/Infrastructure/LoggingUtils.psm1"
+using module ”../Utils/Infrastructure/ConfigurationUtils.psm1"
+using module ”../Utils/Infrastructure/ErrorHandlingUtils.psm1"
+using module ”../Utils/DataAccess/DatabaseUtils.psm1"
+
 # データの整合性チェック（安全な操作）
 function Test-DataConsistency {
     param(

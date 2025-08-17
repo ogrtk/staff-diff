@@ -23,7 +23,8 @@
         "",
         "NULL",
         "null"
-      ]
+      ],
+      "allow_empty_file": false
     },
     "current_data": {
       "description": "現在データCSV読み込み設定",
@@ -35,7 +36,8 @@
         "",
         "NULL",
         "null"
-      ]
+      ],
+      "allow_empty_file": true
     },
     "output": {
       "description": "同期結果CSV出力設定",

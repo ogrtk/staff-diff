@@ -1,6 +1,15 @@
 # PowerShell & SQLite データ管理システム
 # CSVデータインポート処理スクリプト（レイヤー化版）
 
+using module ”../Utils/Foundation/CoreUtils.psm1"
+using module ”../Utils/Infrastructure/LoggingUtils.psm1"
+using module ”../Utils/Infrastructure/ConfigurationUtils.psm1"
+using module ”../Utils/Infrastructure/ErrorHandlingUtils.psm1"
+using module ”../Utils/DataAccess/DatabaseUtils.psm1"
+using module ”../Utils/DataAccess/FileSystemUtils.psm1"
+using module ”../Utils/DataProcessing/CsvProcessingUtils.psm1"
+using module ”../Utils/DataProcessing/DataFilteringUtils.psm1"
+
 # 統合されたデータインポート関数（冪等性対応）
 function Invoke-CsvImport {
     param(
@@ -85,10 +94,6 @@ function Invoke-CsvImportMain {
 
     # 作成したファイルのクリーンアップ処理（冪等性対応）
     $csvCleanupScript = {
-        if ($historyFilePath -and (Test-Path $historyFilePath)) {
-            Remove-Item $historyFilePath -Force -ErrorAction SilentlyContinue
-            Write-SystemLog "履歴ファイルを削除しました: $historyFilePath" -Level "Info"
-        }
         if ($tempHeaderFile -and (Test-Path $tempHeaderFile)) {
             Remove-Item $tempHeaderFile -Force -ErrorAction SilentlyContinue
             Write-SystemLog "一時ヘッダーファイルを削除しました: $tempHeaderFile" -Level "Info"
@@ -105,8 +110,21 @@ function Invoke-CsvImportMain {
                 
     # データフィルタリング
     Write-SystemLog "データフィルタリング処理開始" -Level "Info"
-    $statistics = Invoke-WithErrorHandling -Category External -Operation "データフィルタリング処理" -CleanupScript $csvCleanupScript -ScriptBlock {
-        Invoke-Filtering -DatabasePath $DatabasePath -TableName $TableName -CsvFilePath $processingCsvPath -ShowStatistics:$true
+    
+    # 空のCSVファイルの場合はフィルタリングをスキップ
+    $csvData = Import-CsvWithFormat -CsvPath $processingCsvPath -TableName $TableName
+    if (-not $csvData -or $csvData.Count -eq 0) {
+        Write-SystemLog "空のCSVファイルのためフィルタリング処理をスキップします" -Level "Info"
+        $statistics = @{
+            TotalCount    = 0
+            FilteredCount = 0
+            ExcludedCount = 0
+        }
+    }
+    else {
+        $statistics = Invoke-WithErrorHandling -Category External -Operation "データフィルタリング処理" -CleanupScript $csvCleanupScript -ScriptBlock {
+            Invoke-Filtering -DatabasePath $DatabasePath -TableName $TableName -CsvFilePath $processingCsvPath -ShowStatistics:$true
+        }
     }
 
     # 一時ファイルクリーンアップ実行
@@ -324,7 +342,8 @@ function Import-CsvToSqliteTable {
             # ヘッダー行を除いた内容を一時ファイルに保存
             $csvContent[1..($csvContent.Count - 1)] | Out-File -FilePath $tempCsvFile -Encoding UTF8
             Write-SystemLog "ヘッダー行をスキップした一時ファイルを作成: $(Split-Path -Leaf $tempCsvFile)" -Level "Info"
-        } else {
+        }
+        else {
             Write-SystemLog "CSVファイルにデータ行がありません（ヘッダーのみ）: $CsvFilePath" -Level "Warning"
             return
         }

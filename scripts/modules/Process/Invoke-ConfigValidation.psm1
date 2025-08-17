@@ -1,6 +1,15 @@
 # PowerShell & SQLite データ管理システム
 # 設定検証・パラメータ解決処理スクリプト（レイヤー化版）
 
+using module ”../Utils/Foundation/CoreUtils.psm1"
+using module ”../Utils/Infrastructure/LoggingUtils.psm1"
+using module ”../Utils/Infrastructure/ConfigurationUtils.psm1"
+using module ”../Utils/Infrastructure/ErrorHandlingUtils.psm1"
+using module ”../Utils/DataAccess/DatabaseUtils.psm1"
+using module ”../Utils/DataAccess/FileSystemUtils.psm1"
+using module ”../Utils/DataProcessing/CsvProcessingUtils.psm1"
+using module ”../Utils/DataProcessing/DataFilteringUtils.psm1"
+
 # 設定検証とパラメータ解決の統合処理
 function Invoke-ConfigValidation {
     param(

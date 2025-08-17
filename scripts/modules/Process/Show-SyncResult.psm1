@@ -1,6 +1,15 @@
 # PowerShell & SQLite データ同期システム
 # 統合同期結果表示モジュール
 
+using module ”../Utils/Foundation/CoreUtils.psm1"
+using module ”../Utils/Infrastructure/LoggingUtils.psm1"
+using module ”../Utils/Infrastructure/ConfigurationUtils.psm1"
+using module ”../Utils/Infrastructure/ErrorHandlingUtils.psm1"
+using module ”../Utils/DataAccess/DatabaseUtils.psm1"
+using module ”../Utils/DataAccess/FileSystemUtils.psm1"
+using module ”../Utils/DataProcessing/CsvProcessingUtils.psm1"
+using module ”../Utils/DataProcessing/DataFilteringUtils.psm1"
+
 # 同期処理の包括的結果表示（安全な操作）
 function Show-SyncResult {
     param(

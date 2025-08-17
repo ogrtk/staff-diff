@@ -1,7 +1,8 @@
 # PowerShell & SQLite データ同期システム
 # Layer 3: FileSystem ユーティリティライブラリ（ファイル操作・履歴管理）
-
-# Layer 1, 2への依存は実行時に解決
+using module ”../Foundation/CoreUtils.psm1"
+using module ”../Infrastructure/LoggingUtils.psm1"
+using module ”../Infrastructure/ConfigurationUtils.psm1"
 
 # 日本時間でタイムスタンプを取得
 

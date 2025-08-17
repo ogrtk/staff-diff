@@ -1,5 +1,8 @@
 # PowerShell & SQLite データ同期システム
 # Layer 4: Data Filtering ユーティリティライブラリ（データフィルタ処理専用）
+using module ”../Foundation/CoreUtils.psm1"
+using module ”../Infrastructure/LoggingUtils.psm1"
+using module ”../Infrastructure/ConfigurationUtils.psm1"
 
 # 一時テーブル名の生成（utils関数）
 function New-TempTableName {

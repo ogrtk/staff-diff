@@ -1,8 +1,8 @@
 # PowerShell & SQLite データ同期システム
 # Layer 2: Logging ユーティリティライブラリ（高度なログ機能）
 
-# Layer 1, 2への依存は実行時にImport-Moduleで解決
-
+using module ”../Foundation/CoreUtils.psm1"
+using module ”./ConfigurationUtils.psm1"
 
 # ログファイルのローテーション（ユーティリティ関数）
 function Move-LogFileToRotate {
@@ -26,8 +26,8 @@ function Move-LogFileToRotate {
     
     # 古いログファイルを削除（MaxFiles数を超える場合）
     $existingLogs = Get-ChildItem -Path $logDir -Filter "$logBaseName.*$logExt" |
-        Where-Object { $_.Name -match "$logBaseName\.(\d{8}_\d{6})$logExt" } |
-        Sort-Object LastWriteTime -Descending
+    Where-Object { $_.Name -match "$logBaseName\.(\d{8}_\d{6})$logExt" } |
+    Sort-Object LastWriteTime -Descending
     
     if ($existingLogs.Count -gt $MaxFiles) {
         $filesToDelete = $existingLogs | Select-Object -Skip $MaxFiles
@@ -99,7 +99,8 @@ function Write-SystemLog {
     if ($PSBoundParameters.ContainsKey('ConsoleColor') -and $ConsoleColor) {
         # 明示的に色が指定された場合はそれを使用
         Write-Host $Message -ForegroundColor $ConsoleColor
-    } else {
+    }
+    else {
         # 従来のログレベルベースの色指定
         switch ($Level) {
             "Info" {

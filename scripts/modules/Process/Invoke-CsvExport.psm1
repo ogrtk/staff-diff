@@ -1,6 +1,15 @@
 # PowerShell & SQLite データ同期システム
 # CSV結果エクスポート処理モジュール
 
+using module ”../Utils/Foundation/CoreUtils.psm1"
+using module ”../Utils/Infrastructure/LoggingUtils.psm1"
+using module ”../Utils/Infrastructure/ConfigurationUtils.psm1"
+using module ”../Utils/Infrastructure/ErrorHandlingUtils.psm1"
+using module ”../Utils/DataAccess/DatabaseUtils.psm1"
+using module ”../Utils/DataAccess/FileSystemUtils.psm1"
+using module ”../Utils/DataProcessing/CsvProcessingUtils.psm1"
+using module ”../Utils/DataProcessing/DataFilteringUtils.psm1"
+
 # 同期結果をCSVファイルにエクスポート（外部パス出力 + 履歴保存）
 function Invoke-CsvExport {
     param(
@@ -38,8 +47,7 @@ function Invoke-CsvExport {
         # 履歴ディレクトリの作成
         if (-not (Test-Path $filePathConfig.output_history_directory)) {
             New-Item -ItemType Directory -Path $filePathConfig.output_history_directory -Force | Out-Null
-            Write-SystemLog "履歴ディレクトリを作成しま       
-            した: $filePathConfig.output_history_directory"  -Level "Success"
+            Write-SystemLog "履歴ディレクトリを作成しました: $($filePathConfig.output_history_directory)" -Level "Success"
         }
         # 履歴保存パス準備（OutputFilePathのファイル名を使用）
         $baseFileName = Split-Path -Leaf $OutputFilePath

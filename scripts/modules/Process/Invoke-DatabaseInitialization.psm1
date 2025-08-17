@@ -1,6 +1,15 @@
 # PowerShell & SQLite 職員データ管理システム
 # データベース初期化モジュール
 
+using module ”../Utils/Foundation/CoreUtils.psm1"
+using module ”../Utils/Infrastructure/LoggingUtils.psm1"
+using module ”../Utils/Infrastructure/ConfigurationUtils.psm1"
+using module ”../Utils/Infrastructure/ErrorHandlingUtils.psm1"
+using module ”../Utils/DataAccess/DatabaseUtils.psm1"
+using module ”../Utils/DataAccess/FileSystemUtils.psm1"
+using module ”../Utils/DataProcessing/CsvProcessingUtils.psm1"
+using module ”../Utils/DataProcessing/DataFilteringUtils.psm1"
+
 # 動的データベース初期化（冪等性・リトライ対応）
 function Invoke-DatabaseInitialization {
     param(

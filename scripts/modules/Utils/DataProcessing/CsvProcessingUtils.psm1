@@ -1,7 +1,9 @@
 # PowerShell & SQLite データ同期システム
 # Layer 4: CSV Processing ユーティリティライブラリ（CSV処理専用）
 
-# Layer 1, 2, 3への依存は実行時に解決
+using module ”../Foundation/CoreUtils.psm1"
+using module ”../Infrastructure/LoggingUtils.psm1"
+using module ”../Infrastructure/ConfigurationUtils.psm1"
 
 # CSVフォーマット設定取得関数
 function Get-CsvFormatConfig {
@@ -124,8 +126,21 @@ function Test-CsvFormat {
         
         # 空のCSVファイルチェック
         if (-not $csvData -or $csvData.Count -eq 0) {
-            Write-SystemLog "CSVファイルが空です: $(Split-Path -Leaf $CsvPath)" -Level "Warning"
-            return $false
+            Write-SystemLog "CSVファイルが空です: $(Split-Path -Leaf $CsvPath)" -Level "Info"
+            
+            # 空ファイル許可設定をチェック
+            $allowEmpty = $formatConfig.allow_empty_file
+            if ($null -eq $allowEmpty) {
+                $allowEmpty = $true  # デフォルトは許可
+            }
+            
+            if (-not $allowEmpty) {
+                Write-SystemLog "空のCSVファイルは許可されていません (allow_empty_file=false): $(Split-Path -Leaf $CsvPath)" -Level "Error"
+                return $false
+            }
+            
+            Write-SystemLog "空のCSVファイルが許可されています (allow_empty_file=true): $(Split-Path -Leaf $CsvPath)" -Level "Info"
+            return $true
         }
         
         # ヘッダー取得（最初の行から）
@@ -169,62 +184,6 @@ function Test-CsvFormat {
         return $false
     }
 }
-
-# # CSVからPowerShellオブジェクト配列に変換
-# function ConvertFrom-CsvData {
-#     param(
-#         [Parameter(Mandatory = $true, ParameterSetName = "FromPath")]
-#         [string]$CsvPath,
-        
-#         [Parameter(Mandatory = $true, ParameterSetName = "FromContent")]
-#         [string]$CsvContent,
-        
-#         [Parameter(Mandatory = $true)]
-#         [string]$TableName,
-        
-#         [string]$Delimiter = ","
-#     )
-    
-#     if ($PSCmdlet.ParameterSetName -eq "FromPath") {
-#         return Import-CsvWithFormat -CsvPath $CsvPath -TableName $TableName
-#     }
-#     else {
-#         # CSVコンテンツから直接変換
-#         try {
-#             $formatConfig = Get-CsvFormatConfig -TableName $TableName
-            
-#             # 一時ファイルを使わずに直接ConvertFrom-Csvを使用
-#             $csvParams = @{
-#                 InputObject = $CsvContent
-#             }
-            
-#             # 区切り文字設定（パラメータで上書き可能）
-#             $actualDelimiter = if ($Delimiter -ne ",") { $Delimiter } else { $formatConfig.delimiter }
-#             if ($actualDelimiter -ne ",") {
-#                 $csvParams.Delimiter = $actualDelimiter
-#             }
-            
-#             $csvData = ConvertFrom-Csv @csvParams
-            
-#             # null値の変換
-#             if ($formatConfig.null_values -and $formatConfig.null_values.Count -gt 0) {
-#                 foreach ($row in $csvData) {
-#                     foreach ($prop in $row.PSObject.Properties) {
-#                         if ($prop.Value -in $formatConfig.null_values) {
-#                             $prop.Value = $null
-#                         }
-#                     }
-#                 }
-#             }
-            
-#             return $csvData
-#         }
-#         catch {
-#             Write-SystemLog "CSVコンテンツの変換に失敗しました: $($_.Exception.Message)" -Level "Error"
-#             throw
-#         }
-#     }
-# }
 
 # 設定からCSVカラム取得
 function Get-CsvColumns {

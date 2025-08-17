@@ -1,5 +1,4 @@
 # PowerShell & SQLite データ同期システム
-# Layer 1: Core ユーティリティライブラリ（基盤機能・設定非依存）
 
 # SQLite3コマンドパス取得（DRY原則による統一関数）
 function Get-Sqlite3Path {
@@ -179,7 +178,6 @@ function Invoke-SqliteCsvExport {
         $result | Out-File -FilePath $OutputPath -Encoding $encoding
                 
         $recordCount = if ($result -is [array]) { $result.Count - 1 } else { 0 }  # ヘッダー行を除いた件数
-        Write-SystemLog "SQLite CSV出力完了: $OutputPath ($recordCount 件)" -Level "Success"
         
         return $recordCount
     }

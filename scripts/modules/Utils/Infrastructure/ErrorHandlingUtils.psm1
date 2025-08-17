@@ -1,7 +1,9 @@
 # PowerShell & SQLite データ同期システム
 # Layer 2: Error Handling ユーティリティライブラリ（エラーハンドリング専用）
 
-# Layer 1, 2への依存は実行時に解決（Import-Module不要、直接関数呼び出し）
+using module ”../Foundation/CoreUtils.psm1"
+using module ”./LoggingUtils.psm1"
+using module ”./ConfigurationUtils.psm1"
 
 # エラー分類の定義
 enum ErrorCategory {
@@ -268,7 +270,7 @@ function Invoke-FileOperationWithErrorHandling {
     
     $context = @{
         "ファイルパス" = $FilePath
-        "操作種別" = $OperationType
+        "操作種別"   = $OperationType
     }
     
     return Invoke-WithErrorHandling -ScriptBlock $FileOperation -Category External -Operation "$OperationType ($FilePath)" -Context $context -CleanupScript $CleanupScript
