@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE report PUBLIC "-//JACOCO//DTD Report 1.1//EN" "report.dtd"[]>
-<report name="Pester (08/17/2025 06:35:32)">
-  <sessioninfo id="this" start="1755412497676" dump="1755412532209" />
+<report name="Pester (08/17/2025 12:06:06)">
+  <sessioninfo id="this" start="1755432320247" dump="1755432366842" />
   <package name="scripts">
     <class name="scripts/main" sourcefilename="main.ps1">
       <method name="&lt;script&gt;" desc="()" line="14">
@@ -219,19 +219,19 @@
     </class>
     <class name="scripts/modules/Process/Show-SyncResult" sourcefilename="modules/Process/Show-SyncResult.psm1">
       <method name="Show-SyncResult" desc="()" line="17">
-        <counter type="INSTRUCTION" missed="49" covered="0" />
-        <counter type="LINE" missed="46" covered="0" />
-        <counter type="METHOD" missed="1" covered="0" />
+        <counter type="INSTRUCTION" missed="48" covered="1" />
+        <counter type="LINE" missed="45" covered="1" />
+        <counter type="METHOD" missed="0" covered="1" />
       </method>
       <method name="&lt;script&gt;" desc="()" line="125">
         <counter type="INSTRUCTION" missed="0" covered="1" />
         <counter type="LINE" missed="0" covered="1" />
         <counter type="METHOD" missed="0" covered="1" />
       </method>
-      <counter type="INSTRUCTION" missed="49" covered="1" />
-      <counter type="LINE" missed="46" covered="1" />
-      <counter type="METHOD" missed="1" covered="1" />
-      <counter type="CLASS" missed="1" covered="0" />
+      <counter type="INSTRUCTION" missed="48" covered="2" />
+      <counter type="LINE" missed="45" covered="2" />
+      <counter type="METHOD" missed="0" covered="2" />
+      <counter type="CLASS" missed="0" covered="1" />
     </class>
     <class name="scripts/modules/Process/Test-DataConsistency" sourcefilename="modules/Process/Test-DataConsistency.psm1">
       <method name="Test-DataConsistency" desc="()" line="11">
@@ -626,7 +626,7 @@
       <counter type="CLASS" missed="1" covered="0" />
     </sourcefile>
     <sourcefile name="modules/Process/Show-SyncResult.psm1">
-      <line nr="17" mi="1" ci="0" mb="0" cb="0" />
+      <line nr="17" mi="0" ci="1" mb="0" cb="0" />
       <line nr="18" mi="1" ci="0" mb="0" cb="0" />
       <line nr="21" mi="1" ci="0" mb="0" cb="0" />
       <line nr="22" mi="1" ci="0" mb="0" cb="0" />
@@ -673,10 +673,10 @@
       <line nr="119" mi="1" ci="0" mb="0" cb="0" />
       <line nr="120" mi="1" ci="0" mb="0" cb="0" />
       <line nr="125" mi="0" ci="1" mb="0" cb="0" />
-      <counter type="INSTRUCTION" missed="49" covered="1" />
-      <counter type="LINE" missed="46" covered="1" />
-      <counter type="METHOD" missed="1" covered="1" />
-      <counter type="CLASS" missed="1" covered="0" />
+      <counter type="INSTRUCTION" missed="48" covered="2" />
+      <counter type="LINE" missed="45" covered="2" />
+      <counter type="METHOD" missed="0" covered="2" />
+      <counter type="CLASS" missed="0" covered="1" />
     </sourcefile>
     <sourcefile name="modules/Process/Test-DataConsistency.psm1">
       <line nr="11" mi="1" ci="0" mb="0" cb="0" />
@@ -701,13 +701,13 @@
       <counter type="METHOD" missed="2" covered="0" />
       <counter type="CLASS" missed="1" covered="0" />
     </sourcefile>
-    <counter type="INSTRUCTION" missed="469" covered="4" />
-    <counter type="LINE" missed="406" covered="4" />
-    <counter type="METHOD" missed="23" covered="4" />
-    <counter type="CLASS" missed="7" covered="0" />
+    <counter type="INSTRUCTION" missed="468" covered="5" />
+    <counter type="LINE" missed="405" covered="5" />
+    <counter type="METHOD" missed="22" covered="5" />
+    <counter type="CLASS" missed="6" covered="1" />
   </package>
-  <counter type="INSTRUCTION" missed="535" covered="4" />
-  <counter type="LINE" missed="452" covered="4" />
-  <counter type="METHOD" missed="24" covered="4" />
-  <counter type="CLASS" missed="8" covered="0" />
+  <counter type="INSTRUCTION" missed="534" covered="5" />
+  <counter type="LINE" missed="451" covered="5" />
+  <counter type="METHOD" missed="23" covered="5" />
+  <counter type="CLASS" missed="7" covered="1" />
 </report>

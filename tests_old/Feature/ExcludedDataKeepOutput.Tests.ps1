@@ -5,6 +5,9 @@ BeforeAll {
     # 統合テストヘルパーの読み込み
     Import-Module (Join-Path $PSScriptRoot "../TestHelpers/MockHelpers.psm1") -Force
     
+    # 必要なモジュールの読み込み
+    Import-Module (Join-Path $PSScriptRoot "../../scripts/modules/Utils/Foundation/CoreUtils.psm1") -Force
+    
     # 一時ディレクトリの作成
     $script:TestDir = New-MockTemporaryDirectory -Prefix "excluded-keep-test"
     $script:TestConfigPath = Join-Path $script:TestDir.Path "test-config.json"
@@ -16,7 +19,9 @@ BeforeAll {
 
 AfterAll {
     # テスト環境のクリーンアップ
-    Remove-MockTemporaryDirectory -TempDirectory $script:TestDir
+    if ($script:TestDir -and $script:TestDir.Cleanup) {
+        & $script:TestDir.Cleanup
+    }
 }
 
 Describe "除外データKEEP出力機能" {
@@ -116,11 +121,20 @@ Describe "除外データKEEP出力機能" {
                     }
                 }
             }
+            "data_filters" = @{
+                "current_data" = @{
+                    "enabled" = $true
+                    "rules" = @()
+                    "output_excluded_as_keep" = @{
+                        "enabled" = $false
+                    }
+                }
+            }
         }
         
         # 除外データKEEP出力無効時の設定
-        $testConfigDisabled = $testConfig.Clone()
-        $testConfigDisabled["data_filters"] = @{
+        $testConfigDisabled = $testConfig | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+        $testConfigDisabled.data_filters = @{
             "current_data" = @{
                 "enabled"                 = $true
                 "rules"                   = @(
@@ -133,8 +147,8 @@ Describe "除外データKEEP出力機能" {
         }
         
         # 除外データKEEP出力有効時の設定
-        $testConfigEnabled = $testConfig.Clone()
-        $testConfigEnabled["data_filters"] = @{
+        $testConfigEnabled = $testConfig | ConvertTo-Json -Depth 10 | ConvertFrom-Json
+        $testConfigEnabled.data_filters = @{
             "current_data" = @{
                 "enabled"                 = $true
                 "rules"                   = @(
@@ -175,20 +189,21 @@ Z002,もう一人の削除対象
             # システム実行
             & pwsh -Command "
                 Set-Location '$PWD'
-                . './scripts/modules/Utils/Foundation/CoreUtils.psm1'
-                . './scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1'
-                . './scripts/modules/Utils/Infrastructure/LoggingUtils.psm1'
-                . './scripts/modules/Utils/Infrastructure/ErrorHandlingUtils.psm1'
-                . './scripts/modules/Utils/DataAccess/DatabaseUtils.psm1'
-                . './scripts/modules/Utils/DataAccess/FileSystemUtils.psm1'
-                . './scripts/modules/Utils/DataProcessing/CsvProcessingUtils.psm1'
-                . './scripts/modules/Utils/DataProcessing/DataFilteringUtils.psm1'
-                . './scripts/modules/Process/Invoke-CsvImport.psm1'
-                . './scripts/modules/Process/Invoke-DataSync.psm1'
+                Import-Module './scripts/modules/Utils/Foundation/CoreUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/Infrastructure/LoggingUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/Infrastructure/ErrorHandlingUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/DataAccess/DatabaseUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/DataAccess/FileSystemUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/DataProcessing/CsvProcessingUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/DataProcessing/DataFilteringUtils.psm1' -Force
+                Import-Module './scripts/modules/Process/Invoke-CsvImport.psm1' -Force
+                Import-Module './scripts/modules/Process/Invoke-DataSync.psm1' -Force
+                Import-Module './scripts/modules/Process/Invoke-DatabaseInitialization.psm1' -Force
                 
                 Set-DataSyncConfig -ConfigFilePath '$testConfigPath'
                 Remove-Item -Path '$testDatabasePath' -ErrorAction SilentlyContinue
-                Initialize-Database -DatabasePath '$testDatabasePath'
+                Invoke-DatabaseInitialization -DatabasePath '$testDatabasePath'
                 Invoke-CsvImport -CsvFilePath '$testProvidedPath' -DatabasePath '$testDatabasePath' -TableName 'provided_data'
                 Invoke-CsvImport -CsvFilePath '$testCurrentPath' -DatabasePath '$testDatabasePath' -TableName 'current_data'
                 Invoke-DataSync -DatabasePath '$testDatabasePath'
@@ -210,20 +225,21 @@ Z002,もう一人の削除対象
             # システム実行
             & pwsh -Command "
                 Set-Location '$PWD'
-                . './scripts/modules/Utils/Foundation/CoreUtils.psm1'
-                . './scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1'
-                . './scripts/modules/Utils/Infrastructure/LoggingUtils.psm1'
-                . './scripts/modules/Utils/Infrastructure/ErrorHandlingUtils.psm1'
-                . './scripts/modules/Utils/DataAccess/DatabaseUtils.psm1'
-                . './scripts/modules/Utils/DataAccess/FileSystemUtils.psm1'
-                . './scripts/modules/Utils/DataProcessing/CsvProcessingUtils.psm1'
-                . './scripts/modules/Utils/DataProcessing/DataFilteringUtils.psm1'
-                . './scripts/modules/Process/Invoke-CsvImport.psm1'
-                . './scripts/modules/Process/Invoke-DataSync.psm1'
+                Import-Module './scripts/modules/Utils/Foundation/CoreUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/Infrastructure/LoggingUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/Infrastructure/ErrorHandlingUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/DataAccess/DatabaseUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/DataAccess/FileSystemUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/DataProcessing/CsvProcessingUtils.psm1' -Force
+                Import-Module './scripts/modules/Utils/DataProcessing/DataFilteringUtils.psm1' -Force
+                Import-Module './scripts/modules/Process/Invoke-CsvImport.psm1' -Force
+                Import-Module './scripts/modules/Process/Invoke-DataSync.psm1' -Force
+                Import-Module './scripts/modules/Process/Invoke-DatabaseInitialization.psm1' -Force
                 
                 Set-DataSyncConfig -ConfigFilePath '$testConfigPath'
                 Remove-Item -Path '$testDatabasePath' -ErrorAction SilentlyContinue
-                Initialize-Database -DatabasePath '$testDatabasePath'
+                Invoke-DatabaseInitialization -DatabasePath '$testDatabasePath'
                 Invoke-CsvImport -CsvFilePath '$testProvidedPath' -DatabasePath '$testDatabasePath' -TableName 'provided_data'
                 Invoke-CsvImport -CsvFilePath '$testCurrentPath' -DatabasePath '$testDatabasePath' -TableName 'current_data'
                 Invoke-DataSync -DatabasePath '$testDatabasePath'

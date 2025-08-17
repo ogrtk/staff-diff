@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerShell Test Results</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .summary { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-section { background: white; margin-bottom: 20px; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .section-header { background: #f8f9fa; padding: 15px; border-bottom: 1px solid #dee2e6; font-weight: bold; }
+        .test-case { padding: 10px 15px; border-bottom: 1px solid #f0f0f0; }
+        .test-case:last-child { border-bottom: none; }
+        .passed { color: #28a745; }
+        .failed { color: #dc3545; }
+        .skipped { color: #ffc107; }
+        .stats { display: flex; gap: 20px; }
+        .stat-item { text-align: center; }
+        .stat-number { font-size: 2em; font-weight: bold; }
+        .duration { color: #6c757d; font-size: 0.9em; }
+        .error-details { background: #f8f9fa; padding: 10px; margin-top: 10px; border-left: 4px solid #dc3545; font-family: monospace; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 PowerShell テスト結果</h1>
+        <p>生成日時: 2025-08-17 12:06:08</p>
+    </div>
+    
+    <div class="summary">
+        <h2>📊 テスト概要</h2>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number passed">197</div>
+                <div>成功</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number failed">99</div>
+                <div>失敗</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number skipped">0</div>
+                <div>スキップ</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">296</div>
+                <div>合計</div>
+            </div>
+        </div>
+        <p class="duration">⏱️ 実行時間: 00:00:46.5948444</p>
+    </div>    <div class="test-section">
+        <div class="section-header">📋 Column Mapping <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DataSync Tests Column Mapping should handle missing columns gracefully)</span></div>        <div class="test-case">
+            <span class="passed">✅ should handle missing columns gracefully</span>
+            <span class="duration">(00:00:00.0116332)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should correctly map employee_id to user_id</span>
+            <span class="duration">(00:00:00.0127456)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Concurrent Logging and Thread Safety <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Concurrent Logging and Thread Safety 並行アクセス下でログの整合性を維持すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 並行アクセス下でログの整合性を維持すること</span>
+            <span class="duration">(00:00:00.5647617)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 並行ログ書き込みを安全に処理すること</span>
+            <span class="duration">(00:00:01.2901900)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected $true, but got $false.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Configuration Caching Behavior <span style="font-size: 0.8em; color: #6c757d;">(ConfigurationUtils (インフラストラクチャ層) テスト Configuration Caching Behavior should maintain cache across multiple function calls)</span></div>        <div class="test-case">
+            <span class="passed">✅ should maintain cache across multiple function calls</span>
+            <span class="duration">(00:00:00.0099826)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should handle concurrent access to cached configuration</span>
+            <span class="duration">(00:00:02.3846230)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected $null to not be found in collection @($null, $null, $null, $null, $null), but it was found.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Configuration Error Handling <span style="font-size: 0.8em; color: #6c757d;">(ConfigurationUtils (インフラストラクチャ層) テスト Configuration Error Handling should handle permission denied errors)</span></div>        <div class="test-case">
+            <span class="passed">✅ should handle permission denied errors</span>
+            <span class="duration">(00:00:00.0265069)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should handle malformed JSON gracefully</span>
+            <span class="duration">(00:00:00.0181187)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected an exception to be thrown, but no exception was thrown.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should handle empty configuration file</span>
+            <span class="duration">(00:00:00.0262715)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected a value, but got $null or empty.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Configuration File Structure Validation <span style="font-size: 0.8em; color: #6c757d;">(ConfigurationUtils (インフラストラクチャ層) テスト Configuration File Structure Validation should validate required file_paths section)</span></div>        <div class="test-case">
+            <span class="passed">✅ should validate required file_paths section</span>
+            <span class="duration">(00:00:00.0145285)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle timezone configuration</span>
+            <span class="duration">(00:00:00.0100435)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should validate required tables section</span>
+            <span class="duration">(00:00:00.0182206)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should validate sync_config section</span>
+            <span class="duration">(00:00:00.0221367)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected the value to have type [array] or any of its subtypes, but got 'employee_id' with type [string].
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Configuration Validation and Defaults <span style="font-size: 0.8em; color: #6c757d;">(ConfigurationUtils (インフラストラクチャ層) テスト Configuration Validation and Defaults should provide reasonable defaults for missing optional fields)</span></div>        <div class="test-case">
+            <span class="passed">✅ should provide reasonable defaults for missing optional fields</span>
+            <span class="duration">(00:00:00.0142895)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 ConvertTo-CsvData Function - Output Generation <span style="font-size: 0.8em; color: #6c757d;">(CsvProcessingUtils (データ処理層) テスト ConvertTo-CsvData Function - Output Generation CSV特殊文字をエスケープすること)</span></div>        <div class="test-case">
+            <span class="failed">❌ CSV特殊文字をエスケープすること</span>
+            <span class="duration">(00:00:00.0202352)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'ConvertTo-CsvData' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ データオブジェクトからCSV内容を生成すること</span>
+            <span class="duration">(00:00:00.0142431)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'ConvertTo-CsvData' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 空のデータを適切に処理すること</span>
+            <span class="duration">(00:00:00.0178934)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'ConvertTo-CsvData' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ デフォルトでヘッダーを含むこと</span>
+            <span class="duration">(00:00:00.0159283)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'ConvertTo-CsvData' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Copy-InputFileToHistory Function - File History Operations <span style="font-size: 0.8em; color: #6c757d;">(FileSystemUtils (データアクセス層) テスト Copy-InputFileToHistory Function - File History Operations should preserve file content during copy)</span></div>        <div class="test-case">
+            <span class="passed">✅ should preserve file content during copy</span>
+            <span class="duration">(00:00:00.0337242)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should copy file to history directory</span>
+            <span class="duration">(00:00:00.0453535)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should throw error if source file doesn't exist</span>
+            <span class="duration">(00:00:00.0056274)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should create history directory if it doesn't exist</span>
+            <span class="duration">(00:00:00.0174744)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 CSV Format and Delimiter Handling <span style="font-size: 0.8em; color: #6c757d;">(CsvProcessingUtils (データ処理層) テスト CSV Format and Delimiter Handling 空フィールドを処理すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ 空フィールドを処理すること</span>
+            <span class="duration">(00:00:00.0154440)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected $null or empty, but got 'テスト太郎'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 行末文字のバリエーションを処理すること</span>
+            <span class="duration">(00:00:00.0090525)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 区切り文字を含むクォート付きフィールドを処理すること</span>
+            <span class="duration">(00:00:00.0134790)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected '説明文,カンマ付き', but got $null.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 異なる区切り文字を処理すること</span>
+            <span class="duration">(00:00:00.0130558)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 CSVファイル読み取り <span style="font-size: 0.8em; color: #6c757d;">(Invoke-CsvImport テスト CSVファイル読み取り 存在しないCSVファイルを適切に処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 存在しないCSVファイルを適切に処理すること</span>
+            <span class="duration">(00:00:00.0295427)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ CSVエンコーディングを正しく検出すること</span>
+            <span class="duration">(00:00:00.0234514)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 有効なCSVファイルを正常に読み取ること</span>
+            <span class="duration">(00:00:00.0550655)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 空のCSVファイルを処理すること</span>
+            <span class="duration">(00:00:00.0111746)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Data Comparison Logic <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DataSync Tests Data Comparison Logic should identify records to DELETE (only in current data))</span></div>        <div class="test-case">
+            <span class="passed">✅ should identify records to DELETE (only in current data)</span>
+            <span class="duration">(00:00:00.0127161)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should identify records to ADD (new in provided data)</span>
+            <span class="duration">(00:00:00.0237240)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should identify records to KEEP/UPDATE (common records)</span>
+            <span class="duration">(00:00:00.0164471)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Data Integrity Validation <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DataSync Tests Data Integrity Validation should validate data consistency after sync)</span></div>        <div class="test-case">
+            <span class="passed">✅ should validate data consistency after sync</span>
+            <span class="duration">(00:00:00.0180563)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should detect duplicate records</span>
+            <span class="duration">(00:00:00.0179374)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Data Synchronization Process <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DataSync Tests Data Synchronization Process should detect data changes requiring UPDATE)</span></div>        <div class="test-case">
+            <span class="passed">✅ should detect data changes requiring UPDATE</span>
+            <span class="duration">(00:00:00.0093383)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should preserve unchanged records as KEEP</span>
+            <span class="duration">(00:00:00.0132004)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle empty provided data gracefully</span>
+            <span class="duration">(00:00:00.0150242)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle empty current data gracefully</span>
+            <span class="duration">(00:00:00.0106858)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Database Schema Validation <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト Database Schema Validation should ensure primary key constraints are defined)</span></div>        <div class="test-case">
+            <span class="failed">❌ should ensure primary key constraints are defined</span>
+            <span class="duration">(00:00:00.0128175)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected a value, but got $null or empty.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should validate column types against SQL standards</span>
+            <span class="duration">(00:00:00.0057550)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should validate nullable constraints</span>
+            <span class="duration">(00:00:00.0043062)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 End-to-End Synchronization <span style="font-size: 0.8em; color: #6c757d;">(Data Sync Integration Tests End-to-End Synchronization should perform complete sync workflow)</span></div>        <div class="test-case">
+            <span class="passed">✅ should perform complete sync workflow</span>
+            <span class="duration">(00:00:00.0263659)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Error Handling <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DataSync Tests Error Handling should handle database connection errors)</span></div>        <div class="test-case">
+            <span class="passed">✅ should handle database connection errors</span>
+            <span class="duration">(00:00:00.0172868)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle malformed data gracefully</span>
+            <span class="duration">(00:00:00.0175114)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should validate required fields</span>
+            <span class="duration">(00:00:00.0162030)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Error Handling and Data Validation <span style="font-size: 0.8em; color: #6c757d;">(CsvProcessingUtils (データ処理層) テスト Error Handling and Data Validation 不正な形式のCSVを適切に処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 不正な形式のCSVを適切に処理すること</span>
+            <span class="duration">(00:00:00.0025913)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 非常に大きなCSVファイルを処理すること</span>
+            <span class="duration">(00:00:00.1134674)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected 1000, but got 2.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ データ型を検証すること</span>
+            <span class="duration">(00:00:00.0127836)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected 'invalid-date', but got $null.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 並行CSV処理を処理すること</span>
+            <span class="duration">(00:00:00.5558486)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected a collection with size 3, but got an empty collection.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Error Handling and Edge Cases <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト Error Handling and Edge Cases should validate SQL injection prevention)</span></div>        <div class="test-case">
+            <span class="passed">✅ should validate SQL injection prevention</span>
+            <span class="duration">(00:00:00.0082534)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle very long table and column names</span>
+            <span class="duration">(00:00:00.0097546)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should handle empty table definitions gracefully</span>
+            <span class="duration">(00:00:00.0167224)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected no exception to be thrown, but an exception "テーブル定義が見つかりません: empty_table (ベーステーブル: empty_table)" was thrown from /workspaces/ps-sqlite/scripts/modules/Utils/DataAccess/DatabaseUtils.psm1:22 char:9
+    +         throw "テーブル定義が見つかりません: $TableName (ベーステーブル: $baseTableName)"
+    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Error Handling and Resilience <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Error Handling and Resilience 非常に長いログメッセージを処理すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ 非常に長いログメッセージを処理すること</span>
+            <span class="duration">(00:00:00.0125393)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected no exception to be thrown, but an exception "A parameter cannot be found that matches parameter name 'LogFilePath'." was thrown from /workspaces/ps-sqlite/tests/Utils/Infrastructure/LoggingUtils.Tests.ps1:449 char:53
+    + …          { Write-SystemLog -Message $longMessage -LogFilePath $script …
+    +                                                    ~~~~~~~~~~~~.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ ファイルアクセスエラーを適切に処理すること</span>
+            <span class="duration">(00:00:00.0238717)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected no exception to be thrown, but an exception "A parameter cannot be found that matches parameter name 'LogFilePath'." was thrown from /workspaces/ps-sqlite/tests/Utils/Infrastructure/LoggingUtils.Tests.ps1:424 char:61
+    + …      { Write-SystemLog -Message "Read-only test" -LogFilePath $readOn …
+    +                                                    ~~~~~~~~~~~~.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ nullまたは空のメッセージを処理すること</span>
+            <span class="duration">(00:00:00.0093830)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected no exception to be thrown, but an exception "Cannot bind argument to parameter 'Message' because it is an empty string." was thrown from /workspaces/ps-sqlite/tests/Utils/Infrastructure/LoggingUtils.Tests.ps1:456 char:40
+    +             { Write-SystemLog -Message $null -LogFilePath $script:Tes …
+    +                                        ~~~~~.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ ファイルログが失敗した時にコンソールログを継続すること</span>
+            <span class="duration">(00:00:00.0081191)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Export-DatabaseToCsv Function - Database Export <span style="font-size: 0.8em; color: #6c757d;">(CsvProcessingUtils (データ処理層) テスト Export-DatabaseToCsv Function - Database Export データベースデータをCSVにエクスポートすること)</span></div>        <div class="test-case">
+            <span class="failed">❌ データベースデータをCSVにエクスポートすること</span>
+            <span class="duration">(00:00:00.0188617)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Import-CsvToDatabase' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ カスタム列選択をサポートすること</span>
+            <span class="duration">(00:00:00.0159345)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Export-DatabaseToCsv' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ カスタムWHERE句を処理すること</span>
+            <span class="duration">(00:00:00.0155888)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Export-DatabaseToCsv' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Foundation層との統合 <span style="font-size: 0.8em; color: #6c757d;">(ErrorHandlingUtils (インフラストラクチャ層) テスト Foundation層との統合 Foundation層のタイムスタンプ関数と連携すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ Foundation層のタイムスタンプ関数と連携すること</span>
+            <span class="duration">(00:00:00.0423607)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ ログ用にFoundation層ユーティリティを使用すること</span>
+            <span class="duration">(00:00:00.0188177)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Get-CrossPlatformEncoding 関数 <span style="font-size: 0.8em; color: #6c757d;">(CoreUtils (基盤層) テスト Get-CrossPlatformEncoding 関数 PowerShell Core (version 6+) でUTF8エンコーディングを返すこと)</span></div>        <div class="test-case">
+            <span class="passed">✅ PowerShell Core (version 6+) でUTF8エンコーディングを返すこと</span>
+            <span class="duration">(00:00:00.0077997)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 常に有効なエンコーディングオブジェクトを返すこと</span>
+            <span class="duration">(00:00:00.0283733)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ Windows PowerShell (version < 6) でBOM付きUTF8エンコーディングを返すこと</span>
+            <span class="duration">(00:00:00.0094299)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Get-CsvColumns Function <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト Get-CsvColumns Function should return CSV column list for table)</span></div>        <div class="test-case">
+            <span class="failed">❌ should return CSV column list for table</span>
+            <span class="duration">(00:00:00.0088102)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected a value, but got $null or empty.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should return columns in correct order</span>
+            <span class="duration">(00:00:00.0092340)</span>            <div class="error-details">
+                <strong>エラー:</strong> Cannot index into a null array.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should handle tables with different column structures</span>
+            <span class="duration">(00:00:00.0126826)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected 'employee_id' to be found in collection $null, but it was not found.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Get-DataSyncConfig Function - Configuration Loading <span style="font-size: 0.8em; color: #6c757d;">(ConfigurationUtils (インフラストラクチャ層) テスト Get-DataSyncConfig Function - Configuration Loading should throw error when configuration file not found)</span></div>        <div class="test-case">
+            <span class="failed">❌ should throw error when configuration file not found</span>
+            <span class="duration">(00:00:00.0201222)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected an exception with message like '*設定ファイルが見つかりません*' to be thrown, but no exception was thrown.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should cache configuration after first load</span>
+            <span class="duration">(00:00:00.0125267)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should force reload with -Force parameter</span>
+            <span class="duration">(00:00:00.0257659)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected strings to be the same, but they were different.
+Expected length: 10
+Actual length:   3
+Strings differ at index 0.
+Expected: 'Asia/Tokyo'
+But was:  'UTC'
+           ^
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should load configuration from specified path</span>
+            <span class="duration">(00:00:00.0099314)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should throw error when called without ConfigPath if not cached</span>
+            <span class="duration">(00:00:00.0137940)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected an exception with message like '*設定がまだ読み込まれていません*' to be thrown, but no exception was thrown.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Get-Sqlite3Path 関数 <span style="font-size: 0.8em; color: #6c757d;">(CoreUtils (基盤層) テスト Get-Sqlite3Path 関数 コマンド解決エラーを適切に処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ コマンド解決エラーを適切に処理すること</span>
+            <span class="duration">(00:00:00.0359154)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ SQLite3コマンドパスを返すこと</span>
+            <span class="duration">(00:00:00.0182732)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ sqlite3が利用できない場合にエラーをスローすること</span>
+            <span class="duration">(00:00:00.1615825)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Get-TableDefinition Function <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト Get-TableDefinition Function should validate table column properties)</span></div>        <div class="test-case">
+            <span class="passed">✅ should validate table column properties</span>
+            <span class="duration">(00:00:00.0072395)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should return table definition for valid table name</span>
+            <span class="duration">(00:00:00.0042510)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should throw error for unknown table name</span>
+            <span class="duration">(00:00:00.0095876)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle temporary table names (_temp suffix)</span>
+            <span class="duration">(00:00:00.0045290)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Get-Timestamp 関数 <span style="font-size: 0.8em; color: #6c757d;">(CoreUtils (基盤層) テスト Get-Timestamp 関数 カスタムフォーマットパラメータを受け入れること)</span></div>        <div class="test-case">
+            <span class="passed">✅ カスタムフォーマットパラメータを受け入れること</span>
+            <span class="duration">(00:00:00.0069269)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ Asia/Tokyoタイムゾーンを正しく処理すること</span>
+            <span class="duration">(00:00:00.0067692)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ デフォルトフォーマットでタイムスタンプを返すこと</span>
+            <span class="duration">(00:00:00.0106743)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ カスタムフォーマット文字列を正しく処理すること</span>
+            <span class="duration">(00:00:00.0224181)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ タイムゾーンに失敗した場合にUTC+9フォールバックを使用すること</span>
+            <span class="duration">(00:00:00.0119884)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 異なるタイムゾーン値を処理すること</span>
+            <span class="duration">(00:00:00.0089836)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Import-CsvToDatabase Function - Database Integration <span style="font-size: 0.8em; color: #6c757d;">(CsvProcessingUtils (データ処理層) テスト Import-CsvToDatabase Function - Database Integration インポート時に必須フィールドを検証すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ インポート時に必須フィールドを検証すること</span>
+            <span class="duration">(00:00:00.0213743)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Import-CsvToDatabase' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ インポートエラーを適切に処理すること</span>
+            <span class="duration">(00:00:00.0159470)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Import-CsvToDatabase' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 大量データセットのバッチ処理をサポートすること</span>
+            <span class="duration">(00:00:00.0359720)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Import-CsvToDatabase' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ CSVデータをデータベースにインポートすること</span>
+            <span class="duration">(00:00:00.0231259)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Import-CsvToDatabase' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Initialize-SystemLogging Function <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Initialize-SystemLogging Function 初期化時にログファイルを作成すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ 初期化時にログファイルを作成すること</span>
+            <span class="duration">(00:00:00.0209511)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Initialize-SystemLogging' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ ログ設定を初期化すること</span>
+            <span class="duration">(00:00:00.0272609)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected no exception to be thrown, but an exception "The term 'Initialize-SystemLogging' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again." was thrown from /workspaces/ps-sqlite/tests/Utils/Infrastructure/LoggingUtils.Tests.ps1:171 char:15
+    +             { Initialize-SystemLogging -Configuration $logConfig } |  …
+    +               ~~~~~~~~~~~~~~~~~~~~~~~~.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 設定パラメータを検証すること</span>
+            <span class="duration">(00:00:00.0255311)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Integration with Foundation Layer <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Integration with Foundation Layer 基盤層のタイムスタンプ関数を使用すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ 基盤層のタイムスタンプ関数を使用すること</span>
+            <span class="duration">(00:00:00.0083011)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 基盤層のエンコーディング関数を使用すること</span>
+            <span class="duration">(00:00:00.0117858)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Integration with Lower Layers <span style="font-size: 0.8em; color: #6c757d;">(CsvProcessingUtils (データ処理層) テスト Integration with Lower Layers データアクセス層のデータベース関数を使用すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ データアクセス層のデータベース関数を使用すること</span>
+            <span class="duration">(00:00:00.0113742)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected a value, but got $null or empty.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ インフラストラクチャ層の設定を使用すること</span>
+            <span class="duration">(00:00:00.0061386)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should use Foundation layer encoding functions</span>
+            <span class="duration">(00:00:00.0252026)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should use Infrastructure layer logging functions</span>
+            <span class="duration">(00:00:00.0173480)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 基盤層のエンコーディング関数を使用すること</span>
+            <span class="duration">(00:00:00.0041491)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should use Foundation layer timestamp functions</span>
+            <span class="duration">(00:00:00.0028613)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Invoke-FileOperationWithErrorHandling関数 <span style="font-size: 0.8em; color: #6c757d;">(ErrorHandlingUtils (インフラストラクチャ層) テスト Invoke-FileOperationWithErrorHandling関数 ファイル書き込み操作を処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ ファイル書き込み操作を処理すること</span>
+            <span class="duration">(00:00:00.0066767)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ ファイル未発見エラーを処理すること</span>
+            <span class="duration">(00:00:03.0501406)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 成功するファイル操作を処理すること</span>
+            <span class="duration">(00:00:00.0054210)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ ファイル削除操作を処理すること</span>
+            <span class="duration">(00:00:00.0111969)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Invoke-WithErrorHandling関数 - 基本操作 <span style="font-size: 0.8em; color: #6c757d;">(ErrorHandlingUtils (インフラストラクチャ層) テスト Invoke-WithErrorHandling関数 - 基本操作 成功時にクリーンアップスクリプトを実行すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ 成功時にクリーンアップスクリプトを実行すること</span>
+            <span class="duration">(00:00:00.0179414)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected $true, but got $false.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 成功するスクリプトブロックを実行すること</span>
+            <span class="duration">(00:00:00.0175049)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ エラー時にクリーンアップスクリプトを実行すること</span>
+            <span class="duration">(00:00:00.0364933)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected $true, but got $false.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 例外を処理して再スローすること</span>
+            <span class="duration">(00:00:00.0209293)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Large Dataset Handling <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DataSync Tests Large Dataset Handling should process large datasets efficiently)</span></div>        <div class="test-case">
+            <span class="passed">✅ should process large datasets efficiently</span>
+            <span class="duration">(00:00:00.4741482)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Layer Architecture Validation <span style="font-size: 0.8em; color: #6c757d;">(FileSystemUtils (データアクセス層) テスト Layer Architecture Validation 基盤層とインフラストラクチャ層に依存するLayer 3であること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 基盤層とインフラストラクチャ層に依存するLayer 3であること</span>
+            <span class="duration">(00:00:00.0100376)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should be Layer 2 with Foundation dependencies only</span>
+            <span class="duration">(00:00:00.0158418)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should be Layer 3 with Foundation and Infrastructure dependencies</span>
+            <span class="duration">(00:00:00.0081669)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 下位層関数を使用すること</span>
+            <span class="duration">(00:00:00.0024874)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should use lower layer functions</span>
+            <span class="duration">(00:00:00.0038663)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ すべての下位層依存関係を持つLayer 4であること</span>
+            <span class="duration">(00:00:00.0051690)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should use Foundation layer functions</span>
+            <span class="duration">(00:00:00.0232262)</span>            <div class="error-details">
+                <strong>エラー:</strong> Should -Invoke: Could not find Mock for command Get-CrossPlatformEncoding in module ConfigurationUtils. Was the mock defined? Did you use the same -ModuleName as on the Mock? When using InModuleScope are InModuleScope, Mock and Should -Invoke using the same -ModuleName?
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 下位層関数を使用すること</span>
+            <span class="duration">(00:00:00.0110087)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 基盤層関数を使用すること</span>
+            <span class="duration">(00:00:00.0095268)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 基盤層のみに依存するLayer 2であること</span>
+            <span class="duration">(00:00:00.0036972)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Log Entry Formatting and Structure <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Log Entry Formatting and Structure ログエントリを一貫してフォーマットすること)</span></div>        <div class="test-case">
+            <span class="failed">❌ ログエントリを一貫してフォーマットすること</span>
+            <span class="duration">(00:00:00.0156478)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ フォーマット済み出力にログレベルを含むこと</span>
+            <span class="duration">(00:00:00.0070232)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ ログエントリにタイムスタンプを含むこと</span>
+            <span class="duration">(00:00:00.0109186)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 複数行メッセージを処理すること</span>
+            <span class="duration">(00:00:00.0138009)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Log Rotation and Maintenance <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Log Rotation and Maintenance ログファイルローテーションを処理すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ ログファイルローテーションを処理すること</span>
+            <span class="duration">(00:00:00.0154518)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 古いログファイルをクリーンアップすること</span>
+            <span class="duration">(00:00:00.0329432)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ ログファイルサイズ制限を維持すること</span>
+            <span class="duration">(00:00:00.0098830)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 New-CreateTableSQL Function <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト New-CreateTableSQL Function should include all column definitions with proper constraints)</span></div>        <div class="test-case">
+            <span class="failed">❌ should include all column definitions with proper constraints</span>
+            <span class="duration">(00:00:00.0122015)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected regular expression 'employee_id.*PRIMARY KEY' to match 'CREATE TABLE IF NOT EXISTS provided_data (
+    @{nullable=False; type=TEXT} 
+);', but it did not match.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should generate different SQL for different tables</span>
+            <span class="duration">(00:00:00.0114741)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected regular expression 'employee_id.*PRIMARY KEY' to match 'CREATE TABLE IF NOT EXISTS provided_data (
+    @{nullable=False; type=TEXT} 
+);', but it did not match.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should generate valid CREATE TABLE SQL</span>
+            <span class="duration">(00:00:00.0144528)</span>            <div class="error-details">
+                <strong>エラー:</strong> テーブル定義が見つかりません: test_table (ベーステーブル: test_table)
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should handle IF NOT EXISTS option</span>
+            <span class="duration">(00:00:00.0053960)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'IfNotExists'.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 New-DeleteSQL Function <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト New-DeleteSQL Function should handle custom WHERE clause)</span></div>        <div class="test-case">
+            <span class="failed">❌ should handle custom WHERE clause</span>
+            <span class="duration">(00:00:00.0151051)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-DeleteSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should use primary key in WHERE clause</span>
+            <span class="duration">(00:00:00.0170735)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-DeleteSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should generate DELETE SQL with WHERE clause</span>
+            <span class="duration">(00:00:00.0140035)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-DeleteSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 New-HistoryFileName Function - Filename Generation <span style="font-size: 0.8em; color: #6c757d;">(FileSystemUtils (データアクセス層) テスト New-HistoryFileName Function - Filename Generation should handle custom extension)</span></div>        <div class="test-case">
+            <span class="passed">✅ should handle custom extension</span>
+            <span class="duration">(00:00:00.0032199)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should generate history filename with timestamp</span>
+            <span class="duration">(00:00:00.0049671)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle filename without extension</span>
+            <span class="duration">(00:00:00.0065135)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 New-InsertSQL Function <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト New-InsertSQL Function should include all table columns)</span></div>        <div class="test-case">
+            <span class="failed">❌ should include all table columns</span>
+            <span class="duration">(00:00:00.0174989)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-InsertSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should generate INSERT SQL with placeholders</span>
+            <span class="duration">(00:00:00.0182102)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-InsertSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should generate valid SQL syntax</span>
+            <span class="duration">(00:00:00.0224074)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-InsertSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 New-SelectSQL Function <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト New-SelectSQL Function should add ORDER BY clause when provided)</span></div>        <div class="test-case">
+            <span class="passed">✅ should add ORDER BY clause when provided</span>
+            <span class="duration">(00:00:00.0082376)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle specific column selection</span>
+            <span class="duration">(00:00:00.0087228)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should combine WHERE and ORDER BY clauses</span>
+            <span class="duration">(00:00:00.0096698)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should add WHERE clause when provided</span>
+            <span class="duration">(00:00:00.0056799)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should generate SELECT SQL for all columns</span>
+            <span class="duration">(00:00:00.0128767)</span>            <div class="error-details">
+                <strong>エラー:</strong> テーブル定義が見つかりません: test_table (ベーステーブル: test_table)
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 New-TempTableName 関数 <span style="font-size: 0.8em; color: #6c757d;">(DataFilteringUtils (データ処理層) テスト New-TempTableName 関数 ベーステーブル名から一時テーブル名を生成すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ ベーステーブル名から一時テーブル名を生成すること</span>
+            <span class="duration">(00:00:00.0026969)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 空白を含むテーブル名を適切に処理すること</span>
+            <span class="duration">(00:00:00.0024206)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 異なるテーブル名でも正しく生成すること</span>
+            <span class="duration">(00:00:00.0024812)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 New-UpdateSQL Function <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト New-UpdateSQL Function should generate UPDATE SQL with WHERE clause)</span></div>        <div class="test-case">
+            <span class="failed">❌ should generate UPDATE SQL with WHERE clause</span>
+            <span class="duration">(00:00:00.0249797)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-UpdateSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should set all non-primary key columns</span>
+            <span class="duration">(00:00:00.0288092)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-UpdateSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should handle tables with multiple primary keys</span>
+            <span class="duration">(00:00:00.0314032)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-UpdateSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Performance and Memory Management <span style="font-size: 0.8em; color: #6c757d;">(CsvProcessingUtils (データ処理層) テスト Performance and Memory Management CSVを効率的に処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ CSVを効率的に処理すること</span>
+            <span class="duration">(00:00:00.0137250)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 繰り返し操作でメモリリークしないこと</span>
+            <span class="duration">(00:00:00.1836888)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Performance and Optimization <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト Performance and Optimization should generate SQL efficiently for large schemas)</span></div>        <div class="test-case">
+            <span class="failed">❌ should generate SQL efficiently for large schemas</span>
+            <span class="duration">(00:00:00.0191772)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-InsertSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should cache table definitions for repeated access</span>
+            <span class="duration">(00:00:00.0109051)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Performance and Resource Management <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Performance and Resource Management 適度なメモリ使用量を維持すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ 適度なメモリ使用量を維持すること</span>
+            <span class="duration">(00:00:00.0082409)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 大量ログを効率的に記録すること</span>
+            <span class="duration">(00:00:00.0075117)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ ファイルハンドルをリークしないこと</span>
+            <span class="duration">(00:00:00.0130417)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Real Configuration File Integration <span style="font-size: 0.8em; color: #6c757d;">(ConfigurationUtils (インフラストラクチャ層) テスト Real Configuration File Integration should validate real configuration has required employee data structure)</span></div>        <div class="test-case">
+            <span class="passed">✅ should validate real configuration has required employee data structure</span>
+            <span class="duration">(00:00:00.0162956)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should load the actual project configuration file</span>
+            <span class="duration">(00:00:00.0193004)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Resolve-FilePath Function - Path Resolution <span style="font-size: 0.8em; color: #6c757d;">(FileSystemUtils (データアクセス層) テスト Resolve-FilePath Function - Path Resolution should handle Windows and Unix path separators)</span></div>        <div class="test-case">
+            <span class="passed">✅ should handle Windows and Unix path separators</span>
+            <span class="duration">(00:00:00.0066894)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should resolve absolute paths correctly</span>
+            <span class="duration">(00:00:00.0068995)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle path normalization</span>
+            <span class="duration">(00:00:00.0044004)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle path with spaces</span>
+            <span class="duration">(00:00:00.0029722)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should resolve relative paths from project root</span>
+            <span class="duration">(00:00:00.0063112)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Save-ExcludedDataForKeep 関数 - 統合テスト <span style="font-size: 0.8em; color: #6c757d;">(DataFilteringUtils (データ処理層) テスト Save-ExcludedDataForKeep 関数 - 統合テスト フィルタ条件がない場合にスキップすること)</span></div>        <div class="test-case">
+            <span class="passed">✅ フィルタ条件がない場合にスキップすること</span>
+            <span class="duration">(00:00:00.0648085)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 除外データのテーブル保存が正常に動作すること</span>
+            <span class="duration">(00:00:00.0895881)</span>            <div class="error-details">
+                <strong>エラー:</strong> Could not find Command Get-CsvColumns
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Show-FilteringStatistics 関数 <span style="font-size: 0.8em; color: #6c757d;">(DataFilteringUtils (データ処理層) テスト Show-FilteringStatistics 関数 フィルタ適用時の統計を正しく表示すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ フィルタ適用時の統計を正しく表示すること</span>
+            <span class="duration">(00:00:00.0525375)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ ゼロ件データの統計を正しく処理すること</span>
+            <span class="duration">(00:00:00.0397769)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ フィルタなしの場合の統計を正しく表示すること</span>
+            <span class="duration">(00:00:00.0348310)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 SQL Generation Integration <span style="font-size: 0.8em; color: #6c757d;">(DatabaseUtils (データアクセス層) テスト SQL Generation Integration should maintain consistency across different SQL operations)</span></div>        <div class="test-case">
+            <span class="failed">❌ should maintain consistency across different SQL operations</span>
+            <span class="duration">(00:00:00.0272536)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-InsertSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ should generate complete CRUD operations for a table</span>
+            <span class="duration">(00:00:00.0266008)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'New-InsertSQL' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 SQL生成 <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DatabaseInitialization テスト SQL生成 複合インデックス文を生成すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 複合インデックス文を生成すること</span>
+            <span class="duration">(00:00:00.0084759)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 制約のないテーブルを処理すること</span>
+            <span class="duration">(00:00:00.0090849)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 正しいCREATE TABLE文を生成すること</span>
+            <span class="duration">(00:00:00.0291996)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 適切なインデックス文を生成すること</span>
+            <span class="duration">(00:00:00.0105483)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Sync Statistics Generation <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DataSync Tests Sync Statistics Generation should generate accurate sync statistics)</span></div>        <div class="test-case">
+            <span class="passed">✅ should generate accurate sync statistics</span>
+            <span class="duration">(00:00:00.0325532)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should track processing time accurately</span>
+            <span class="duration">(00:00:00.1207850)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 UTF-8 and Japanese Character Handling <span style="font-size: 0.8em; color: #6c757d;">(CsvProcessingUtils (データ処理層) テスト UTF-8 and Japanese Character Handling ラウンドトリップ時に日本語文字を保持すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ ラウンドトリップ時に日本語文字を保持すること</span>
+            <span class="duration">(00:00:00.0173142)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'ConvertTo-CsvData' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 日本語文字を正しく処理すること</span>
+            <span class="duration">(00:00:00.0173348)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected strings to be the same, but they were different.
+Expected length: 4
+Actual length:   5
+Strings differ at index 0.
+Expected: '田中太郎'
+But was:  'テスト太郎'
+           ^
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ UTF-8 BOMを処理すること</span>
+            <span class="duration">(00:00:00.0086701)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 UTF-8 Encoding Support <span style="font-size: 0.8em; color: #6c757d;">(ConfigurationUtils (インフラストラクチャ層) テスト UTF-8 Encoding Support should handle BOM in UTF-8 files)</span></div>        <div class="test-case">
+            <span class="passed">✅ should handle BOM in UTF-8 files</span>
+            <span class="duration">(00:00:00.0187905)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle UTF-8 encoded configuration files</span>
+            <span class="duration">(00:00:00.0161632)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Write-AuditLog Function - Audit Logging <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Write-AuditLog Function - Audit Logging セキュリティ関連情報を含むこと)</span></div>        <div class="test-case">
+            <span class="failed">❌ セキュリティ関連情報を含むこと</span>
+            <span class="duration">(00:00:00.0163827)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Write-AuditLog' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 日本語文字を含む監査イベントを処理すること</span>
+            <span class="duration">(00:00:00.0209611)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Write-AuditLog' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 監査イベントをログに記録すること</span>
+            <span class="duration">(00:00:00.0187877)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected no exception to be thrown, but an exception "The term 'Write-AuditLog' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again." was thrown from /workspaces/ps-sqlite/tests/Utils/Infrastructure/LoggingUtils.Tests.ps1:247 char:15
+    +             { Write-AuditLog -AuditEvent $auditEvent -LogFilePath $sc …
+    +               ~~~~~~~~~~~~~~.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Write-PerformanceLog Function - Performance Logging <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Write-PerformanceLog Function - Performance Logging パフォーマンス統計を計算してログに記録すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ パフォーマンス統計を計算してログに記録すること</span>
+            <span class="duration">(00:00:00.0190480)</span>            <div class="error-details">
+                <strong>エラー:</strong> The term 'Write-PerformanceLog' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ パフォーマンス指標をログに記録すること</span>
+            <span class="duration">(00:00:00.0292020)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected no exception to be thrown, but an exception "The term 'Write-PerformanceLog' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again." was thrown from /workspaces/ps-sqlite/tests/Utils/Infrastructure/LoggingUtils.Tests.ps1:202 char:15
+    +             { Write-PerformanceLog -Metrics $metrics -LogFilePath $sc …
+    +               ~~~~~~~~~~~~~~~~~~~~.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 不足しているパフォーマンス指標を適切に処理すること</span>
+            <span class="duration">(00:00:00.0329048)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected no exception to be thrown, but an exception "The term 'Write-PerformanceLog' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again." was thrown from /workspaces/ps-sqlite/tests/Utils/Infrastructure/LoggingUtils.Tests.ps1:233 char:15
+    +             { Write-PerformanceLog -Metrics $incompleteMetrics -LogFi …
+    +               ~~~~~~~~~~~~~~~~~~~~.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Write-SystemLog Function - Basic Logging <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Write-SystemLog Function - Basic Logging 未指定時にInfoレベルをデフォルトとすること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 未指定時にInfoレベルをデフォルトとすること</span>
+            <span class="duration">(00:00:00.0374943)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ ログメッセージで日本語文字を処理すること</span>
+            <span class="duration">(00:00:00.0336926)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ コンポーネント情報を含むこと</span>
+            <span class="duration">(00:00:00.0049917)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'Component'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 異なるログレベルを処理すること</span>
+            <span class="duration">(00:00:00.0138700)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected no exception to be thrown, but an exception "Cannot validate argument on parameter 'Level'. The argument "Debug" does not belong to the set "Info,Warning,Error,Success" specified by the ValidateSet attribute. Supply an argument that is in the set and then try the command again." was thrown from /workspaces/ps-sqlite/tests/Utils/Infrastructure/LoggingUtils.Tests.ps1:52 char:73
+    + …  Write-SystemLog -Message "Test $level message" -Level $level } | Sho …
+    +                                                          ~~~~~~.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ コンソールにログメッセージを書き込むこと</span>
+            <span class="duration">(00:00:00.0087914)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'Component'.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 Write-SystemLog Function - File Logging <span style="font-size: 0.8em; color: #6c757d;">(LoggingUtils (インフラストラクチャ層) テスト Write-SystemLog Function - File Logging LogFilePathが指定された時にファイルにログを書き込むこと)</span></div>        <div class="test-case">
+            <span class="failed">❌ LogFilePathが指定された時にファイルにログを書き込むこと</span>
+            <span class="duration">(00:00:00.0076171)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ ログディレクトリが存在しない場合に作成すること</span>
+            <span class="duration">(00:00:00.0058364)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 既存のログファイルに追記すること</span>
+            <span class="duration">(00:00:00.0124246)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ ログファイルでUTF-8エンコーディングを処理すること</span>
+            <span class="duration">(00:00:00.0049044)</span>            <div class="error-details">
+                <strong>エラー:</strong> A parameter cannot be found that matches parameter name 'LogFilePath'.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 エラーカテゴリと分類 <span style="font-size: 0.8em; color: #6c757d;">(ErrorHandlingUtils (インフラストラクチャ層) テスト エラーカテゴリと分類 Systemカテゴリエラーを処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ Systemカテゴリエラーを処理すること</span>
+            <span class="duration">(00:00:00.0141625)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ Externalカテゴリエラーを処理すること</span>
+            <span class="duration">(00:00:03.0429741)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ Dataカテゴリエラーを処理すること</span>
+            <span class="duration">(00:00:00.0205592)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected an exception with message like 'Invalid data format' to be thrown, but no exception was thrown.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 指定されない場合はSystemカテゴリをデフォルトとすること</span>
+            <span class="duration">(00:00:00.0223257)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 エラーハンドリング <span style="font-size: 0.8em; color: #6c757d;">(Invoke-CsvImport テスト エラーハンドリング 破損したCSVファイルを適切に処理すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ 破損したCSVファイルを適切に処理すること</span>
+            <span class="duration">(00:00:00.0469074)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected strings to be the same, but they were different.
+Expected length: 14
+Actual length:   7
+Strings differ at index 0.
+Expected: 'corrupted_file'
+But was:  'success'
+           ^
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ SQL実行エラーを処理すること</span>
+            <span class="duration">(00:00:00.0233341)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected strings to be the same, but they were different.
+String lengths are both 9.
+Strings differ at index 4.
+Expected: 'sql_error'
+But was:  'sql_valid'
+           ----^
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ アクセス拒否エラーを処理すること</span>
+            <span class="duration">(00:00:00.0130249)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ データベース接続エラー時に適切に処理する</span>
+            <span class="duration">(00:00:00.0266628)</span>            <div class="error-details">
+                <strong>エラー:</strong> Cannot convert value "PesterMock_Show-SyncResult_Invoke-WithErrorHandling_f0d5b0d1-e926-444e-ba43-62db84c18d5c" to type "System.Management.Automation.CommandMetadata". Error: "Unable to find type [ErrorCategory]."
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ データベース接続失敗を処理すること</span>
+            <span class="duration">(00:00:00.0173520)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 意味のあるエラーメッセージを提供すること</span>
+            <span class="duration">(00:00:00.0172273)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 無効なテーブル設定を適切に処理すること</span>
+            <span class="duration">(00:00:00.0140479)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 意味のあるエラーメッセージを提供すること</span>
+            <span class="duration">(00:00:00.0126194)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 エラーハンドリングとエッジケース <span style="font-size: 0.8em; color: #6c757d;">(CoreUtils (基盤層) テスト エラーハンドリングとエッジケース 複数回の呼び出しで一貫した動作を維持すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 複数回の呼び出しで一貫した動作を維持すること</span>
+            <span class="duration">(00:00:00.0313821)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 並行アクセスを安全に処理すること</span>
+            <span class="duration">(00:00:00.5651535)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ nullまたは空のパラメータを適切に処理すること</span>
+            <span class="duration">(00:00:00.0074967)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 エラーハンドリングと境界値テスト <span style="font-size: 0.8em; color: #6c757d;">(DataFilteringUtils (データ処理層) テスト エラーハンドリングと境界値テスト 統計計算で正しい比率を計算すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 統計計算で正しい比率を計算すること</span>
+            <span class="duration">(00:00:00.0393186)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ Show-FilteringStatistics が無効なパラメータで例外を発生すること</span>
+            <span class="duration">(00:00:00.0228427)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ New-TempTableName が必須パラメータを要求すること</span>
+            <span class="duration">(00:00:00.0044539)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 エラーハンドリングと復旧 <span style="font-size: 0.8em; color: #6c757d;">(全システム統合テスト エラーハンドリングと復旧 入力ファイルの欠如を処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 入力ファイルの欠如を処理すること</span>
+            <span class="duration">(00:00:00.0097907)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ データベース接続エラーを処理すること</span>
+            <span class="duration">(00:00:00.0042891)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 意味のあるエラーメッセージを提供すること</span>
+            <span class="duration">(00:00:00.0046515)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 エンドツーエンドインポートプロセス <span style="font-size: 0.8em; color: #6c757d;">(CSVインポート統合テスト エンドツーエンドインポートプロセス プロセス全体でデータ整合性を維持すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ プロセス全体でデータ整合性を維持すること</span>
+            <span class="duration">(00:00:00.0192417)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 完全なインポートワークフローを完了すること</span>
+            <span class="duration">(00:00:00.0097295)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 エンドツーエンドデータ同期 <span style="font-size: 0.8em; color: #6c757d;">(全システム統合テスト エンドツーエンドデータ同期 基本同期ワークフローを完了すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 基本同期ワークフローを完了すること</span>
+            <span class="duration">(00:00:00.0208608)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 同期中のフィルタリングを処理すること</span>
+            <span class="duration">(00:00:00.0050036)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ エッジケースを適切に処理すること</span>
+            <span class="duration">(00:00:00.0111100)</span>            <div class="error-details">
+                <strong>エラー:</strong> Method invocation failed because [System.Management.Automation.PSCustomObject] does not contain a method named 'ContainsKey'.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 コンテキスト情報処理 <span style="font-size: 0.8em; color: #6c757d;">(ErrorHandlingUtils (インフラストラクチャ層) テスト コンテキスト情報処理 コンテキストハッシュテーブルを受け入れること)</span></div>        <div class="test-case">
+            <span class="passed">✅ コンテキストハッシュテーブルを受け入れること</span>
+            <span class="duration">(00:00:00.0048223)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 空のコンテキストを処理すること</span>
+            <span class="duration">(00:00:00.0073444)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ nullコンテキストを処理すること</span>
+            <span class="duration">(00:00:00.0042824)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 データフィルタリング <span style="font-size: 0.8em; color: #6c757d;">(Invoke-CsvImport テスト データフィルタリング フィルタリング後の空の結果を処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ フィルタリング後の空の結果を処理すること</span>
+            <span class="duration">(00:00:00.0178655)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ Y接頭辞の従業員IDを除外すること</span>
+            <span class="duration">(00:00:00.0237593)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 複数のフィルタルールを同時に適用すること</span>
+            <span class="duration">(00:00:00.0255011)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ Z接頭辞の従業員IDを除外すること</span>
+            <span class="duration">(00:00:00.0270263)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 データベースファイル操作 <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DatabaseInitialization テスト データベースファイル操作 既存データベースを適切に処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 既存データベースを適切に処理すること</span>
+            <span class="duration">(00:00:00.0294711)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 存在しない場合に新しいデータベースファイルを作成すること</span>
+            <span class="duration">(00:00:00.0198547)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ データベースファイルのアクセス権を検証すること</span>
+            <span class="duration">(00:00:00.0223738)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 データ整合性と一貨性 <span style="font-size: 0.8em; color: #6c757d;">(全システム統合テスト データ整合性と一貨性 重複レコードを検出し処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 重複レコードを検出し処理すること</span>
+            <span class="duration">(00:00:00.0104747)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 参照整合性を維持すること</span>
+            <span class="duration">(00:00:00.0457416)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 データ検証 <span style="font-size: 0.8em; color: #6c757d;">(Invoke-CsvImport テスト データ検証 特殊文字とエンコーディングを処理すること)</span></div>        <div class="test-case">
+            <span class="failed">❌ 特殊文字とエンコーディングを処理すること</span>
+            <span class="duration">(00:00:00.1189958)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected 5, but got 0.
+            </div>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 必須フィールドの存在を検証すること</span>
+            <span class="duration">(00:00:00.0177982)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 一貫性のないCSV構造を処理すること</span>
+            <span class="duration">(00:00:00.0274729)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ データ型と形式を検証すること</span>
+            <span class="duration">(00:00:00.0468451)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 テーブルスキーマ検証 <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DatabaseInitialization テスト テーブルスキーマ検証 重複した列名を検出すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 重複した列名を検出すること</span>
+            <span class="duration">(00:00:00.0129251)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 必須列の存在を検証すること</span>
+            <span class="duration">(00:00:00.0266700)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 制約構文を検証すること</span>
+            <span class="duration">(00:00:00.0115841)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 列のデータ型を検証すること</span>
+            <span class="duration">(00:00:00.0130115)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 パフォーマンステスト <span style="font-size: 0.8em; color: #6c757d;">(DataFilteringUtils (データ処理層) テスト パフォーマンステスト 大量データでのShow-FilteringStatisticsが効率的に動作すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 大量データでのShow-FilteringStatisticsが効率的に動作すること</span>
+            <span class="duration">(00:00:00.0392467)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 パフォーマンスとスケール <span style="font-size: 0.8em; color: #6c757d;">(全システム統合テスト パフォーマンスとスケール 一貨したメモリ使用量を維持すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 一貨したメモリ使用量を維持すること</span>
+            <span class="duration">(00:00:00.3173647)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 適切なデータ量を効率的に処理すること</span>
+            <span class="duration">(00:00:01.0242090)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 パフォーマンスとメモリ <span style="font-size: 0.8em; color: #6c757d;">(Invoke-CsvImport テスト パフォーマンスとメモリ 大きなデータセットでメモリリークを起こさないこと)</span></div>        <div class="test-case">
+            <span class="passed">✅ 大きなデータセットでメモリリークを起こさないこと</span>
+            <span class="duration">(00:00:00.2165220)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 大きなCSVファイルを効率的に処理すること</span>
+            <span class="duration">(00:00:00.0221767)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 パフォーマンスとリソース使用量 <span style="font-size: 0.8em; color: #6c757d;">(CoreUtils (基盤層) テスト パフォーマンスとリソース使用量 繰り返し呼び出しでメモリリークしないこと)</span></div>        <div class="test-case">
+            <span class="passed">✅ 繰り返し呼び出しでメモリリークしないこと</span>
+            <span class="duration">(00:00:00.1520193)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 関数を高速で実行すること</span>
+            <span class="duration">(00:00:00.0171721)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 パフォーマンスとリソース管理 <span style="font-size: 0.8em; color: #6c757d;">(ErrorHandlingUtils (インフラストラクチャ層) テスト パフォーマンスとリソース管理 エラーハンドリング中にリソースリークしないこと)</span></div>        <div class="test-case">
+            <span class="passed">✅ エラーハンドリング中にリソースリークしないこと</span>
+            <span class="duration">(00:00:00.2913437)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 複数の並行エラーハンドリング操作を処理すること</span>
+            <span class="duration">(00:00:00.7023263)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected a collection with size 5, but got an empty collection.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 パフォーマンス最適化 <span style="font-size: 0.8em; color: #6c757d;">(Invoke-DatabaseInitialization テスト パフォーマンス最適化 should generate efficient table creation order)</span></div>        <div class="test-case">
+            <span class="passed">✅ should generate efficient table creation order</span>
+            <span class="duration">(00:00:00.0232204)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle large schema initialization efficiently</span>
+            <span class="duration">(00:00:00.0407755)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should batch SQL operations for performance</span>
+            <span class="duration">(00:00:00.0176999)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 パラメータ検証 <span style="font-size: 0.8em; color: #6c757d;">(メインスクリプトテスト パラメータ検証 必須パラメータを検証すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 必須パラメータを検証すること</span>
+            <span class="duration">(00:00:00.0179527)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 ファイル操作 <span style="font-size: 0.8em; color: #6c757d;">(メインスクリプトテスト ファイル操作 タイムスタンプフォーマットを正しく処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ タイムスタンプフォーマットを正しく処理すること</span>
+            <span class="duration">(00:00:00.0124288)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 メモリ使用量 <span style="font-size: 0.8em; color: #6c757d;">(パフォーマンステスト メモリ使用量 操作中にメモリリークしないこと)</span></div>        <div class="test-case">
+            <span class="passed">✅ 操作中にメモリリークしないこと</span>
+            <span class="duration">(00:00:00.4076589)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 モジュール間連携 <span style="font-size: 0.8em; color: #6c757d;">(システムコンポーネント統合テスト モジュール間連携 データベース操作と同期ロジックを統合すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ データベース操作と同期ロジックを統合すること</span>
+            <span class="duration">(00:00:00.0063900)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ CSV処理とデータフィルタリングを統合すること</span>
+            <span class="duration">(00:00:00.0150619)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 リトライロジックと外部操作 <span style="font-size: 0.8em; color: #6c757d;">(ErrorHandlingUtils (インフラストラクチャ層) テスト リトライロジックと外部操作 失敗時に外部操作をリトライすること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 失敗時に外部操作をリトライすること</span>
+            <span class="duration">(00:00:03.0241271)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ タイムアウトシナリオを処理すること</span>
+            <span class="duration">(00:00:06.0358357)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 レイヤーアーキテクチャ検証 <span style="font-size: 0.8em; color: #6c757d;">(DataFilteringUtils (データ処理層) テスト レイヤーアーキテクチャ検証 下位層関数を使用すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 下位層関数を使用すること</span>
+            <span class="duration">(00:00:00.0023215)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ Layer 4 ですべての下位層依存関係を持つこと</span>
+            <span class="duration">(00:00:00.0074726)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ Layer 1 で依存関係がないこと</span>
+            <span class="duration">(00:00:00.0129917)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ Foundation層のみに依存するLayer 2であること</span>
+            <span class="duration">(00:00:00.0107531)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 設定に依存しないこと</span>
+            <span class="duration">(00:00:00.0216170)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 基盤層関数統合 <span style="font-size: 0.8em; color: #6c757d;">(CoreUtils (基盤層) テスト 基盤層関数統合 設定依存なしで連携動作すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 設定依存なしで連携動作すること</span>
+            <span class="duration">(00:00:00.0232743)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 上位層から呼び出し可能であること</span>
+            <span class="duration">(00:00:00.0185418)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 完全データベースセットアップ <span style="font-size: 0.8em; color: #6c757d;">(データベース初期化統合テスト 完全データベースセットアップ should verify database integrity after initialization)</span></div>        <div class="test-case">
+            <span class="passed">✅ should verify database integrity after initialization</span>
+            <span class="duration">(00:00:00.0087880)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle database migration scenarios</span>
+            <span class="duration">(00:00:00.0146398)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should initialize complete database schema</span>
+            <span class="duration">(00:00:00.0118232)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 履歴とバックアップ <span style="font-size: 0.8em; color: #6c757d;">(Invoke-CsvImport テスト 履歴とバックアップ タイムスタンプ付きバックアップコピーを作成すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ タイムスタンプ付きバックアップコピーを作成すること</span>
+            <span class="duration">(00:00:00.0089911)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 処理中に元ファイルを保持すること</span>
+            <span class="duration">(00:00:00.0481336)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 正常な結果表示 <span style="font-size: 0.8em; color: #6c757d;">(Show-SyncResult 正常な結果表示 同期結果を表示する)</span></div>        <div class="test-case">
+            <span class="failed">❌ 同期結果を表示する</span>
+            <span class="duration">(00:00:00.0126746)</span>            <div class="error-details">
+                <strong>エラー:</strong> Unable to find type [ErrorCategory].
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 同期結果を正しく表示する</span>
+            <span class="duration">(00:00:00.0239122)</span>            <div class="error-details">
+                <strong>エラー:</strong> Unable to find type [ErrorCategory].
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 適切にログ出力を行う</span>
+            <span class="duration">(00:00:00.0157854)</span>            <div class="error-details">
+                <strong>エラー:</strong> Unable to find type [ErrorCategory].
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 同期処理総件数を表示する</span>
+            <span class="duration">(00:00:00.0158306)</span>            <div class="error-details">
+                <strong>エラー:</strong> Unable to find type [ErrorCategory].
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ テーブル件数を表示する</span>
+            <span class="duration">(00:00:00.0127656)</span>            <div class="error-details">
+                <strong>エラー:</strong> Unable to find type [ErrorCategory].
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 統合テストシナリオ <span style="font-size: 0.8em; color: #6c757d;">(DataFilteringUtils (データ処理層) テスト 統合テストシナリオ 基盤層のユーティリティを使用すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 基盤層のユーティリティを使用すること</span>
+            <span class="duration">(00:00:00.0078102)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ ログ機能が正常に動作すること</span>
+            <span class="duration">(00:00:00.0201028)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 複雑なエラーシナリオ <span style="font-size: 0.8em; color: #6c757d;">(ErrorHandlingUtils (インフラストラクチャ層) テスト 複雑なエラーシナリオ 入れ子のエラーハンドリングを処理すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 入れ子のエラーハンドリングを処理すること</span>
+            <span class="duration">(00:00:00.0127103)</span>        </div>
+        <div class="test-case">
+            <span class="failed">❌ 異なるPowerShellコンテキストでの例外を処理すること</span>
+            <span class="duration">(00:00:00.4700856)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected regular expression 'Job context error' to match 'The term 'Invoke-WithErrorHandling' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.', but it did not match.
+            </div>        </div>
+        <div class="test-case">
+            <span class="failed">❌ クリーンアップスクリプトエラーを適切に処理すること</span>
+            <span class="duration">(00:00:00.0234172)</span>            <div class="error-details">
+                <strong>エラー:</strong> Expected $true, but got $false.
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 設定統合 <span style="font-size: 0.8em; color: #6c757d;">(Invoke-CsvImport テスト 設定統合 設定ベースのフィルタを適用すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 設定ベースのフィルタを適用すること</span>
+            <span class="duration">(00:00:00.0196155)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 列マッピング設定を尊重すること</span>
+            <span class="duration">(00:00:00.0160152)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should read table configuration from config file</span>
+            <span class="duration">(00:00:00.0408564)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 設定を読み込み検証すること</span>
+            <span class="duration">(00:00:00.0195435)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should handle configuration updates gracefully</span>
+            <span class="duration">(00:00:00.0103419)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ 設定のバリエーションを処理すること</span>
+            <span class="duration">(00:00:00.0163251)</span>        </div>
+        <div class="test-case">
+            <span class="passed">✅ should validate configuration schema version</span>
+            <span class="duration">(00:00:00.0155289)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 設定読み込み <span style="font-size: 0.8em; color: #6c757d;">(メインスクリプトテスト 設定読み込み 設定ファイルを正常に読み込むこと)</span></div>        <div class="test-case">
+            <span class="passed">✅ 設定ファイルを正常に読み込むこと</span>
+            <span class="duration">(00:00:00.1864942)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 設定駆動処理 <span style="font-size: 0.8em; color: #6c757d;">(システムコンポーネント統合テスト 設定駆動処理 異なるテーブルスキーマに適応すること)</span></div>        <div class="test-case">
+            <span class="passed">✅ 異なるテーブルスキーマに適応すること</span>
+            <span class="duration">(00:00:00.0100207)</span>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 除外データKEEP出力が有効の場合 <span style="font-size: 0.8em; color: #6c757d;">(除外データKEEP出力機能 除外データKEEP出力が有効の場合 フィルタ除外されたcurrent_dataがKEEPアクションで出力される)</span></div>        <div class="test-case">
+            <span class="failed">❌ フィルタ除外されたcurrent_dataがKEEPアクションで出力される</span>
+            <span class="duration">(00:00:04.4804086)</span>            <div class="error-details">
+                <strong>エラー:</strong> SQLite3の実行に失敗しました: sqlite3コマンドエラー (終了コード: 1 ,クエリ：SELECT syokuin_no, sync_action FROM sync_result WHERE syokuin_no LIKE 'Z%' ORDER BY syokuin_no ,結果：Parse error near line 1: no such table: sync_result ）
+            </div>        </div>
+    </div>
+    <div class="test-section">
+        <div class="section-header">📋 除外データKEEP出力が無効の場合 <span style="font-size: 0.8em; color: #6c757d;">(除外データKEEP出力機能 除外データKEEP出力が無効の場合 フィルタ除外されたcurrent_dataは出力されない)</span></div>        <div class="test-case">
+            <span class="failed">❌ フィルタ除外されたcurrent_dataは出力されない</span>
+            <span class="duration">(00:00:04.5593256)</span>            <div class="error-details">
+                <strong>エラー:</strong> SQLite3の実行に失敗しました: sqlite3コマンドエラー (終了コード: 1 ,クエリ：SELECT syokuin_no, sync_action FROM sync_result WHERE syokuin_no LIKE 'Z%' ,結果：Parse error near line 1: no such table: sync_result ）
+            </div>        </div>
+    </div>
+</body>
+</html>

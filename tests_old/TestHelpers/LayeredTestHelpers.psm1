@@ -17,34 +17,34 @@
 
 # レイヤー定義と依存関係マップ
 $script:LayerArchitecture = @{
-    "Foundation" = @{
-        Order = 1
-        Description = "基盤層（設定非依存）"
-        Modules = @("CoreUtils")
+    "Foundation"     = @{
+        Order        = 1
+        Description  = "基盤層（設定非依存）"
+        Modules      = @("CoreUtils")
         Dependencies = @()  # 依存なし
     }
     "Infrastructure" = @{
-        Order = 2
-        Description = "インフラ層（設定依存）"
-        Modules = @("ConfigurationUtils", "LoggingUtils", "ErrorHandlingUtils")
+        Order        = 2
+        Description  = "インフラ層（設定依存）"
+        Modules      = @("ConfigurationUtils", "LoggingUtils", "ErrorHandlingUtils")
         Dependencies = @("Foundation")
     }
-    "DataAccess" = @{
-        Order = 3
-        Description = "データアクセス層"
-        Modules = @("DatabaseUtils", "FileSystemUtils")
+    "DataAccess"     = @{
+        Order        = 3
+        Description  = "データアクセス層"
+        Modules      = @("DatabaseUtils", "FileSystemUtils")
         Dependencies = @("Foundation", "Infrastructure")
     }
     "DataProcessing" = @{
-        Order = 4
-        Description = "データ処理層"
-        Modules = @("CsvProcessingUtils", "DataFilteringUtils")
+        Order        = 4
+        Description  = "データ処理層"
+        Modules      = @("CsvProcessingUtils", "DataFilteringUtils")
         Dependencies = @("Foundation", "Infrastructure", "DataAccess")
     }
-    "Process" = @{
-        Order = 5
-        Description = "プロセス層（ビジネスロジック）"
-        Modules = @("Show-SyncResult", "Invoke-CsvImport", "Invoke-CsvExport", "Invoke-DataSync", "Invoke-DatabaseInitialization", "Invoke-ConfigValidation", "Test-DataConsistency")
+    "Process"        = @{
+        Order        = 5
+        Description  = "プロセス層（ビジネスロジック）"
+        Modules      = @("Show-SyncResult", "Invoke-CsvImport", "Invoke-CsvExport", "Invoke-DataSync", "Invoke-DatabaseInitialization", "Invoke-ConfigValidation", "Test-DataConsistency")
         Dependencies = @("Foundation", "Infrastructure", "DataAccess", "DataProcessing")
     }
 }
@@ -72,7 +72,7 @@ function Initialize-LayeredTestEnvironment {
         [Parameter(Mandatory = $true)]
         [string]$ModuleName,
         
-        [switch]$MockDependencies = $true
+        [bool]$MockDependencies = $true
     )
     
     # Pesterヘルパー関数の定義
@@ -91,12 +91,12 @@ function Initialize-LayeredTestEnvironment {
     }
     
     $testEnv = @{
-        LayerName = $LayerName
-        ModuleName = $ModuleName
-        LayerOrder = $layer.Order
-        Dependencies = $layer.Dependencies
-        MockedFunctions = @{}
-        TempDirectory = $null
+        LayerName         = $LayerName
+        ModuleName        = $ModuleName
+        LayerOrder        = $layer.Order
+        Dependencies      = $layer.Dependencies
+        MockedFunctions   = @{}
+        TempDirectory     = $null
         ConfigurationMock = $null
     }
     
@@ -144,15 +144,26 @@ function Import-LayeredModule {
     # 依存関係を先に読み込み
     Import-LayerDependencies -LayerName $LayerName
     
+    # プロジェクトルートを取得
+    try {
+        $projectRoot = Get-ProjectRoot
+    }
+    catch {
+        # フォールバック: エラーハンドリングの場合は直接パスを使用
+        Write-Warning "プロジェクトルート取得失敗: $($_). フォールバックを使用します。"
+        $projectRoot = "/workspaces/ps-sqlite"
+    }
+    
     # 対象モジュールを読み込み
     if ($LayerName -eq "Process") {
-        $modulePath = Join-Path (Get-ProjectRoot) "scripts/modules/Process/$ModuleName.psm1"
-    } else {
-        $modulePath = Join-Path (Get-ProjectRoot) "scripts/modules/Utils/$LayerName/$ModuleName.psm1"
+        $modulePath = Join-Path $projectRoot "scripts/modules/Process/$ModuleName.psm1"
+    }
+    else {
+        $modulePath = Join-Path $projectRoot "scripts/modules/Utils/$LayerName/$ModuleName.psm1"
     }
     
     if (-not (Test-Path $modulePath)) {
-        throw "モジュールファイルが見つかりません: $modulePath"
+        throw "モジュールファイルが見つかりません: $modulePath (プロジェクトルート: $projectRoot)"
     }
     
     try {
@@ -188,11 +199,21 @@ function Import-LayerDependencies {
         
         # 依存レイヤーのすべてのモジュールを読み込み
         foreach ($depModuleName in $dependencyLayerInfo.Modules) {
+            # プロジェクトルートを取得
+            try {
+                $projectRoot = Get-ProjectRoot
+            }
+            catch {
+                # フォールバック: エラーハンドリングの場合は直接パスを使用
+                $projectRoot = "/workspaces/ps-sqlite"
+            }
+            
             # Process層は別ディレクトリ構造
             if ($dependencyLayer -eq "Process") {
-                $depModulePath = Join-Path (Get-ProjectRoot) "scripts/modules/Process/$depModuleName.psm1"
-            } else {
-                $depModulePath = Join-Path (Get-ProjectRoot) "scripts/modules/Utils/$dependencyLayer/$depModuleName.psm1"
+                $depModulePath = Join-Path $projectRoot "scripts/modules/Process/$depModuleName.psm1"
+            }
+            else {
+                $depModulePath = Join-Path $projectRoot "scripts/modules/Utils/$dependencyLayer/$depModuleName.psm1"
             }
             
             if (Test-Path $depModulePath) {
@@ -206,6 +227,9 @@ function Import-LayerDependencies {
                 catch {
                     Write-Warning "依存モジュールのインポートに失敗しました: $depModuleName - $($_.Exception.Message)"
                 }
+            }
+            else {
+                Write-Warning "依存モジュールファイルが見つかりません: $depModulePath"
             }
         }
     }
@@ -336,7 +360,8 @@ function Mock-InfrastructureFunctions {
             )
             try {
                 return & $ScriptBlock
-            } catch {
+            }
+            catch {
                 Write-Warning "Mock error handling: $($_.Exception.Message)"
                 throw
             }
@@ -353,7 +378,8 @@ function Mock-InfrastructureFunctions {
             )
             try {
                 return & $FileOperation
-            } catch {
+            }
+            catch {
                 Write-Warning "Mock file operation error: $($_.Exception.Message)"
                 throw
             }
@@ -403,7 +429,7 @@ function Mock-DataAccessFunctions {
             return @{
                 columns = @{
                     employee_id = @{ type = "TEXT"; primary_key = $true }
-                    name = @{ type = "TEXT"; nullable = $false }
+                    name        = @{ type = "TEXT"; nullable = $false }
                 }
             }
         }
@@ -474,12 +500,12 @@ function Mock-DataProcessingFunctions {
             if (-not $Data -or $Data.Count -eq 0) {
                 return @{
                     FilteredData = @()
-                    Statistics = @{ 
-                        OriginalCount = 0; 
-                        FilteredCount = 0; 
-                        ExcludedCount = 0; 
+                    Statistics   = @{ 
+                        OriginalCount  = 0; 
+                        FilteredCount  = 0; 
+                        ExcludedCount  = 0; 
                         ProcessingTime = "0.001s"
-                        Timestamp = Get-Timestamp
+                        Timestamp      = Get-Timestamp
                     }
                 }
             }
@@ -507,22 +533,24 @@ function Mock-DataProcessingFunctions {
                     
                     if (-not $shouldExclude) {
                         $filteredData += $item
-                    } else {
+                    }
+                    else {
                         $excludedCount++
                     }
                 }
-            } else {
+            }
+            else {
                 $filteredData = $Data
             }
             
             return @{
                 FilteredData = $filteredData
-                Statistics = @{ 
-                    OriginalCount = $Data.Count; 
-                    FilteredCount = $filteredData.Count; 
-                    ExcludedCount = $excludedCount;
+                Statistics   = @{ 
+                    OriginalCount  = $Data.Count; 
+                    FilteredCount  = $filteredData.Count; 
+                    ExcludedCount  = $excludedCount;
                     ProcessingTime = "0.001s"
-                    Timestamp = Get-Timestamp
+                    Timestamp      = Get-Timestamp
                 }
             }
         }
@@ -550,49 +578,49 @@ function New-MockConfiguration {
     モック設定オブジェクトの作成
     #>
     return @{
-        file_paths = @{
+        file_paths  = @{
             provided_data_file_path = "test-data/provided.csv"
-            current_data_file_path = "test-data/current.csv"
-            output_file_path = "test-data/output.csv"
-            timezone = "Asia/Tokyo"
+            current_data_file_path  = "test-data/current.csv"
+            output_file_path        = "test-data/output.csv"
+            timezone                = "Asia/Tokyo"
         }
-        tables = @{
+        tables      = @{
             provided_data = @{
-                columns = @{
+                columns     = @{
                     employee_id = @{ type = "TEXT"; primary_key = $true; nullable = $false }
                     card_number = @{ type = "TEXT"; nullable = $true }
-                    name = @{ type = "TEXT"; nullable = $false }
-                    department = @{ type = "TEXT"; nullable = $true }
-                    position = @{ type = "TEXT"; nullable = $true }
-                    email = @{ type = "TEXT"; nullable = $true }
-                    phone = @{ type = "TEXT"; nullable = $true }
-                    hire_date = @{ type = "TEXT"; nullable = $true }
+                    name        = @{ type = "TEXT"; nullable = $false }
+                    department  = @{ type = "TEXT"; nullable = $true }
+                    position    = @{ type = "TEXT"; nullable = $true }
+                    email       = @{ type = "TEXT"; nullable = $true }
+                    phone       = @{ type = "TEXT"; nullable = $true }
+                    hire_date   = @{ type = "TEXT"; nullable = $true }
                 }
                 csv_mapping = @{
-                    delimiter = ","
+                    delimiter  = ","
                     header_row = 1
-                    encoding = "utf8"
+                    encoding   = "utf8"
                 }
-                filter = @{
-                    exclude = @("Z*")
+                filter      = @{
+                    exclude                 = @("Z*")
                     output_excluded_as_keep = $true
                 }
             }
-            current_data = @{
+            current_data  = @{
                 columns = @{
                     employee_id = @{ type = "TEXT"; primary_key = $true; nullable = $false }
                     card_number = @{ type = "TEXT"; nullable = $true }
-                    name = @{ type = "TEXT"; nullable = $false }
-                    department = @{ type = "TEXT"; nullable = $true }
-                    position = @{ type = "TEXT"; nullable = $true }
-                    email = @{ type = "TEXT"; nullable = $true }
-                    phone = @{ type = "TEXT"; nullable = $true }
-                    hire_date = @{ type = "TEXT"; nullable = $true }
+                    name        = @{ type = "TEXT"; nullable = $false }
+                    department  = @{ type = "TEXT"; nullable = $true }
+                    position    = @{ type = "TEXT"; nullable = $true }
+                    email       = @{ type = "TEXT"; nullable = $true }
+                    phone       = @{ type = "TEXT"; nullable = $true }
+                    hire_date   = @{ type = "TEXT"; nullable = $true }
                 }
             }
         }
         sync_config = @{
-            key_columns = @("employee_id")
+            key_columns        = @("employee_id")
             comparison_columns = @("card_number", "name", "department", "position", "email", "phone", "hire_date")
         }
     }
@@ -608,7 +636,8 @@ function Get-ProjectRoot {
         $PSScriptRoot,
         (Get-Location).Path,
         $MyInvocation.PSScriptRoot,
-        (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent)
+        (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent),
+        "/workspaces/ps-sqlite"  # 明示的にワークスペースパスを追加
     )
     
     foreach ($startPath in $possibleStartPaths) {
@@ -634,6 +663,11 @@ function Get-ProjectRoot {
             $currentPath = Split-Path $currentPath -Parent
         }
         if ($currentPath) { return $currentPath }
+    }
+    
+    # 最終フォールバック: ワークスペースパスを直接使用
+    if (Test-Path "/workspaces/ps-sqlite/CLAUDE.md") {
+        return "/workspaces/ps-sqlite"
     }
     
     throw "プロジェクトルートが見つかりません（CLAUDE.mdを基準）。起動パス: $($possibleStartPaths -join ', ')"
@@ -677,11 +711,11 @@ function Assert-LayeredModuleDependencies {
     
     $layer = $script:LayerArchitecture[$LayerName]
     $result = @{
-        LayerName = $LayerName
-        ModuleName = $ModuleName
-        Dependencies = $layer.Dependencies
-        ValidDependencies = @()
-        InvalidDependencies = @()
+        LayerName            = $LayerName
+        ModuleName           = $ModuleName
+        Dependencies         = $layer.Dependencies
+        ValidDependencies    = @()
+        InvalidDependencies  = @()
         CircularDependencies = @()
     }
     
@@ -690,7 +724,8 @@ function Assert-LayeredModuleDependencies {
         $depLayerInfo = $script:LayerArchitecture[$depLayer]
         if ($depLayerInfo.Order -lt $layer.Order) {
             $result.ValidDependencies += $depLayer
-        } else {
+        }
+        else {
             $result.InvalidDependencies += $depLayer
         }
     }
@@ -754,7 +789,7 @@ function New-MockEmployeeData {
         $position = "役職{0}" -f ($i % 2)
         $email = "test{0:D3}@example.com" -f $i
         $phone = "090-{0:D4}-{1:D4}" -f ($i % 10000), (($i * 2) % 10000)
-        $hireDate = (Get-Date).AddDays(-($i * 30)).ToString("yyyy-MM-dd")
+        $hireDate = (Get-Date).AddDays( - ($i * 30)).ToString("yyyy-MM-dd")
         
         if ($IncludeProblematicData -and $i -eq 3) {
             $name = "エラー,データ"  # Comma in name causes CSV parsing issues

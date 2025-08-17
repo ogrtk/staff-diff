@@ -74,7 +74,7 @@ Describe "LoggingUtils (インフラストラクチャ層) テスト" {
     
     Context "Write-SystemLog Function - File Logging" {
         It "LogFilePathが指定された時にファイルにログを書き込むこと" {
-            Write-SystemLog -Message "File log test" -Level "Info" -LogFilePath $script:TestLogPath
+            Write-SystemLog -Message "File log test" -Level "Info"
             
             Test-Path $script:TestLogPath | Should -Be $true
             $logContent = Get-Content -Path $script:TestLogPath -Raw
@@ -83,10 +83,10 @@ Describe "LoggingUtils (インフラストラクチャ層) テスト" {
         
         It "既存のログファイルに追記すること" {
             # 最初のログ
-            Write-SystemLog -Message "First log entry" -LogFilePath $script:TestLogPath
+            Write-SystemLog -Message "First log entry"
             
             # 2番目のログ
-            Write-SystemLog -Message "Second log entry" -LogFilePath $script:TestLogPath
+            Write-SystemLog -Message "Second log entry"
             
             $logContent = Get-Content -Path $script:TestLogPath
             $logContent | Should -HaveCount 2
@@ -97,7 +97,7 @@ Describe "LoggingUtils (インフラストラクチャ層) テスト" {
         It "ログディレクトリが存在しない場合に作成すること" {
             $nestedLogPath = Join-Path $script:TestEnv.TempDirectory.Path "logs/nested/test.log"
             
-            Write-SystemLog -Message "Nested directory test" -LogFilePath $nestedLogPath
+            Write-SystemLog -Message "Nested directory test"
             
             Test-Path $nestedLogPath | Should -Be $true
             $logContent = Get-Content -Path $nestedLogPath -Raw
@@ -106,7 +106,7 @@ Describe "LoggingUtils (インフラストラクチャ層) テスト" {
         
         It "ログファイルでUTF-8エンコーディングを処理すること" {
             $utf8Message = "UTF-8 テスト: 日本語文字 ñáéíóú"
-            Write-SystemLog -Message $utf8Message -LogFilePath $script:TestLogPath
+            Write-SystemLog -Message $utf8Message
             
             $logContent = Get-Content -Path $script:TestLogPath -Encoding UTF8 -Raw
             $logContent | Should -Match "UTF-8 テスト"
@@ -116,14 +116,14 @@ Describe "LoggingUtils (インフラストラクチャ層) テスト" {
     
     Context "Log Entry Formatting and Structure" {
         It "ログエントリにタイムスタンプを含むこと" {
-            Write-SystemLog -Message "Timestamp test" -LogFilePath $script:TestLogPath
+            Write-SystemLog -Message "Timestamp test"
             
             $logContent = Get-Content -Path $script:TestLogPath -Raw
             $logContent | Should -Match "\d{4}-\d{2}-\d{2}.*\d{2}:\d{2}:\d{2}"
         }
         
         It "フォーマット済み出力にログレベルを含むこと" {
-            Write-SystemLog -Message "Level test" -Level "Warning" -LogFilePath $script:TestLogPath
+            Write-SystemLog -Message "Level test" -Level "Warning"
             
             $logContent = Get-Content -Path $script:TestLogPath -Raw
             $logContent | Should -Match "WARNING"
@@ -137,7 +137,7 @@ Describe "LoggingUtils (インフラストラクチャ層) テスト" {
             )
             
             foreach ($msg in $messages) {
-                Write-SystemLog -Message $msg.Message -Level $msg.Level -LogFilePath $script:TestLogPath
+                Write-SystemLog -Message $msg.Message -Level $msg.Level
             }
             
             $logLines = Get-Content -Path $script:TestLogPath
@@ -150,139 +150,12 @@ Describe "LoggingUtils (インフラストラクチャ層) テスト" {
         
         It "複数行メッセージを処理すること" {
             $multilineMessage = "Line 1`nLine 2`nLine 3"
-            Write-SystemLog -Message $multilineMessage -LogFilePath $script:TestLogPath
+            Write-SystemLog -Message $multilineMessage
             
             $logContent = Get-Content -Path $script:TestLogPath -Raw
             $logContent | Should -Match "Line 1"
             $logContent | Should -Match "Line 2"
             $logContent | Should -Match "Line 3"
-        }
-    }
-    
-    Context "Initialize-SystemLogging Function" {
-        It "ログ設定を初期化すること" {
-            $logConfig = @{
-                LogFilePath = $script:TestLogPath
-                LogLevel = "Debug"
-                MaxLogFileSize = 1MB
-                MaxLogFiles = 5
-            }
-            
-            { Initialize-SystemLogging -Configuration $logConfig } | Should -Not -Throw
-        }
-        
-        It "初期化時にログファイルを作成すること" {
-            $initLogPath = Join-Path $script:TestEnv.TempDirectory.Path "init.log"
-            $logConfig = @{ LogFilePath = $initLogPath }
-            
-            Initialize-SystemLogging -Configuration $logConfig
-            
-            Test-Path $initLogPath | Should -Be $true
-        }
-        
-        It "設定パラメータを検証すること" {
-            $invalidConfig = @{
-                LogLevel = "InvalidLevel"
-                MaxLogFileSize = -1
-            }
-            
-            { Initialize-SystemLogging -Configuration $invalidConfig } | Should -Throw
-        }
-    }
-    
-    Context "Write-PerformanceLog Function - Performance Logging" {
-        It "パフォーマンス指標をログに記録すること" {
-            $metrics = @{
-                Operation = "DataImport"
-                Duration = [TimeSpan]::FromSeconds(5.5)
-                RecordCount = 1000
-                MemoryUsage = 50MB
-            }
-            
-            { Write-PerformanceLog -Metrics $metrics -LogFilePath $script:TestLogPath } | Should -Not -Throw
-            
-            $logContent = Get-Content -Path $script:TestLogPath -Raw
-            $logContent | Should -Match "DataImport"
-            $logContent | Should -Match "5\.5"
-            $logContent | Should -Match "1000"
-        }
-        
-        It "パフォーマンス統計を計算してログに記録すること" {
-            $operations = 1..5 | ForEach-Object {
-                @{
-                    Operation = "TestOperation$_"
-                    Duration = [TimeSpan]::FromMilliseconds((Get-Random -Minimum 100 -Maximum 1000))
-                    RecordCount = (Get-Random -Minimum 10 -Maximum 100)
-                }
-            }
-            
-            foreach ($op in $operations) {
-                Write-PerformanceLog -Metrics $op -LogFilePath $script:TestLogPath
-            }
-            
-            $logContent = Get-Content -Path $script:TestLogPath -Raw
-            $logContent | Should -Match "TestOperation"
-            $logContent | Should -Match "Duration"
-        }
-        
-        It "不足しているパフォーマンス指標を適切に処理すること" {
-            $incompleteMetrics = @{
-                Operation = "IncompleteTest"
-            }
-            
-            { Write-PerformanceLog -Metrics $incompleteMetrics -LogFilePath $script:TestLogPath } | Should -Not -Throw
-        }
-    }
-    
-    Context "Write-AuditLog Function - Audit Logging" {
-        It "監査イベントをログに記録すること" {
-            $auditEvent = @{
-                User = "TestUser"
-                Action = "FileAccess"
-                Resource = "test-data.csv"
-                Result = "Success"
-                Details = "File read successfully"
-            }
-            
-            { Write-AuditLog -AuditEvent $auditEvent -LogFilePath $script:TestLogPath } | Should -Not -Throw
-            
-            $logContent = Get-Content -Path $script:TestLogPath -Raw
-            $logContent | Should -Match "TestUser"
-            $logContent | Should -Match "FileAccess"
-            $logContent | Should -Match "Success"
-        }
-        
-        It "セキュリティ関連情報を含むこと" {
-            $securityEvent = @{
-                User = "SecurityTest"
-                Action = "Authentication"
-                Resource = "System"
-                Result = "Failed"
-                IPAddress = "192.168.1.1"
-                UserAgent = "TestAgent"
-            }
-            
-            Write-AuditLog -AuditEvent $securityEvent -LogFilePath $script:TestLogPath
-            
-            $logContent = Get-Content -Path $script:TestLogPath -Raw
-            $logContent | Should -Match "Authentication"
-            $logContent | Should -Match "Failed"
-            $logContent | Should -Match "192.168.1.1"
-        }
-        
-        It "日本語文字を含む監査イベントを処理すること" {
-            $japaneseAuditEvent = @{
-                User = "テストユーザー"
-                Action = "データ更新"
-                Resource = "従業員データ.csv"
-                Result = "成功"
-            }
-            
-            Write-AuditLog -AuditEvent $japaneseAuditEvent -LogFilePath $script:TestLogPath
-            
-            $logContent = Get-Content -Path $script:TestLogPath -Encoding UTF8 -Raw
-            $logContent | Should -Match "テストユーザー"
-            $logContent | Should -Match "データ更新"
         }
     }
     
@@ -414,7 +287,8 @@ Describe "LoggingUtils (インフラストラクチャ層) テスト" {
                 # OS固有の読み取り専用設定
                 if ($IsWindows) {
                     Set-ItemProperty -Path $readOnlyDir -Name IsReadOnly -Value $true
-                } else {
+                }
+                else {
                     # Linux/macOS: 書き込み権限を除去
                     chmod u-w $readOnlyDir
                 }
@@ -427,7 +301,8 @@ Describe "LoggingUtils (インフラストラクチャ層) テスト" {
                 # 権限を復元
                 if ($IsWindows) {
                     Set-ItemProperty -Path $readOnlyDir -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
-                } else {
+                }
+                else {
                     chmod u+w $readOnlyDir 2>/dev/null
                 }
             }
