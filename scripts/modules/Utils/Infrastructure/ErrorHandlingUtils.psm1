@@ -66,8 +66,7 @@ function Invoke-WithErrorHandling {
         [Parameter(Mandatory = $true)]
         [ScriptBlock]$ScriptBlock,
         
-        [Parameter(Mandatory = $true)]
-        [ErrorCategory]$Category,
+        [ErrorCategory]$Category = [ErrorCategory]::System,
         
         [string]$Operation = "",
         

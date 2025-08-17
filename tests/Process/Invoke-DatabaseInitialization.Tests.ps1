@@ -19,61 +19,61 @@ BeforeAll {
     # Mock table configuration
     $script:MockTableConfig = @{
         provided_data = @{
-            description = "Л�������"
-            columns = @(
+            description = "Л�������"
+            columns     = @(
                 @{
-                    name = "id"
-                    type = "INTEGER"
+                    name        = "id"
+                    type        = "INTEGER"
                     constraints = "PRIMARY KEY AUTOINCREMENT"
                     csv_include = $false
-                    required = $true
+                    required    = $true
                 },
                 @{
-                    name = "employee_id"
-                    type = "TEXT"
+                    name        = "employee_id"
+                    type        = "TEXT"
                     constraints = "NOT NULL UNIQUE"
                     csv_include = $true
-                    required = $true
+                    required    = $true
                 },
                 @{
-                    name = "name"
-                    type = "TEXT"
+                    name        = "name"
+                    type        = "TEXT"
                     constraints = "NOT NULL"
                     csv_include = $true
-                    required = $true
+                    required    = $true
                 },
                 @{
-                    name = "department"
-                    type = "TEXT"
+                    name        = "department"
+                    type        = "TEXT"
                     constraints = ""
                     csv_include = $true
-                    required = $false
+                    required    = $false
                 }
             )
         }
-        current_data = @{
-            description = "�(�������"
-            columns = @(
+        current_data  = @{
+            description = "�(�������"
+            columns     = @(
                 @{
-                    name = "id"
-                    type = "INTEGER"
+                    name        = "id"
+                    type        = "INTEGER"
                     constraints = "PRIMARY KEY AUTOINCREMENT"
                     csv_include = $false
-                    required = $true
+                    required    = $true
                 },
                 @{
-                    name = "user_id"
-                    type = "TEXT"
+                    name        = "user_id"
+                    type        = "TEXT"
                     constraints = "NOT NULL UNIQUE"
                     csv_include = $true
-                    required = $true
+                    required    = $true
                 },
                 @{
-                    name = "name"
-                    type = "TEXT"
+                    name        = "name"
+                    type        = "TEXT"
                     constraints = "NOT NULL"
                     csv_include = $true
-                    required = $true
+                    required    = $true
                 }
             )
         }
@@ -85,7 +85,7 @@ BeforeAll {
     # Expected SQL statements
     $script:ExpectedCreateTableSQL = @{
         provided_data = "CREATE TABLE IF NOT EXISTS provided_data (id INTEGER PRIMARY KEY AUTOINCREMENT, employee_id TEXT NOT NULL UNIQUE, name TEXT NOT NULL, department TEXT)"
-        current_data = "CREATE TABLE IF NOT EXISTS current_data (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL UNIQUE, name TEXT NOT NULL)"
+        current_data  = "CREATE TABLE IF NOT EXISTS current_data (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT NOT NULL UNIQUE, name TEXT NOT NULL)"
     }
 }
 
@@ -97,9 +97,9 @@ AfterAll {
     Remove-Module -Name Invoke-DatabaseInitialization -Force -ErrorAction SilentlyContinue
 }
 
-Describe "Invoke-DatabaseInitialization Tests" {
-    Context "SQL Generation" {
-        It "should generate correct CREATE TABLE statements" {
+Describe "Invoke-DatabaseInitialization テスト" {
+    Context "SQL生成" {
+        It "正しいCREATE TABLE文を生成すること" {
             $tableConfig = $script:MockTableConfig.provided_data
             $tableName = "provided_data"
             
@@ -108,7 +108,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
             foreach ($column in $tableConfig.columns) {
                 if ($column.constraints) {
                     $columns += "$($column.name) $($column.type) $($column.constraints)"
-                } else {
+                }
+                else {
                     $columns += "$($column.name) $($column.type)"
                 }
             }
@@ -121,7 +122,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
             $sql | Should -Match "department TEXT"
         }
         
-        It "should handle tables without constraints" {
+        It "制約のないテーブルを処理すること" {
             $simpleTableConfig = @{
                 columns = @(
                     @{ name = "id"; type = "INTEGER"; constraints = "" },
@@ -133,7 +134,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
             foreach ($column in $simpleTableConfig.columns) {
                 if ($column.constraints -and $column.constraints.Trim() -ne "") {
                     $columns += "$($column.name) $($column.type) $($column.constraints)"
-                } else {
+                }
+                else {
                     $columns += "$($column.name) $($column.type)"
                 }
             }
@@ -142,7 +144,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
             $sql | Should -Be "CREATE TABLE IF NOT EXISTS simple_table (id INTEGER, data TEXT)"
         }
         
-        It "should generate appropriate index statements" {
+        It "適切なインデックス文を生成すること" {
             $tableName = "provided_data"
             $indexColumns = @("employee_id", "name")
             
@@ -156,7 +158,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
             $indexStatements[1] | Should -Be "CREATE INDEX IF NOT EXISTS idx_provided_data_name ON provided_data (name)"
         }
         
-        It "should generate composite index statements" {
+        It "複合インデックス文を生成すること" {
             $tableName = "provided_data"
             $compositeColumns = @("department", "position")
             $indexName = "idx_${tableName}_dept_pos"
@@ -167,8 +169,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
         }
     }
     
-    Context "Database File Operations" {
-        It "should create new database file when it doesn't exist" {
+    Context "データベースファイル操作" {
+        It "存在しない場合に新しいデータベースファイルを作成すること" {
             $newDbPath = Join-Path $script:TempDir "new-database.db"
             Test-Path $newDbPath | Should -Be $false
             
@@ -178,7 +180,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
                     # Simulate database file creation
                     New-Item -Path $newDbPath -ItemType File -Force | Out-Null
                     "database_created"
-                } catch {
+                }
+                catch {
                     "creation_failed"
                 }
             }
@@ -187,7 +190,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
             Test-Path $newDbPath | Should -Be $true
         }
         
-        It "should handle existing database gracefully" {
+        It "既存データベースを適切に処理すること" {
             Test-Path $script:ExistingDbPath | Should -Be $false
             
             # Create existing database file
@@ -198,7 +201,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
             $result = & {
                 if (Test-Path $script:ExistingDbPath) {
                     "database_exists"
-                } else {
+                }
+                else {
                     "database_not_found"
                 }
             }
@@ -206,7 +210,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
             $result | Should -Be "database_exists"
         }
         
-        It "should validate database file permissions" {
+        It "データベースファイルのアクセス権を検証すること" {
             $testDbFile = Join-Path $script:TempDir "permission-test.db"
             New-Item -Path $testDbFile -ItemType File -Force | Out-Null
             
@@ -216,7 +220,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
                 try {
                     Add-Content -Path $testDbFile -Value "test" -ErrorAction Stop
                     $true
-                } catch {
+                }
+                catch {
                     $false
                 }
             }
@@ -226,8 +231,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
         }
     }
     
-    Context "Table Schema Validation" {
-        It "should validate required columns are present" {
+    Context "テーブルスキーマ検証" {
+        It "必須列の存在を検証すること" {
             $tableConfig = $script:MockTableConfig.provided_data
             $requiredColumns = $tableConfig.columns | Where-Object { $_.required -eq $true }
             
@@ -236,7 +241,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
             $requiredColumns | Where-Object { $_.name -eq "name" } | Should -Not -BeNullOrEmpty
         }
         
-        It "should validate column data types" {
+        It "列のデータ型を検証すること" {
             $tableConfig = $script:MockTableConfig.provided_data
             $validTypes = @("TEXT", "INTEGER", "REAL", "BLOB", "NUMERIC")
             
@@ -245,15 +250,15 @@ Describe "Invoke-DatabaseInitialization Tests" {
             }
         }
         
-        It "should validate constraint syntax" {
-            $validConstraints = @(
-                "PRIMARY KEY",
-                "PRIMARY KEY AUTOINCREMENT", 
-                "NOT NULL",
-                "UNIQUE",
-                "NOT NULL UNIQUE",
-                ""
-            )
+        It "制約構文を検証すること" {
+            # $validConstraints = @(
+            #     "PRIMARY KEY",
+            #     "PRIMARY KEY AUTOINCREMENT", 
+            #     "NOT NULL",
+            #     "UNIQUE",
+            #     "NOT NULL UNIQUE",
+            #     ""
+            # )
             
             $tableConfig = $script:MockTableConfig.provided_data
             foreach ($column in $tableConfig.columns) {
@@ -264,7 +269,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
             }
         }
         
-        It "should detect duplicate column names" {
+        It "重複した列名を検出すること" {
             $duplicateConfig = @{
                 columns = @(
                     @{ name = "id"; type = "INTEGER" },
@@ -281,8 +286,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
         }
     }
     
-    Context "Error Handling" {
-        It "should handle invalid table configuration gracefully" {
+    Context "エラーハンドリング" {
+        It "無効なテーブル設定を適切に処理すること" {
             $invalidConfig = @{
                 # Missing columns array
             }
@@ -293,7 +298,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
                         throw "Invalid table configuration: missing columns"
                     }
                     "config_valid"
-                } catch {
+                }
+                catch {
                     "config_invalid"
                 }
             }
@@ -301,7 +307,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
             $result | Should -Be "config_invalid"
         }
         
-        It "should handle SQL execution errors" {
+        It "SQL実行エラーを処理すること" {
             # Mock SQL execution error
             $invalidSQL = "CREATE TABLE invalid syntax"
             
@@ -311,7 +317,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
                         throw "SQL syntax error"
                     }
                     "sql_valid"
-                } catch {
+                }
+                catch {
                     "sql_error"
                 }
             }
@@ -319,7 +326,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
             $result | Should -Be "sql_error"
         }
         
-        It "should handle database connection failures" {
+        It "データベース接続失敗を処理すること" {
             $invalidPath = "/invalid/path/database.db"
             
             $result = & {
@@ -329,7 +336,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
                         throw "Database connection failed: invalid path"
                     }
                     "connection_ok"
-                } catch {
+                }
+                catch {
                     "connection_failed"
                 }
             }
@@ -337,17 +345,17 @@ Describe "Invoke-DatabaseInitialization Tests" {
             $result | Should -Be "connection_failed"
         }
         
-        It "should provide meaningful error messages" {
-            $error = "Database initialization failed: Table 'provided_data' column 'employee_id' constraint validation failed"
+        It "意味のあるエラーメッセージを提供すること" {
+            $errorMsg = "Database initialization failed: Table 'provided_data' column 'employee_id' constraint validation failed"
             
-            $error | Should -Match "Database initialization failed"
-            $error | Should -Match "provided_data"
-            $error | Should -Match "employee_id"
-            $error | Should -Match "constraint validation failed"
+            $errorMsg | Should -Match "Database initialization failed"
+            $errorMsg | Should -Match "provided_data"
+            $errorMsg | Should -Match "employee_id"
+            $errorMsg | Should -Match "constraint validation failed"
         }
     }
     
-    Context "Performance Optimization" {
+    Context "パフォーマンス最適化" {
         It "should generate efficient table creation order" {
             # Tables should be created in dependency order
             $tableOrder = @("provided_data", "current_data", "sync_result")
@@ -395,7 +403,8 @@ Describe "Invoke-DatabaseInitialization Tests" {
                 foreach ($column in $largeSchema[$tableName].columns) {
                     if ($column.constraints) {
                         $columns += "$($column.name) $($column.type) $($column.constraints)"
-                    } else {
+                    }
+                    else {
                         $columns += "$($column.name) $($column.type)"
                     }
                 }
@@ -410,7 +419,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
         }
     }
     
-    Context "Configuration Integration" {
+    Context "設定統合" {
         It "should read table configuration from config file" {
             # Mock configuration loading
             $mockConfigPath = Join-Path $script:TempDir "mock-config.json"
@@ -428,7 +437,7 @@ Describe "Invoke-DatabaseInitialization Tests" {
         It "should validate configuration schema version" {
             $configWithVersion = @{
                 schema_version = "1.0"
-                tables = $script:MockTableConfig
+                tables         = $script:MockTableConfig
             }
             
             $configWithVersion.schema_version | Should -Match "^\d+\.\d+$"
@@ -467,16 +476,16 @@ Describe "Invoke-DatabaseInitialization Tests" {
     }
 }
 
-Describe "Database Initialization Integration Tests" {
-    Context "Full Database Setup" {
+Describe "データベース初期化統合テスト" {
+    Context "完全データベースセットアップ" {
         It "should initialize complete database schema" {
             $initializationSteps = @{
                 ValidateConfig = $true
                 CreateDatabase = $true
-                CreateTables = $true
-                CreateIndexes = $true
+                CreateTables   = $true
+                CreateIndexes  = $true
                 CreateTriggers = $false  # Optional
-                VerifySchema = $true
+                VerifySchema   = $true
             }
             
             $completedSteps = ($initializationSteps.Values | Where-Object { $_ -eq $true }).Count
@@ -497,9 +506,9 @@ Describe "Database Initialization Integration Tests" {
         
         It "should verify database integrity after initialization" {
             $integrityChecks = @{
-                TablesExist = $true
-                IndexesExist = $true
-                ConstraintsValid = $true
+                TablesExist        = $true
+                IndexesExist       = $true
+                ConstraintsValid   = $true
                 PermissionsCorrect = $true
             }
             

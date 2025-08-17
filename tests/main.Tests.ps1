@@ -1,21 +1,21 @@
 #!/usr/bin/env pwsh
-# PowerShell & SQLite Data Management System - Main Script Tests
+# PowerShell & SQLite データ管理システム - メインスクリプトテスト
 
 BeforeAll {
     $script:TestRoot = Split-Path -Parent $PSScriptRoot
     $script:MainScript = Join-Path $TestRoot 'scripts/main.ps1'
     $script:ConfigPath = Join-Path $TestRoot 'config/data-sync-config.json'
     
-    # Test temporary directory
+    # テスト一時ディレクトリ
     $script:TempDir = Join-Path ([System.IO.Path]::GetTempPath()) "ps-sqlite-test-$(Get-Random)"
     New-Item -ItemType Directory -Path $script:TempDir -Force | Out-Null
     
-    # Test data files
+    # テストデータファイル
     $script:TestProvidedData = Join-Path $script:TempDir "test-provided.csv"
     $script:TestCurrentData = Join-Path $script:TempDir "test-current.csv"
     $script:TestOutputData = Join-Path $script:TempDir "test-output.csv"
     
-    # Create test CSV files with Japanese content
+    # 日本語コンテンツでテストCSVファイルを作成
     @"
 employee_id,card_number,name,department,position,email,phone,hire_date
 E001,C001,田中太郎,営業部,主任,tanaka@example.com,090-1111-1111,2020-04-01
@@ -36,9 +36,9 @@ AfterAll {
     }
 }
 
-Describe "Main Script Tests" {
-    Context "Configuration Loading" {
-        It "should load configuration file successfully" {
+Describe "メインスクリプトテスト" {
+    Context "設定読み込み" {
+        It "設定ファイルを正常に読み込むこと" {
             Test-Path $script:ConfigPath | Should -Be $true
             
             $config = Get-Content -Path $script:ConfigPath | ConvertFrom-Json
@@ -48,35 +48,35 @@ Describe "Main Script Tests" {
         }
     }
     
-    Context "Parameter Validation" {
-        It "should validate required parameters" {
+    Context "パラメータ検証" {
+        It "必須パラメータを検証すること" {
             $params = @{
                 ProvidedDataFilePath = $script:TestProvidedData
                 CurrentDataFilePath = $script:TestCurrentData
                 OutputFilePath = $script:TestOutputData
             }
             
-            # Verify parameters are acceptable
+            # パラメータが適切であることを検証
             $params.Keys | Should -Contain "ProvidedDataFilePath"
             $params.Keys | Should -Contain "CurrentDataFilePath" 
             $params.Keys | Should -Contain "OutputFilePath"
         }
     }
     
-    Context "File Operations" {
-        It "should handle timestamp formatting correctly" {
+    Context "ファイル操作" {
+        It "タイムスタンプフォーマットを正しく処理すること" {
             $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
             $timestamp | Should -Match "^\d{8}_\d{6}$"
         }
     }
 }
 
-Describe "Performance Tests" {
-    Context "Memory Usage" {
-        It "should not leak memory during operations" {
+Describe "パフォーマンステスト" {
+    Context "メモリ使用量" {
+        It "操作中にメモリリークしないこと" {
             $initialMemory = [System.GC]::GetTotalMemory($false)
             
-            # Simulate operations
+            # 操作のシミュレーション
             for ($i = 0; $i -lt 10; $i++) {
                 $data = @("test") * 100
                 $data = $null
@@ -86,7 +86,7 @@ Describe "Performance Tests" {
             $finalMemory = [System.GC]::GetTotalMemory($true)
             $memoryIncrease = $finalMemory - $initialMemory
             
-            # Memory increase should be minimal (less than 5MB)
+            # メモリ増加は最小限であるべき (5MB未満)
             $memoryIncrease | Should -BeLessOrEqual (5 * 1024 * 1024)
         }
     }

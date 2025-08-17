@@ -46,12 +46,12 @@ try {
     Import-Module (Join-Path $ProcessModulePath "Invoke-DataSync.psm1")
     Import-Module (Join-Path $ProcessModulePath "Show-SyncResult.psm1")
     Import-Module (Join-Path $ProcessModulePath "Test-DataConsistency.psm1")
-
     # --- 初期設定: 設定ファイルの読み込み ---
     # 全ての処理に先立ち、設定ファイルを読み込んでキャッシュする
     if ([string]::IsNullOrEmpty($ConfigFilePath)) {
         $configPath = Join-Path $ProjectRoot "config" "data-sync-config.json"
-    } else {
+    }
+    else {
         $configPath = $ConfigFilePath
     }
     Get-DataSyncConfig -ConfigPath $configPath | Out-Null
@@ -104,4 +104,4 @@ catch {
         Write-SystemLog "スタックトレース: `n$($_.ScriptStackTrace)" -Level "Error"
     }
     exit 1
-}
+} 

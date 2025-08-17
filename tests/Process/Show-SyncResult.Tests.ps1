@@ -2,11 +2,17 @@
 # Show-SyncResult モジュール テスト
 
 BeforeAll {
-    # テスト対象モジュールのインポート
-    $ModuleRoot = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) "scripts/modules"
-    Import-Module (Join-Path $ModuleRoot "Utils/Foundation/CoreUtils.psm1") -Force
-    Import-Module (Join-Path $ModuleRoot "Utils/Infrastructure/ConfigurationUtils.psm1") -Force
-    Import-Module (Join-Path $ModuleRoot "Process/Show-SyncResult.psm1") -Force
+    # レイヤードテストヘルパーの読み込み
+    Import-Module (Join-Path $PSScriptRoot "../TestHelpers/LayeredTestHelpers.psm1") -Force
+    Import-Module (Join-Path $PSScriptRoot "../TestHelpers/MockHelpers.psm1") -Force
+    
+    # Process層モジュールのテスト環境を初期化（Show-SyncResultはProcess層）
+    $script:TestEnv = Initialize-LayeredTestEnvironment -LayerName "Process" -ModuleName "Show-SyncResult"
+}
+
+AfterAll {
+    # テスト環境のクリーンアップ
+    Cleanup-LayeredTestEnvironment -TestEnvironment $script:TestEnv
 }
 
 Describe "Show-SyncResult" {
@@ -14,29 +20,29 @@ Describe "Show-SyncResult" {
         # Mock dependencies
         Mock -ModuleName Show-SyncResult -CommandName Get-DataSyncConfig -MockWith {
             return @{
-                version = "1.0.0"
+                version    = "1.0.0"
                 sync_rules = @{
                     sync_action_labels = @{
                         mappings = @{
                             "1" = @{
-                                action_name = "ADD"
+                                action_name   = "ADD"
                                 display_label = "1"
-                                description = "新規追加"
+                                description   = "新規追加"
                             }
                             "2" = @{
-                                action_name = "UPDATE"
+                                action_name   = "UPDATE"
                                 display_label = "2"
-                                description = "更新"
+                                description   = "更新"
                             }
                             "3" = @{
-                                action_name = "DELETE"
+                                action_name   = "DELETE"
                                 display_label = "3"
-                                description = "削除"
+                                description   = "削除"
                             }
                             "9" = @{
-                                action_name = "KEEP"
+                                action_name   = "KEEP"
                                 display_label = "9"
-                                description = "変更なし"
+                                description   = "変更なし"
                             }
                         }
                     }
@@ -52,18 +58,18 @@ Describe "Show-SyncResult" {
             if ($Query -match "table_name") {
                 # テーブル件数クエリのモック
                 return @(
-                    @{table_name = "provided_data"; count = 100},
-                    @{table_name = "current_data"; count = 95},
-                    @{table_name = "sync_result"; count = 100}
+                    @{table_name = "provided_data"; count = 100 },
+                    @{table_name = "current_data"; count = 95 },
+                    @{table_name = "sync_result"; count = 100 }
                 )
             }
             elseif ($Query -match "sync_action") {
                 # 同期結果クエリのモック（config設定に基づく数値）
                 return @(
-                    @{sync_action = "1"; count = 5},
-                    @{sync_action = "2"; count = 10},
-                    @{sync_action = "3"; count = 0},
-                    @{sync_action = "9"; count = 85}
+                    @{sync_action = "1"; count = 5 },
+                    @{sync_action = "2"; count = 10 },
+                    @{sync_action = "3"; count = 0 },
+                    @{sync_action = "9"; count = 85 }
                 )
             }
             

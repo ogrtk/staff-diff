@@ -1,43 +1,61 @@
 # PowerShell & SQLite データ同期システム
 # フィルタ除外データのKEEP出力機能テスト
 
+BeforeAll {
+    # 統合テストヘルパーの読み込み
+    Import-Module (Join-Path $PSScriptRoot "../TestHelpers/MockHelpers.psm1") -Force
+    
+    # 一時ディレクトリの作成
+    $script:TestDir = New-MockTemporaryDirectory -Prefix "excluded-keep-test"
+    $script:TestConfigPath = Join-Path $script:TestDir.Path "test-config.json"
+    $script:TestDatabasePath = Join-Path $script:TestDir.Path "test.db"
+    $script:TestProvidedPath = Join-Path $script:TestDir.Path "provided.csv"
+    $script:TestCurrentPath = Join-Path $script:TestDir.Path "current.csv"
+    $script:TestOutputPath = Join-Path $script:TestDir.Path "output.csv"
+}
+
+AfterAll {
+    # テスト環境のクリーンアップ
+    Remove-MockTemporaryDirectory -TempDirectory $script:TestDir
+}
+
 Describe "除外データKEEP出力機能" {
     BeforeAll {
-        # テスト用設定とデータベースパス
-        $testConfigPath = "./test-data/excluded-keep-test-config.json"
-        $testDatabasePath = "./test-data/excluded-keep-test.db"
-        $testProvidedPath = "./test-data/excluded-keep-provided.csv"
-        $testCurrentPath = "./test-data/excluded-keep-current.csv"
-        $testOutputPath = "./test-data/excluded-keep-output.csv"
+        # テスト用設定とデータベースパス（スクリプトスコープの変数を使用）
+        $testConfigPath = $script:TestConfigPath
+        $testDatabasePath = $script:TestDatabasePath
+        $testProvidedPath = $script:TestProvidedPath
+        $testCurrentPath = $script:TestCurrentPath
+        $testOutputPath = $script:TestOutputPath
         
         # テスト用設定ファイル作成
         $testConfig = @{
             "file_paths" = @{
                 "provided_data_file_path" = $testProvidedPath
-                "current_data_file_path" = $testCurrentPath
-                "output_file_path" = $testOutputPath
-                "timezone" = "Asia/Tokyo"
+                "current_data_file_path"  = $testCurrentPath
+                "output_file_path"        = $testOutputPath
+                "timezone"                = "Asia/Tokyo"
             }
             "csv_format" = @{
                 "provided_data" = @{
-                    "encoding" = "UTF-8"
-                    "delimiter" = ","
-                    "has_header" = $false
+                    "encoding"    = "UTF-8"
+                    "delimiter"   = ","
+                    "has_header"  = $false
                     "null_values" = @("", "NULL")
                 }
-                "current_data" = @{
-                    "encoding" = "UTF-8"
-                    "delimiter" = ","
-                    "has_header" = $true
+                "current_data"  = @{
+                    "encoding"    = "UTF-8"
+                    "delimiter"   = ","
+                    "has_header"  = $true
                     "null_values" = @("", "NULL")
                 }
-                "output" = @{
-                    "encoding" = "UTF-8"
-                    "delimiter" = ","
+                "output"        = @{
+                    "encoding"       = "UTF-8"
+                    "delimiter"      = ","
                     "include_header" = $true
                 }
             }
-            "tables" = @{
+            "tables"     = @{
                 "provided_data" = @{
                     "columns" = @(
                         @{ "name" = "id"; "type" = "INTEGER"; "constraints" = "PRIMARY KEY AUTOINCREMENT"; "csv_include" = $false }
@@ -45,14 +63,14 @@ Describe "除外データKEEP出力機能" {
                         @{ "name" = "name"; "type" = "TEXT"; "constraints" = "NOT NULL"; "csv_include" = $true; "required" = $true }
                     )
                 }
-                "current_data" = @{
+                "current_data"  = @{
                     "columns" = @(
                         @{ "name" = "id"; "type" = "INTEGER"; "constraints" = "PRIMARY KEY AUTOINCREMENT"; "csv_include" = $false }
                         @{ "name" = "user_id"; "type" = "TEXT"; "constraints" = "NOT NULL"; "csv_include" = $true; "required" = $true }
                         @{ "name" = "name"; "type" = "TEXT"; "constraints" = "NOT NULL"; "csv_include" = $true; "required" = $true }
                     )
                 }
-                "sync_result" = @{
+                "sync_result"   = @{
                     "columns" = @(
                         @{ "name" = "id"; "type" = "INTEGER"; "constraints" = "PRIMARY KEY AUTOINCREMENT"; "csv_include" = $false }
                         @{ "name" = "syokuin_no"; "type" = "TEXT"; "constraints" = "NOT NULL"; "csv_include" = $true; "required" = $true }
@@ -62,15 +80,15 @@ Describe "除外データKEEP出力機能" {
                 }
             }
             "sync_rules" = @{
-                "key_columns" = @{
+                "key_columns"         = @{
                     "provided_data" = @("employee_id")
-                    "current_data" = @("user_id")
-                    "sync_result" = @("syokuin_no")
+                    "current_data"  = @("user_id")
+                    "sync_result"   = @("syokuin_no")
                 }
-                "column_mappings" = @{
+                "column_mappings"     = @{
                     "mappings" = @{
                         "employee_id" = "user_id"
-                        "name" = "name"
+                        "name"        = "name"
                     }
                 }
                 "sync_result_mapping" = @{
@@ -81,7 +99,7 @@ Describe "除外データKEEP出力機能" {
                                 @{ "type" = "current_data"; "field" = "user_id"; "priority" = 2 }
                             )
                         }
-                        "name" = @{
+                        "name"       = @{
                             "sources" = @(
                                 @{ "type" = "provided_data"; "field" = "name"; "priority" = 1 }
                                 @{ "type" = "current_data"; "field" = "name"; "priority" = 2 }
@@ -89,12 +107,12 @@ Describe "除外データKEEP出力機能" {
                         }
                     }
                 }
-                "sync_action_labels" = @{
+                "sync_action_labels"  = @{
                     "mappings" = @{
-                        "ADD" = @{ "value" = "1" }
+                        "ADD"    = @{ "value" = "1" }
                         "UPDATE" = @{ "value" = "2" }
                         "DELETE" = @{ "value" = "3" }
-                        "KEEP" = @{ "value" = "9" }
+                        "KEEP"   = @{ "value" = "9" }
                     }
                 }
             }
@@ -104,8 +122,8 @@ Describe "除外データKEEP出力機能" {
         $testConfigDisabled = $testConfig.Clone()
         $testConfigDisabled["data_filters"] = @{
             "current_data" = @{
-                "enabled" = $true
-                "rules" = @(
+                "enabled"                 = $true
+                "rules"                   = @(
                     @{ "field" = "user_id"; "type" = "exclude"; "glob" = "Z*" }
                 )
                 "output_excluded_as_keep" = @{
@@ -118,8 +136,8 @@ Describe "除外データKEEP出力機能" {
         $testConfigEnabled = $testConfig.Clone()
         $testConfigEnabled["data_filters"] = @{
             "current_data" = @{
-                "enabled" = $true
-                "rules" = @(
+                "enabled"                 = $true
+                "rules"                   = @(
                     @{ "field" = "user_id"; "type" = "exclude"; "glob" = "Z*" }
                 )
                 "output_excluded_as_keep" = @{
@@ -147,15 +165,6 @@ Z002,もう一人の削除対象
         # テストファイル作成
         $providedData | Out-File -FilePath $testProvidedPath -Encoding UTF8 -NoNewline
         $currentData | Out-File -FilePath $testCurrentPath -Encoding UTF8 -NoNewline
-    }
-    
-    AfterAll {
-        # テストファイルクリーンアップ
-        Remove-Item -Path $testConfigPath -ErrorAction SilentlyContinue
-        Remove-Item -Path $testDatabasePath -ErrorAction SilentlyContinue
-        Remove-Item -Path $testProvidedPath -ErrorAction SilentlyContinue
-        Remove-Item -Path $testCurrentPath -ErrorAction SilentlyContinue
-        Remove-Item -Path $testOutputPath -ErrorAction SilentlyContinue
     }
     
     Context "除外データKEEP出力が無効の場合" {
