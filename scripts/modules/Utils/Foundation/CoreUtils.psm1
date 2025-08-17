@@ -28,6 +28,20 @@ function Get-CrossPlatformEncoding {
 }
 
 
+# 安全なTest-Path（null値チェック付き）
+function Test-PathSafe {
+    param(
+        [Parameter(Mandatory = $false)]
+        [string]$Path
+    )
+    
+    if ([string]::IsNullOrEmpty($Path)) {
+        return $false
+    }
+    
+    return Test-Path $Path
+}
+
 # タイムスタンプ取得（タイムゾーン対応・設定非依存・Layer 1）
 function Get-Timestamp {
     param(
@@ -177,6 +191,7 @@ function Invoke-SqliteCsvExport {
 Export-ModuleMember -Function @(
     'Get-Sqlite3Path',
     'Get-CrossPlatformEncoding',
+    'Test-PathSafe',
     'Get-Timestamp',
     'Invoke-SqliteCommand',
     'Invoke-SqliteCsvQuery',

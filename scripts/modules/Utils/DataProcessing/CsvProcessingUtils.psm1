@@ -169,9 +169,119 @@ function Test-CsvFormat {
         return $false
     }
 }
+
+# # CSVからPowerShellオブジェクト配列に変換
+# function ConvertFrom-CsvData {
+#     param(
+#         [Parameter(Mandatory = $true, ParameterSetName = "FromPath")]
+#         [string]$CsvPath,
+        
+#         [Parameter(Mandatory = $true, ParameterSetName = "FromContent")]
+#         [string]$CsvContent,
+        
+#         [Parameter(Mandatory = $true)]
+#         [string]$TableName,
+        
+#         [string]$Delimiter = ","
+#     )
+    
+#     if ($PSCmdlet.ParameterSetName -eq "FromPath") {
+#         return Import-CsvWithFormat -CsvPath $CsvPath -TableName $TableName
+#     }
+#     else {
+#         # CSVコンテンツから直接変換
+#         try {
+#             $formatConfig = Get-CsvFormatConfig -TableName $TableName
+            
+#             # 一時ファイルを使わずに直接ConvertFrom-Csvを使用
+#             $csvParams = @{
+#                 InputObject = $CsvContent
+#             }
+            
+#             # 区切り文字設定（パラメータで上書き可能）
+#             $actualDelimiter = if ($Delimiter -ne ",") { $Delimiter } else { $formatConfig.delimiter }
+#             if ($actualDelimiter -ne ",") {
+#                 $csvParams.Delimiter = $actualDelimiter
+#             }
+            
+#             $csvData = ConvertFrom-Csv @csvParams
+            
+#             # null値の変換
+#             if ($formatConfig.null_values -and $formatConfig.null_values.Count -gt 0) {
+#                 foreach ($row in $csvData) {
+#                     foreach ($prop in $row.PSObject.Properties) {
+#                         if ($prop.Value -in $formatConfig.null_values) {
+#                             $prop.Value = $null
+#                         }
+#                     }
+#                 }
+#             }
+            
+#             return $csvData
+#         }
+#         catch {
+#             Write-SystemLog "CSVコンテンツの変換に失敗しました: $($_.Exception.Message)" -Level "Error"
+#             throw
+#         }
+#     }
+# }
+
+# 設定からCSVカラム取得
+function Get-CsvColumns {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TableName
+    )
+    
+    try {
+        $config = Get-DataSyncConfig
+        
+        # テーブル設定を直接参照
+        if (-not $config.tables -or -not $config.tables.$TableName) {
+            throw "テーブル設定が見つかりません: $TableName"
+        }
+        
+        $tableConfig = $config.tables.$TableName
+        return $tableConfig.columns | Where-Object { $_.csv_include -eq $true } | ForEach-Object { $_.name }
+        
+    }
+    catch {
+        Write-SystemLog "CSVカラム情報の取得に失敗しました: $($_.Exception.Message)" -Level "Error"
+        throw
+    }
+}
+
+# 設定から必須カラム取得
+function Get-RequiredColumns {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TableName
+    )
+    
+    try {
+        $config = Get-DataSyncConfig
+        
+        # テーブル設定を直接参照
+        if (-not $config.tables -or -not $config.tables.$TableName) {
+            throw "テーブル設定が見つかりません: $TableName"
+        }
+        
+        $tableConfig = $config.tables.$TableName
+        return $tableConfig.columns | Where-Object { $_.csv_include -eq $true -and $_.required -eq $true } | ForEach-Object { $_.name }
+        
+    }
+    catch {
+        Write-SystemLog "必須カラム情報の取得に失敗しました: $($_.Exception.Message)" -Level "Error"
+        throw
+    }
+}
+
 Export-ModuleMember -Function @(
     'Get-CsvFormatConfig',
     'ConvertTo-PowerShellEncoding',
     'Import-CsvWithFormat',
-    'Test-CsvFormat'
+    'Test-CsvFormat',
+    'ConvertFrom-CsvData',
+    'Get-CsvColumns',
+    'Get-RequiredColumns'
 )

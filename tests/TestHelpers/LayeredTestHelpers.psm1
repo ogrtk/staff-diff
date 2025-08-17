@@ -116,6 +116,16 @@ function Initialize-LayeredTestEnvironment {
     # モジュールの読み込み
     Import-LayeredModule -LayerName $LayerName -ModuleName $ModuleName -TestEnvironment $testEnv
     
+    # 設定の初期化（Infrastructure層以上の場合）
+    if ($layer.Order -ge 2) {
+        try {
+            Initialize-TestConfiguration
+        }
+        catch {
+            Write-Warning "Test configuration initialization failed: $_"
+        }
+    }
+    
     return $testEnv
 }
 
@@ -278,6 +288,31 @@ function Mock-InfrastructureFunctions {
             return $TestEnvironment.ConfigurationMock ?? (New-MockConfiguration)
         }
         $TestEnvironment.MockedFunctions["Get-DataSyncConfig"] = $true
+    }
+    
+    # 設定が実際にロードされていない場合のためのヘルパー関数
+    if (-not (Get-Command "Initialize-TestConfiguration" -ErrorAction SilentlyContinue)) {
+        function Global:Initialize-TestConfiguration {
+            param([string]$ConfigPath)
+            
+            if (-not $ConfigPath) {
+                # デフォルトテスト設定を作成
+                $tempConfig = Join-Path ([System.IO.Path]::GetTempPath()) "temp-test-config-$(Get-Random).json"
+                $mockConfig = New-MockConfiguration
+                $mockConfig | ConvertTo-Json -Depth 10 | Out-File -FilePath $tempConfig -Encoding UTF8
+                $ConfigPath = $tempConfig
+            }
+            
+            try {
+                if (Get-Command "Get-DataSyncConfig" -ErrorAction SilentlyContinue) {
+                    Get-DataSyncConfig -ConfigPath $ConfigPath -Force | Out-Null
+                }
+            }
+            catch {
+                Write-Warning "Failed to initialize test configuration: $_"
+            }
+        }
+        $TestEnvironment.MockedFunctions["Initialize-TestConfiguration"] = $true
     }
     
     # LoggingUtils functions

@@ -543,10 +543,41 @@ function Invoke-MockPesterTest {
     return $result
 }
 
+function Remove-MockTemporaryDirectory {
+    <#
+    .SYNOPSIS
+    Remove a temporary directory created for testing
+    
+    .PARAMETER TempDirectory
+    Path to the temporary directory to remove
+    .PARAMETER Path
+    Alias for TempDirectory parameter for backward compatibility
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, ParameterSetName = "TempDirectory")]
+        [Alias("Path")]
+        [string]$TempDirectory
+    )
+    
+    try {
+        if (Test-Path $TempDirectory) {
+            Remove-Item -Path $TempDirectory -Recurse -Force
+            Write-Verbose "Removed temporary directory: $TempDirectory"
+        } else {
+            Write-Verbose "Temporary directory does not exist: $TempDirectory"
+        }
+    }
+    catch {
+        Write-Warning "Failed to remove temporary directory: $TempDirectory - $_"
+    }
+}
+
 # Export functions
 Export-ModuleMember -Function @(
     'Invoke-MockSqliteCommand',
     'New-MockTemporaryDirectory',
+    'Remove-MockTemporaryDirectory',
     'Invoke-MockFileOperation',
     'New-MockSystemEnvironment',
     'Invoke-MockExternalCommand',

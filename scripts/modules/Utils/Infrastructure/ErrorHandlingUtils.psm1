@@ -252,6 +252,29 @@ function Write-ErrorDetails {
     }
 }
 
+# ファイル操作専用エラーハンドリング
+function Invoke-FileOperationWithErrorHandling {
+    param(
+        [Parameter(Mandatory = $true)]
+        [ScriptBlock]$FileOperation,
+        
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath,
+        
+        [string]$OperationType = "ファイル操作",
+        
+        [ScriptBlock]$CleanupScript = $null
+    )
+    
+    $context = @{
+        "ファイルパス" = $FilePath
+        "操作種別" = $OperationType
+    }
+    
+    return Invoke-WithErrorHandling -ScriptBlock $FileOperation -Category External -Operation "$OperationType ($FilePath)" -Context $context -CleanupScript $CleanupScript
+}
+
 Export-ModuleMember -Function @(
-    'Invoke-WithErrorHandling'
+    'Invoke-WithErrorHandling',
+    'Invoke-FileOperationWithErrorHandling'
 )
