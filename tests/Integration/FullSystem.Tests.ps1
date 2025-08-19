@@ -207,7 +207,7 @@ Describe "フルシステム統合テスト" {
             }
             
             # Act
-            $result = & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
+            & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
             
             # Assert
             Test-Path $outputCsvPath | Should -Be $true
@@ -239,7 +239,7 @@ Describe "フルシステム統合テスト" {
             }
             
             # Act
-            $result = & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
+            & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
 
             # Assert
             # 履歴ディレクトリが作成されていることを確認
@@ -295,7 +295,7 @@ Describe "フルシステム統合テスト" {
             }
             
             # Act
-            $result = & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
+            & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
             
             # Assert
             $outputData = Import-Csv $outputCsvPath -Encoding UTF8
@@ -386,7 +386,7 @@ E003,C003
             }
             
             # Act
-            $result = & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $noFilterConfigPath 2>&1
+            & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $noFilterConfigPath 2>&1
             
             # Assert
             $outputData = Import-Csv $outputCsvPath -Encoding UTF8
@@ -416,7 +416,7 @@ E003,C003
             
             # Act
             $startTime = Get-Date
-            $result = & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
+            & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
             $endTime = Get-Date
             $duration = ($endTime - $startTime).TotalSeconds
             
@@ -447,7 +447,6 @@ E003,C003
             $providedData = @(
                 [PSCustomObject]@{ employee_id = "E001"; card_number = "C001"; name = "ログテスト"; department = "テスト部"; position = "テスト"; email = "log@company.com"; phone = "03-1234-5678"; hire_date = "2023-01-01" }
             )
-            $currentData = @()
             
             $providedCsvPath = Join-Path $script:TestDataDir "log-provided.csv"
             $currentCsvPath = Join-Path $script:TestDataDir "log-current.csv"
@@ -461,7 +460,7 @@ E003,C003
             }
             
             # Act
-            $result = & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
+            & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
             
             # Assert
             # ログディレクトリが作成されていることを確認
@@ -487,7 +486,6 @@ E003,C003
             $providedData = @(
                 [PSCustomObject]@{ employee_id = "E001"; card_number = "C001"; name = "パラメータテスト"; department = "テスト部"; position = "テスト"; email = "param@company.com"; phone = "03-1234-5678"; hire_date = "2023-01-01" }
             )
-            $currentData = @()
             
             # 設定ファイルとは異なるパスをパラメータで指定
             $paramProvidedCsvPath = Join-Path $script:TestDataDir "param-provided.csv"
@@ -502,7 +500,7 @@ E003,C003
             }
             
             # Act
-            $result = & pwsh $script:MainScriptPath -ProvidedDataFilePath $paramProvidedCsvPath -CurrentDataFilePath $paramCurrentCsvPath -OutputFilePath $paramOutputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
+            & pwsh $script:MainScriptPath -ProvidedDataFilePath $paramProvidedCsvPath -CurrentDataFilePath $paramCurrentCsvPath -OutputFilePath $paramOutputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
 
             # Assert
             # パラメータで指定したパスに出力ファイルが生成されることを確認
