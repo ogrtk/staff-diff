@@ -5,16 +5,16 @@
 using module "../TestHelpers/LayeredTestHelpers.psm1"
 using module "../TestHelpers/MockHelpers.psm1"
 using module "../TestHelpers/TestDataGenerator.psm1"
+using module "../../scripts/modules/Utils/Foundation/CoreUtils.psm1"
 
 Describe "フルシステム統合テスト" {
     
     BeforeAll {
-        $script:ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.Parent.FullName
+        $script:ProjectRoot = Find-ProjectRoot
         $script:MainScriptPath = Join-Path $script:ProjectRoot "scripts" "main.ps1"        
 
         # テスト環境の初期化
-        $script:TestEnv = Initialize-TestEnvironment -ProjectRoot $script:ProjectRoot -CreateTempDatabase
-        $script:OriginalErrorActionPreference = $ErrorActionPreference
+        $script:TestEnv = Initialize-TestEnvironment -CreateTempDatabase
         
         # テスト用データディレクトリの作成
         $script:TestDataDir = Join-Path $script:ProjectRoot "test-data" "integration"
@@ -71,9 +71,7 @@ Describe "フルシステム統合テスト" {
     
     AfterAll {
         # テスト環境のクリーンアップ
-        Clear-TestEnvironment -ProjectRoot $script:ProjectRoot
-        $ErrorActionPreference = $script:OriginalErrorActionPreference
-        Reset-AllMocks
+        Clear-TestEnvironment
         
         # テストデータディレクトリのクリーンアップ
         if (Test-Path $script:TestDataDir) {
@@ -82,8 +80,6 @@ Describe "フルシステム統合テスト" {
     }
     
     BeforeEach {
-        Reset-AllMocks
-        
         # 各テスト前にテストデータをクリーンアップ
         if (Test-Path $script:TestDatabasePath) {
             Remove-Item $script:TestDatabasePath -Force -ErrorAction SilentlyContinue

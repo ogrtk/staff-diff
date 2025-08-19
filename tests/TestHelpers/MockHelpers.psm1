@@ -29,10 +29,12 @@ function New-MockCommand {
     if (Get-Command "Mock" -ErrorAction SilentlyContinue) {
         if ($null -ne $ReturnValue) {
             Mock $CommandName { return $ReturnValue }
-        } else {
+        }
+        else {
             Mock $CommandName $MockScript
         }
-    } else {
+    }
+    else {
         # Pesterが利用できない場合のフォールバック
         throw "Mock機能が利用できません。Pesterが正しくインストールされているか確認してください。"
     }
@@ -57,7 +59,8 @@ function New-MockSqliteCommand {
             $global:LASTEXITCODE = 1
             throw "モック化されたSQLiteエラー"
         }
-    } else {
+    }
+    else {
         New-MockCommand -CommandName "sqlite3" -MockScript {
             $global:LASTEXITCODE = $ExitCode
             return $ReturnValue
@@ -92,7 +95,8 @@ function New-MockFileSystemOperations {
             $content = $FileContent[$Path]
             if ($Raw) {
                 return $content
-            } else {
+            }
+            else {
                 return $content -split "`n"
             }
         }
@@ -125,8 +129,8 @@ function New-MockLoggingSystem {
             
             if ($CaptureMessages) {
                 $script:CapturedLogMessages += @{
-                    Message = $Message
-                    Level = $Level
+                    Message   = $Message
+                    Level     = $Level
                     Timestamp = Get-Date
                 }
             }
@@ -174,22 +178,28 @@ function Get-CapturedLogMessages {
 }
 
 # すべてのモックのリセット
-function Reset-AllMocks {
-    # グローバル変数をクリア
-    if ($script:MockedCommands) {
-        $script:MockedCommands.Clear()
-    }
-    if ($script:MockCallHistory) {
-        $script:MockCallHistory.Clear()
-    }
+# function Reset-AllMocks {
+#     # グローバル変数をクリア
+#     if ($script:MockedCommands) {
+#         $script:MockedCommands.Clear()
+#     }
+#     if ($script:MockCallHistory) {
+#         $script:MockCallHistory.Clear()
+#     }
     
-    # キャプチャされたログメッセージのクリア
-    if (Get-Variable -Name "CapturedLogMessages" -Scope Script -ErrorAction SilentlyContinue) {
-        $script:CapturedLogMessages = @()
-    }
+#     # キャプチャされたログメッセージのクリア
+#     if (Get-Variable -Name "CapturedLogMessages" -Scope Script -ErrorAction SilentlyContinue) {
+#         $script:CapturedLogMessages = @()
+#     }
     
-    Write-Verbose "すべてのモックをリセットしました"
-}
+#     Write-Verbose "すべてのモックをリセットしました"
+# # }
+# function Reset-AllMocks {
+#     # 現在定義されているすべてのモックを取得してリセット
+#     Get-Mock | ForEach-Object {
+#         Remove-Mock -CommandName $_.CommandName -ModuleName $_.ModuleName
+#     }
+# }
 
 Export-ModuleMember -Function @(
     'New-MockCommand',

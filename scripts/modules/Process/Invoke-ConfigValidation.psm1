@@ -21,19 +21,18 @@ function Invoke-ConfigValidation {
     )
     
     return Invoke-WithErrorHandling -Category System -Operation "設定検証・パラメータ解決処理" -Context @{
-        "ProjectRoot"          = $ProjectRoot
         "DatabasePath"         = $DatabasePath
         "ProvidedDataFilePath" = $ProvidedDataFilePath
         "CurrentDataFilePath"  = $CurrentDataFilePath
         "OutputFilePath"       = $OutputFilePath
         "ConfigFilePath"       = $ConfigFilePath
     } -ScriptBlock {
-        $PrjRoot = Find-ProjectRoot
+
         # DatabasePathが未指定の場合、デフォルトを設定
         $resolvedDatabasePath = $DatabasePath
         if ([string]::IsNullOrEmpty($resolvedDatabasePath)) {
+            $PrjRoot = Find-ProjectRoot
             $resolvedDatabasePath = Join-Path $PrjRoot "database" "data-sync.db"
-            # $resolvedDatabasePath = Join-Path $ProjectRoot "database" "data-sync.db"
             Write-SystemLog "DatabasePathが未指定のため、デフォルトパスを使用します: $resolvedDatabasePath" -Level "Info"
         }
     

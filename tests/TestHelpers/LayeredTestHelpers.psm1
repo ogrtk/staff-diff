@@ -1,27 +1,22 @@
 # PowerShell & SQLite データ同期システム
 # レイヤアーキテクチャ対応テストヘルパーモジュール
+
+using module "../../scripts/modules/Utils/Foundation/CoreUtils.psm1"
 using module "../../scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1"
 
 # テスト環境設定
 function Initialize-TestEnvironment {
     param(
-        [Parameter(Mandatory = $true)]
-        [string]$ProjectRoot,
-        
         [string]$TestConfigPath = "",
-        
         [switch]$CreateTempDatabase,
-        
         [switch]$CleanupBefore
     )
     
     # 環境変数設定（Pesterテスト実行中であることを示す）
     $env:PESTER_TEST = "1"
     
-    # プロジェクトルートの検証
-    if (-not (Test-Path $ProjectRoot)) {
-        throw "プロジェクトルートが見つかりません: $ProjectRoot"
-    }
+    # プロジェクトルートを取得
+    $ProjectRoot = Find-ProjectRoot
     
     # テスト用設定ファイルの設定
     if ([string]::IsNullOrEmpty($TestConfigPath)) {
@@ -32,9 +27,6 @@ function Initialize-TestEnvironment {
     if ($CleanupBefore) {
         Clear-TestEnvironment -ProjectRoot $ProjectRoot
     }
-    
-    # レイヤアーキテクチャモジュールの読み込み
-    # $importResult = Import-LayeredModules -ProjectRoot $ProjectRoot -SkipErrors
     
     # テスト用データベースの作成
     $testDatabasePath = $null
@@ -57,21 +49,19 @@ function Initialize-TestEnvironment {
     }
     
     return @{
-        ProjectRoot        = $ProjectRoot
-        TestConfigPath     = $TestConfigPath
-        TestDatabasePath   = $testDatabasePath
-        ModuleImportResult = $importResult
+        ProjectRoot      = $ProjectRoot
+        TestConfigPath   = $TestConfigPath
+        TestDatabasePath = $testDatabasePath
     }
 }
 
 # テスト環境のクリーンアップ
 function Clear-TestEnvironment {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$ProjectRoot
-    )
     
     try {
+        # プロジェクトルートを取得
+        $ProjectRoot = Find-ProjectRoot
+
         # 一時ファイルのクリーンアップ
         $tempPath = [System.IO.Path]::GetTempPath()
         $testFiles = Get-ChildItem -Path $tempPath -Filter "*test*.db" -ErrorAction SilentlyContinue
@@ -137,26 +127,9 @@ function New-TestDatabase {
     }
 }
 
-# テスト実行の統計情報
-function Show-TestStatistics {
-    param(
-        [Parameter(Mandatory = $true)]
-        [hashtable]$TestResults
-    )
-    
-    Write-Host "`n=== テスト実行統計 ===" -ForegroundColor Cyan
-    Write-Host "総テスト数: $($TestResults.TotalCount)" -ForegroundColor White
-    Write-Host "成功: $($TestResults.PassedCount)" -ForegroundColor Green
-    Write-Host "失敗: $($TestResults.FailedCount)" -ForegroundColor Red
-    Write-Host "スキップ: $($TestResults.SkippedCount)" -ForegroundColor Yellow
-    Write-Host "実行時間: $($TestResults.Time)" -ForegroundColor White
-    Write-Host "==================`n" -ForegroundColor Cyan
-}
-
 Export-ModuleMember -Function @(
     'Import-LayeredModules',
     'Initialize-TestEnvironment',
     'Clear-TestEnvironment',
-    'New-TestDatabase',
-    'Show-TestStatistics'
+    'New-TestDatabase'
 )

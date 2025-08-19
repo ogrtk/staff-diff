@@ -23,26 +23,19 @@ Describe "Invoke-ConfigValidation モジュール" {
         $script:ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.Parent.FullName
 
         # テスト環境の初期化
-        $script:TestEnv = Initialize-TestEnvironment -ProjectRoot $script:ProjectRoot
-        $script:OriginalErrorActionPreference = $ErrorActionPreference
+        $script:TestEnv = Initialize-TestEnvironment
         
         # テスト用データの準備
         $script:ValidTestConfig = New-TestConfig
-        $script:TestConfigPath = New-TempTestFile -Content ($script:ValidTestConfig | ConvertTo-Json -Depth 10) -Extension ".json" -Prefix "config_validation_"
     }
     
     AfterAll {
         # テスト環境のクリーンアップ
-        $ErrorActionPreference = $script:OriginalErrorActionPreference
-        
-        # 一時ファイルのクリーンアップ
-        if ($script:TestConfigPath -and (Test-Path $script:TestConfigPath)) {
-            Remove-Item $script:TestConfigPath -Force -ErrorAction SilentlyContinue
-        }
+        Clear-TestEnvironment
     }
     
     BeforeEach {
-        # 基本的なモック化
+        # 基本的なモック化 - 共通設定
         Mock -ModuleName "Invoke-ConfigValidation" -CommandName Write-SystemLog { }
         Mock -ModuleName "Invoke-ConfigValidation" -CommandName Invoke-WithErrorHandling { 
             param($ScriptBlock, $Category, $Operation, $Context)
@@ -51,23 +44,37 @@ Describe "Invoke-ConfigValidation モジュール" {
         Mock -ModuleName "Invoke-ConfigValidation" -CommandName Get-Sqlite3Path { return @{ Source = "/usr/bin/sqlite3" } }
         Mock -ModuleName "Invoke-ConfigValidation" -CommandName Get-DataSyncConfig { return $script:ValidTestConfig }
         Mock -ModuleName "Invoke-ConfigValidation" -CommandName Test-DataSyncConfig { }
-        Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath { return "/test/file.csv" }
         Mock -ModuleName "Invoke-ConfigValidation" -CommandName Test-Path { return $true }
-        Mock -ModuleName "Invoke-ConfigValidation" -CommandName Get-DataSyncConfig {
-            return $script:ValidTestConfig
+        Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path {
+            param($Path, $Parent)
+            if ($Parent) { return Join-Path $script:TestEnv.ProjectRoot "test-data" }
+            return $Path
         }
 
+        # デフォルトのResolve-FilePath (個別テストでオーバーライド可能)
+        Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath {
+            param($ParameterPath, $ConfigKey, $Description)
+            if (-not [string]::IsNullOrEmpty($ParameterPath)) {
+                return $ParameterPath
+            }
+            $defaultTestDir = Join-Path $script:TestEnv.ProjectRoot "test-data" "default"
+            switch ($ConfigKey) {
+                "provided_data_file_path" { return Join-Path $defaultTestDir "provided.csv" }
+                "current_data_file_path" { return Join-Path $defaultTestDir "current.csv" }
+                "output_file_path" { return Join-Path $defaultTestDir "output.csv" }
+                default { return Join-Path $defaultTestDir "file.csv" }
+            }
+        }
     }
 
     Context "Invoke-ConfigValidation 関数 - 基本動作" {
         
         It "有効なパラメータで正常に処理を完了する" {
-            # Arrange
-            $testProjectRoot = $script:TestEnv.ProjectRoot
-            $testDbPath = Join-Path $testProjectRoot "database" "test.db"
-            $testProvidedPath = Join-Path $testProjectRoot "test-data" "provided.csv"
-            $testCurrentPath = Join-Path $testProjectRoot "test-data" "current.csv"
-            $testOutputPath = Join-Path $testProjectRoot "test-data" "output.csv"
+            # Arrange - テスト環境パスを活用
+            $testDbPath = Join-Path $script:TestEnv.ProjectRoot "database" "test.db"
+            $testProvidedPath = Join-Path $script:TestEnv.ProjectRoot "test-data" "test-provided.csv"
+            $testCurrentPath = Join-Path $script:TestEnv.ProjectRoot "test-data" "test-current.csv"
+            $testOutputPath = Join-Path $script:TestEnv.ProjectRoot "test-data" "test-output.csv"
             
             # 外部依存関数のモック化
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath {
@@ -83,7 +90,7 @@ Describe "Invoke-ConfigValidation モジュール" {
             }
             
             # Act
-            $result = Invoke-ConfigValidation -DatabasePath $testDbPath -ProvidedDataFilePath $testProvidedPath -CurrentDataFilePath $testCurrentPath -OutputFilePath $testOutputPath -ConfigFilePath $script:TestConfigPath
+            $result = Invoke-ConfigValidation -DatabasePath $testDbPath -ProvidedDataFilePath $testProvidedPath -CurrentDataFilePath $testCurrentPath -OutputFilePath $testOutputPath -ConfigFilePath "some/config/filepath"
             
             # Assert
             $result | Should -Not -BeNullOrEmpty
@@ -94,7 +101,7 @@ Describe "Invoke-ConfigValidation モジュール" {
         }
         
         It "DatabasePathが未指定の場合、デフォルトパスを設定する" {
-            # Act
+            # Act - BeforeEachの基本モックを活用
             $result = Invoke-ConfigValidation
             
             # Assert
@@ -103,7 +110,7 @@ Describe "Invoke-ConfigValidation モジュール" {
         }
         
         It "設定ファイル読み込みが正常に実行される" {
-            # Act
+            # Act - BeforeEachの基本モックを活用
             Invoke-ConfigValidation
             
             # Assert
@@ -134,6 +141,63 @@ Describe "Invoke-ConfigValidation モジュール" {
     }
 
     Context "Invoke-ConfigValidation 関数 - ファイルパス解決" {
+        
+        It "実ファイルを使ったパス解決テスト" {
+            # Arrange - 実テストファイルを作成
+            $testDataDir = Join-Path $script:TestEnv.ProjectRoot "test-data" "real-files"
+            if (-not (Test-Path $testDataDir)) {
+                New-Item -Path $testDataDir -ItemType Directory -Force | Out-Null
+            }
+            
+            # 実テストCSVファイルを作成
+            $realProvidedPath = Join-Path $testDataDir "real-provided.csv"
+            $realCurrentPath = Join-Path $testDataDir "real-current.csv"
+            $realOutputPath = Join-Path $testDataDir "real-output.csv"
+            
+            # New-TestCsvDataを使ってテストデータ作成
+            New-TestCsvData -DataType "provided_data" -RecordCount 5 -OutputPath $realProvidedPath -IncludeHeader
+            New-TestCsvData -DataType "current_data" -RecordCount 3 -OutputPath $realCurrentPath -IncludeHeader
+            
+            try {
+                # Resolve-FilePathをモックして実ファイルパスを返す
+                Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath {
+                    param($ParameterPath, $ConfigKey, $Description)
+                    switch ($ConfigKey) {
+                        "provided_data_file_path" { return $realProvidedPath }
+                        "current_data_file_path" { return $realCurrentPath }
+                        "output_file_path" { return $realOutputPath }
+                    }
+                }
+                
+                # 実ファイルの存在を確認するためにTest-Pathをモックしない
+                # Split-Pathのみモック
+                Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path {
+                    param($Path, $Parent)
+                    if ($Parent) { return $testDataDir }
+                    return $Path
+                }
+                
+                # Act
+                $result = Invoke-ConfigValidation
+                
+                # Assert
+                $result | Should -Not -BeNullOrEmpty
+                $result.ProvidedDataFilePath | Should -Be $realProvidedPath
+                $result.CurrentDataFilePath | Should -Be $realCurrentPath
+                $result.OutputFilePath | Should -Be $realOutputPath
+                
+                # 実ファイルが作成されていることを確認
+                Test-Path $realProvidedPath | Should -Be $true
+                Test-Path $realCurrentPath | Should -Be $true
+                
+            }
+            finally {
+                # クリーンアップ
+                if (Test-Path $testDataDir) {
+                    Remove-Item $testDataDir -Recurse -Force -ErrorAction SilentlyContinue
+                }
+            }
+        }
         
         It "パラメータで指定されたパスが優先される" {
             # Arrange
@@ -169,10 +233,10 @@ Describe "Invoke-ConfigValidation モジュール" {
         }
         
         It "パラメータが未指定の場合、設定ファイルから解決される" {
-            # Arrange
-            $configProvidedPath = "/config/provided.csv"
-            $configCurrentPath = "/config/current.csv"
-            $configOutputPath = "/config/output.csv"
+            # Arrange - テスト環境パスを活用
+            $configProvidedPath = Join-Path $script:TestEnv.ProjectRoot "config" "provided.csv"
+            $configCurrentPath = Join-Path $script:TestEnv.ProjectRoot "config" "current.csv"
+            $configOutputPath = Join-Path $script:TestEnv.ProjectRoot "config" "output.csv"
             
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath {
                 param($ParameterPath, $ConfigKey, $Description)
@@ -199,10 +263,11 @@ Describe "Invoke-ConfigValidation モジュール" {
     Context "Invoke-ConfigValidation 関数 - ファイル存在チェック" {
         
         It "解決されたパスでファイル存在チェックが実行される" {
-            # Arrange
-            $testProvidedPath = "/test/provided.csv"
-            $testCurrentPath = "/test/current.csv"
-            $testOutputPath = "/test/output.csv"
+            # Arrange - テスト環境パスを活用
+            $testDataDir = Join-Path $script:TestEnv.ProjectRoot "test-data"
+            $testProvidedPath = Join-Path $testDataDir "file-check-provided.csv"
+            $testCurrentPath = Join-Path $testDataDir "file-check-current.csv"
+            $testOutputPath = Join-Path $testDataDir "file-check-output.csv"
             
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath {
                 param($ParameterPath, $ConfigKey, $Description)
@@ -214,7 +279,7 @@ Describe "Invoke-ConfigValidation モジュール" {
             }
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path {
                 param($Path, $Parent)
-                if ($Parent) { return "/test" }
+                if ($Parent) { return $testDataDir }
                 return $Path
             }
             
@@ -240,11 +305,12 @@ Describe "Invoke-ConfigValidation モジュール" {
     Context "Invoke-ConfigValidation 関数 - ログ出力" {
         
         It "処理パラメータが適切にログ出力される" {
-            # Arrange
-            $testDbPath = "/test/database.db"
-            $testProvidedPath = "/test/provided.csv"
-            $testCurrentPath = "/test/current.csv"
-            $testOutputPath = "/test/output.csv"
+            # Arrange - テスト環境パスを活用
+            $testDbPath = Join-Path $script:TestEnv.ProjectRoot "database" "log-test.db"
+            $testDataDir = Join-Path $script:TestEnv.ProjectRoot "test-data"
+            $testProvidedPath = Join-Path $testDataDir "log-provided.csv"
+            $testCurrentPath = Join-Path $testDataDir "log-current.csv"
+            $testOutputPath = Join-Path $testDataDir "log-output.csv"
             
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath {
                 param($ParameterPath, $ConfigKey, $Description)
@@ -254,6 +320,7 @@ Describe "Invoke-ConfigValidation モジュール" {
                     "output_file_path" { return $testOutputPath }
                 }
             }
+            Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path { return $testDataDir }
             
             # Act
             Invoke-ConfigValidation -DatabasePath $testDbPath
@@ -274,13 +341,18 @@ Describe "Invoke-ConfigValidation モジュール" {
     Context "ファイル存在チェック（Test-ResolvedFilePaths経由）" {
         
         It "すべてのファイルが存在する場合、正常に完了する" {
-            # Arrange
+            # Arrange - テスト環境パスを活用
+            $existingDir = Join-Path $script:TestEnv.ProjectRoot "test-data" "existing"
+            $existingProvidedPath = Join-Path $existingDir "provided.csv"
+            $existingCurrentPath = Join-Path $existingDir "current.csv"
+            $existingOutputPath = Join-Path $existingDir "output.csv"
+            
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath { 
                 param($ParameterPath, $ConfigKey, $Description)
                 switch ($ConfigKey) {
-                    "provided_data_file_path" { return "/existing/provided.csv" }
-                    "current_data_file_path" { return "/existing/current.csv" }
-                    "output_file_path" { return "/existing/output.csv" }
+                    "provided_data_file_path" { return $existingProvidedPath }
+                    "current_data_file_path" { return $existingCurrentPath }
+                    "output_file_path" { return $existingOutputPath }
                 }
             }
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Test-Path { 
@@ -289,7 +361,7 @@ Describe "Invoke-ConfigValidation モジュール" {
             }
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path {
                 param($Path, $Parent)
-                if ($Parent) { return "/existing" }
+                if ($Parent) { return $existingDir }
                 return $Path
             }
             
@@ -298,13 +370,18 @@ Describe "Invoke-ConfigValidation モジュール" {
         }
         
         It "提供データファイルが存在しない場合、エラーをスローする" {
-            # Arrange
+            # Arrange - テスト環境パスを活用
+            $testDataDir = Join-Path $script:TestEnv.ProjectRoot "test-data"
+            $missingProvidedPath = Join-Path $testDataDir "missing" "provided.csv"
+            $existingCurrentPath = Join-Path $testDataDir "existing" "current.csv"
+            $existingOutputPath = Join-Path $testDataDir "existing" "output.csv"
+            
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath { 
                 param($ParameterPath, $ConfigKey, $Description)
                 switch ($ConfigKey) {
-                    "provided_data_file_path" { return "/missing/provided.csv" }
-                    "current_data_file_path" { return "/existing/current.csv" }
-                    "output_file_path" { return "/existing/output.csv" }
+                    "provided_data_file_path" { return $missingProvidedPath }
+                    "current_data_file_path" { return $existingCurrentPath }
+                    "output_file_path" { return $existingOutputPath }
                 }
             }
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Test-Path { 
@@ -313,7 +390,8 @@ Describe "Invoke-ConfigValidation モジュール" {
             }
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path {
                 param($Path, $Parent)
-                if ($Parent) { return "/existing" }
+                if ($Parent -and $Path -match "existing") { return Join-Path $testDataDir "existing" }
+                if ($Parent -and $Path -match "missing") { return Join-Path $testDataDir "missing" }
                 return $Path
             }
             
@@ -322,13 +400,18 @@ Describe "Invoke-ConfigValidation モジュール" {
         }
         
         It "現在データファイルが存在しない場合、エラーをスローする" {
-            # Arrange
+            # Arrange - テスト環境パスを活用
+            $testDataDir = Join-Path $script:TestEnv.ProjectRoot "test-data"
+            $existingProvidedPath = Join-Path $testDataDir "existing" "provided.csv"
+            $missingCurrentPath = Join-Path $testDataDir "missing" "current.csv"
+            $existingOutputPath = Join-Path $testDataDir "existing" "output.csv"
+            
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath { 
                 param($ParameterPath, $ConfigKey, $Description)
                 switch ($ConfigKey) {
-                    "provided_data_file_path" { return "/existing/provided.csv" }
-                    "current_data_file_path" { return "/missing/current.csv" }
-                    "output_file_path" { return "/existing/output.csv" }
+                    "provided_data_file_path" { return $existingProvidedPath }
+                    "current_data_file_path" { return $missingCurrentPath }
+                    "output_file_path" { return $existingOutputPath }
                 }
             }
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Test-Path { 
@@ -337,7 +420,8 @@ Describe "Invoke-ConfigValidation モジュール" {
             }
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path {
                 param($Path, $Parent)
-                if ($Parent) { return "/existing" }
+                if ($Parent -and $Path -match "existing") { return Join-Path $testDataDir "existing" }
+                if ($Parent -and $Path -match "missing") { return Join-Path $testDataDir "missing" }
                 return $Path
             }
             
@@ -346,28 +430,34 @@ Describe "Invoke-ConfigValidation モジュール" {
         }
         
         It "出力ディレクトリが存在しない場合、エラーをスローする" {
-            # Arrange
+            # Arrange - テスト環境パスを活用
+            $testDataDir = Join-Path $script:TestEnv.ProjectRoot "test-data"
+            $existingProvidedPath = Join-Path $testDataDir "existing" "provided.csv"
+            $existingCurrentPath = Join-Path $testDataDir "existing" "current.csv"
+            $missingDirPath = Join-Path $testDataDir "missing_dir"
+            $missingOutputPath = Join-Path $missingDirPath "output.csv"
+            
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath { 
                 param($ParameterPath, $ConfigKey, $Description)
                 switch ($ConfigKey) {
-                    "provided_data_file_path" { return "/existing/provided.csv" }
-                    "current_data_file_path" { return "/existing/current.csv" }
-                    "output_file_path" { return "/missing_dir/output.csv" }
+                    "provided_data_file_path" { return $existingProvidedPath }
+                    "current_data_file_path" { return $existingCurrentPath }
+                    "output_file_path" { return $missingOutputPath }
                 }
             }
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Test-Path { 
                 param($Path)
-                if ($Path -eq "/missing_dir") {
+                if ($Path -eq $missingDirPath) {
                     return $false
                 }
                 return $Path -match "existing"
             }
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path {
                 param($Path, $Parent)
-                if ($Parent -and $Path -eq "/missing_dir/output.csv") {
-                    return "/missing_dir"
+                if ($Parent -and $Path -eq $missingOutputPath) {
+                    return $missingDirPath
                 }
-                return "/existing"
+                return Join-Path $testDataDir "existing"
             }
             
             # Act & Assert
@@ -428,21 +518,74 @@ Describe "Invoke-ConfigValidation モジュール" {
             { Invoke-ConfigValidation } | Should -Throw "*設定検証エラー*"
         }
         
+        It "日本語データを含むファイルパスの処理" {
+            # Arrange - 日本語データを含むテストファイル作成
+            $japaneseTestDir = Join-Path $script:TestEnv.ProjectRoot "test-data" "japanese-test"
+            if (-not (Test-Path $japaneseTestDir)) {
+                New-Item -Path $japaneseTestDir -ItemType Directory -Force | Out-Null
+            }
+            
+            $japaneseProvidedPath = Join-Path $japaneseTestDir "日本語-provided.csv"
+            $japaneseCurrentPath = Join-Path $japaneseTestDir "日本語-current.csv"
+            $japaneseOutputPath = Join-Path $japaneseTestDir "日本語-output.csv"
+            
+            try {
+                # 日本語データを含むCSVファイル作成
+                New-TestCsvData -DataType "provided_data" -RecordCount 3 -OutputPath $japaneseProvidedPath -IncludeJapanese -IncludeHeader
+                New-TestCsvData -DataType "current_data" -RecordCount 2 -OutputPath $japaneseCurrentPath -IncludeJapanese -IncludeHeader
+                
+                Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath {
+                    param($ParameterPath, $ConfigKey, $Description)
+                    switch ($ConfigKey) {
+                        "provided_data_file_path" { return $japaneseProvidedPath }
+                        "current_data_file_path" { return $japaneseCurrentPath }
+                        "output_file_path" { return $japaneseOutputPath }
+                    }
+                }
+                Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path {
+                    param($Path, $Parent)
+                    if ($Parent) { return $japaneseTestDir }
+                    return $Path
+                }
+                
+                # Act
+                $result = Invoke-ConfigValidation
+                
+                # Assert
+                $result | Should -Not -BeNullOrEmpty
+                $result.ProvidedDataFilePath | Should -Be $japaneseProvidedPath
+                $result.CurrentDataFilePath | Should -Be $japaneseCurrentPath
+                $result.OutputFilePath | Should -Be $japaneseOutputPath
+                
+                # 日本語ファイル名でも正常に処理されることを確認
+                Test-Path $japaneseProvidedPath | Should -Be $true
+                Test-Path $japaneseCurrentPath | Should -Be $true
+                
+            }
+            finally {
+                # クリーンアップ
+                if (Test-Path $japaneseTestDir) {
+                    Remove-Item $japaneseTestDir -Recurse -Force -ErrorAction SilentlyContinue
+                }
+            }
+        }
+        
         It "複数のパラメータが同時に指定された場合の優先順位" {
-            # Arrange
+            # Arrange - テスト環境パスを活用
+            $paramDir = Join-Path $script:TestEnv.ProjectRoot "test-data" "param"
             $allPaths = @{
-                DatabasePath         = "/param/database.db"
-                ProvidedDataFilePath = "/param/provided.csv"
-                CurrentDataFilePath  = "/param/current.csv"
-                OutputFilePath       = "/param/output.csv"
-                ConfigFilePath       = $script:TestConfigPath
+                DatabasePath         = Join-Path $paramDir "database.db"
+                ProvidedDataFilePath = Join-Path $paramDir "provided.csv"
+                CurrentDataFilePath  = Join-Path $paramDir "current.csv"
+                OutputFilePath       = Join-Path $paramDir "output.csv"
+                ConfigFilePath       = "some/config/filepath"
             }
 
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath {
                 param($ParameterPath, $ConfigKey, $Description)
                 return $ParameterPath  # パラメータ値をそのまま返す
             }
-            Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path { return "/param" }
+            Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path { return $paramDir }
             
             # Act
             $result = Invoke-ConfigValidation @allPaths
@@ -455,19 +598,22 @@ Describe "Invoke-ConfigValidation モジュール" {
         }
         
         It "非常に長いファイルパスでも正常に処理される" {
-            # Arrange
-            $longPath = "/" + ("very_long_directory_name" * 10) + "/file.csv"
+            # Arrange - テスト環境パスを活用
+            $longDirName = "very_long_directory_name" * 10
+            $longDir = Join-Path $script:TestEnv.ProjectRoot $longDirName
+            $longPath = Join-Path $longDir "file.csv"
+            $defaultTestPath = Join-Path $script:TestEnv.ProjectRoot "test-data" "default.csv"
             
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Resolve-FilePath {
                 param($ParameterPath, $ConfigKey, $Description)
                 if (-not [string]::IsNullOrEmpty($ParameterPath)) {
                     return $ParameterPath
                 }
-                return "/test/default.csv"
+                return $defaultTestPath
             }
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path {
                 param($Path, $Parent)
-                if ($Parent) { return "/" + ("very_long_directory_name" * 10) }
+                if ($Parent) { return $longDir }
                 return $Path
             }
             
