@@ -10,9 +10,8 @@ $TestHelpersPath = Join-Path $ProjectRoot "tests" "TestHelpers"
 Import-Module (Join-Path $ProjectRoot "scripts" "modules" "Utils" "Foundation" "CoreUtils.psm1") -Force
 
 # テストヘルパーの読み込み
-Import-Module (Join-Path $TestHelpersPath "LayeredTestHelpers.psm1") -Force
+Import-Module (Join-Path $TestHelpersPath "TestEnvironmentHelpers.psm1") -Force
 Import-Module (Join-Path $TestHelpersPath "MockHelpers.psm1") -Force
-Import-Module (Join-Path $TestHelpersPath "TestDataGenerator.psm1") -Force
 
 # テスト対象モジュールの読み込み
 Import-Module $ModulePath -Force
@@ -33,7 +32,6 @@ Describe "ConfigurationUtils モジュール" {
         # テスト環境のクリーンアップ
         Clear-TestEnvironment -ProjectRoot $ProjectRoot
         $ErrorActionPreference = $script:OriginalErrorActionPreference
-        Reset-AllMocks
         
         # 一時ファイルのクリーンアップ
         if (Test-Path $script:TestConfigPath) {
@@ -42,7 +40,7 @@ Describe "ConfigurationUtils モジュール" {
     }
     
     BeforeEach {
-        Reset-AllMocks
+        # モックのリセットは不要。Pesterが自動で管理。
         # 設定キャッシュのリセット
         if (Get-Command "Reset-DataSyncConfig" -ErrorAction SilentlyContinue) {
             Reset-DataSyncConfig
@@ -77,7 +75,7 @@ Describe "ConfigurationUtils モジュール" {
             Get-DataSyncConfig -ConfigPath $script:TestConfigPath | Out-Null
             
             # ファイルシステムモックをリセット（2回目の呼び出しでファイル読み込みがないことを確認）
-            Reset-AllMocks
+            # Pesterのモック機能で既存のモックを上書きする
             New-MockCommand -CommandName "Test-Path" -MockScript { throw "ファイルアクセスが発生した" }
             New-MockCommand -CommandName "Get-Content" -MockScript { throw "ファイル読み込みが発生した" }
             

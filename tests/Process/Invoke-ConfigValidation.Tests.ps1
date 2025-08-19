@@ -2,9 +2,8 @@
 # Process/Invoke-ConfigValidation.psm1 ユニットテスト
 
 # テストヘルパーを最初にインポート
-using module "../TestHelpers/LayeredTestHelpers.psm1"
+using module "../TestHelpers/TestEnvironmentHelpers.psm1"
 using module "../TestHelpers/MockHelpers.psm1"
-using module "../TestHelpers/TestDataGenerator.psm1"
 
 # 依存関係のモジュールをインポート（モック化準備のため）
 using module "../../scripts/modules/Utils/Foundation/CoreUtils.psm1"

@@ -177,29 +177,6 @@ function Get-CapturedLogMessages {
     return $messages
 }
 
-# すべてのモックのリセット
-# function Reset-AllMocks {
-#     # グローバル変数をクリア
-#     if ($script:MockedCommands) {
-#         $script:MockedCommands.Clear()
-#     }
-#     if ($script:MockCallHistory) {
-#         $script:MockCallHistory.Clear()
-#     }
-    
-#     # キャプチャされたログメッセージのクリア
-#     if (Get-Variable -Name "CapturedLogMessages" -Scope Script -ErrorAction SilentlyContinue) {
-#         $script:CapturedLogMessages = @()
-#     }
-    
-#     Write-Verbose "すべてのモックをリセットしました"
-# # }
-# function Reset-AllMocks {
-#     # 現在定義されているすべてのモックを取得してリセット
-#     Get-Mock | ForEach-Object {
-#         Remove-Mock -CommandName $_.CommandName -ModuleName $_.ModuleName
-#     }
-# }
 
 Export-ModuleMember -Function @(
     'New-MockCommand',
@@ -207,6 +184,5 @@ Export-ModuleMember -Function @(
     'New-MockFileSystemOperations',
     'New-MockLoggingSystem',
     'New-MockErrorHandling',
-    'Get-CapturedLogMessages',
-    'Reset-AllMocks'
+    'Get-CapturedLogMessages'
 )

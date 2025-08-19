@@ -1,4 +1,0 @@
-﻿syokuin_no,card_number,name,position,email,phone,hire_date,sync_action
-E001,C001,"通常データ","課長",normal@company.com,999-9999-9999,2020-01-15,1
-E002,C002,"現在データ","主任",current@company.com,999-9999-9999,2021-03-20,3
-Z001,C901,"除外対象外データ","テスト",no_exclude@company.com,999-9999-9999,2023-01-01,1

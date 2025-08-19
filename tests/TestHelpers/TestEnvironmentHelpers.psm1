@@ -1,5 +1,183 @@
 # PowerShell & SQLite データ同期システム
-# テストデータ生成ヘルパーモジュール
+# 統合テスト環境ヘルパーモジュール
+
+using module "../../scripts/modules/Utils/Foundation/CoreUtils.psm1"
+using module "../../scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1"
+
+# 共通パス管理
+function Get-TestDataPath {
+    param(
+        [string]$SubPath = "",
+        [switch]$Temp
+    )
+    
+    $ProjectRoot = Find-ProjectRoot
+    $basePath = if ($Temp) {
+        Join-Path $ProjectRoot "test-data" "temp"
+    } else {
+        Join-Path $ProjectRoot "test-data"
+    }
+    
+    if (-not [string]::IsNullOrEmpty($SubPath)) {
+        return Join-Path $basePath $SubPath
+    }
+    
+    return $basePath
+}
+
+# 統一一時ファイル作成
+function New-TestTempPath {
+    param(
+        [string]$Extension = ".txt",
+        [string]$Prefix = "test_",
+        [switch]$UseSystemTemp
+    )
+    
+    $tempDir = if ($UseSystemTemp) {
+        [System.IO.Path]::GetTempPath()
+    } else {
+        Get-TestDataPath -Temp
+    }
+    
+    # ディレクトリの作成
+    if (-not (Test-Path $tempDir)) {
+        New-Item -Path $tempDir -ItemType Directory -Force | Out-Null
+    }
+    
+    $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $randomId = Get-Random -Minimum 1000 -Maximum 9999
+    $fileName = "$Prefix$timestamp$randomId$Extension"
+    
+    return Join-Path $tempDir $fileName
+}
+
+# テスト環境設定
+function Initialize-TestEnvironment {
+    param(
+        [string]$TestConfigPath = "",
+        [switch]$CreateTempDatabase,
+        [switch]$CleanupBefore
+    )
+    
+    # 環境変数設定（Pesterテスト実行中であることを示す）
+    $env:PESTER_TEST = "1"
+    
+    # プロジェクトルートを取得
+    $ProjectRoot = Find-ProjectRoot
+    
+    # テスト用設定ファイルの設定
+    if ([string]::IsNullOrEmpty($TestConfigPath)) {
+        $TestConfigPath = Join-Path $ProjectRoot "config" "data-sync-config.json"
+    }
+    
+    # クリーンアップ処理
+    if ($CleanupBefore) {
+        Clear-TestEnvironment -ProjectRoot $ProjectRoot
+    }
+    
+    # テスト用データベースの作成
+    $testDatabasePath = $null
+    if ($CreateTempDatabase) {
+        $testDatabasePath = New-TestDatabase -ProjectRoot $ProjectRoot
+    }
+    
+    # 設定の初期化
+    try {
+        if (Test-Path $TestConfigPath) {
+            Get-DataSyncConfig -ConfigPath $TestConfigPath | Out-Null
+            Write-Host "✓ テスト設定を読み込みました: $TestConfigPath" -ForegroundColor Green
+        }
+        else {
+            Write-Warning "テスト設定ファイルが見つかりません。デフォルト設定を使用します: $TestConfigPath"
+        }
+    }
+    catch {
+        Write-Warning "設定の読み込みに失敗しました。デフォルト設定を使用します: $($_.Exception.Message)"
+    }
+    
+    return @{
+        ProjectRoot      = $ProjectRoot
+        TestConfigPath   = $TestConfigPath
+        TestDatabasePath = $testDatabasePath
+    }
+}
+
+# テスト環境のクリーンアップ
+function Clear-TestEnvironment {
+    param(
+        [string]$ProjectRoot = ""
+    )
+    
+    try {
+        # プロジェクトルートを取得
+        if ([string]::IsNullOrEmpty($ProjectRoot)) {
+            $ProjectRoot = Find-ProjectRoot
+        }
+
+        # 一時ファイルのクリーンアップ
+        $tempPath = [System.IO.Path]::GetTempPath()
+        $testFiles = Get-ChildItem -Path $tempPath -Filter "*test*.db" -ErrorAction SilentlyContinue
+        foreach ($file in $testFiles) {
+            try {
+                Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue
+                Write-Verbose "テスト用一時ファイルを削除: $($file.FullName)"
+            }
+            catch {
+                Write-Warning "一時ファイルの削除に失敗: $($file.FullName)"
+            }
+        }
+        
+        # テスト用データディレクトリのクリーンアップ
+        $testDataPath = Get-TestDataPath -Temp
+        if (Test-Path $testDataPath) {
+            Remove-Item $testDataPath -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Verbose "テスト用データディレクトリを削除: $testDataPath"
+        }
+        
+        # 設定キャッシュのリセット
+        if (Get-Command "Reset-DataSyncConfig" -ErrorAction SilentlyContinue) {
+            Reset-DataSyncConfig
+        }
+        
+        # 環境変数のクリーンアップ
+        Remove-Item Env:PESTER_TEST -ErrorAction SilentlyContinue
+        
+        Write-Host "✓ テスト環境をクリーンアップしました" -ForegroundColor Green
+    }
+    catch {
+        Write-Warning "テスト環境のクリーンアップ中にエラーが発生しました: $($_.Exception.Message)"
+    }
+}
+
+# テスト用データベースの作成
+function New-TestDatabase {
+    param(
+        [string]$ProjectRoot = ""
+    )
+    
+    if ([string]::IsNullOrEmpty($ProjectRoot)) {
+        $ProjectRoot = Find-ProjectRoot
+    }
+    
+    $testDbPath = New-TestTempPath -Extension ".db" -Prefix "test_data_sync_" -UseSystemTemp
+    
+    try {
+        # 既存ファイルがある場合は削除
+        if (Test-Path $testDbPath) {
+            Remove-Item $testDbPath -Force
+        }
+        
+        # 空のデータベースファイルを作成
+        $null = New-Item -Path $testDbPath -ItemType File -Force
+        
+        Write-Host "✓ テスト用データベースを作成しました: $testDbPath" -ForegroundColor Green
+        return $testDbPath
+    }
+    catch {
+        Write-Error "テスト用データベースの作成に失敗しました: $($_.Exception.Message)"
+        throw
+    }
+}
 
 # テスト用CSVデータの生成
 function New-TestCsvData {
@@ -264,12 +442,12 @@ function New-TestConfig {
         version = "1.0.0"
         description = "テスト用設定ファイル"
         file_paths = @{
-            provided_data_file_path = "./test-data/test-provided.csv"
-            current_data_file_path = "./test-data/test-current.csv"
-            output_file_path = "./test-data/test-output.csv"
-            provided_data_history_directory = "./test-data/temp/provided-data/"
-            current_data_history_directory = "./test-data/temp/current-data/"
-            output_history_directory = "./test-data/temp/output/"
+            provided_data_file_path = (Get-TestDataPath -SubPath "test-provided.csv")
+            current_data_file_path = (Get-TestDataPath -SubPath "test-current.csv")
+            output_file_path = (Get-TestDataPath -SubPath "test-output.csv")
+            provided_data_history_directory = (Get-TestDataPath -SubPath "temp/provided-data/" -Temp)
+            current_data_history_directory = (Get-TestDataPath -SubPath "temp/current-data/" -Temp)
+            output_history_directory = (Get-TestDataPath -SubPath "temp/output/" -Temp)
             timezone = "Asia/Tokyo"
         }
         csv_format = @{
@@ -564,7 +742,7 @@ function New-TestConfig {
         }
         logging = @{
             enabled = $true
-            log_directory = "./test-data/temp/logs/"
+            log_directory = (Get-TestDataPath -SubPath "temp/logs/" -Temp)
             log_file_name = "test-system.log"
             max_file_size_mb = 5
             max_files = 3
@@ -657,9 +835,7 @@ function New-TempTestFile {
         [string]$Prefix = "test_"
     )
     
-    $tempDir = [System.IO.Path]::GetTempPath()
-    $fileName = "$Prefix$(Get-Date -Format 'yyyyMMdd_HHmmss')$(Get-Random -Minimum 1000 -Maximum 9999)$Extension"
-    $filePath = Join-Path $tempDir $fileName
+    $filePath = New-TestTempPath -Extension $Extension -Prefix $Prefix
     
     if (-not [string]::IsNullOrEmpty($Content)) {
         $Content | Out-File -FilePath $filePath -Encoding UTF8
@@ -672,6 +848,11 @@ function New-TempTestFile {
 }
 
 Export-ModuleMember -Function @(
+    'Get-TestDataPath',
+    'New-TestTempPath',
+    'Initialize-TestEnvironment',
+    'Clear-TestEnvironment',
+    'New-TestDatabase',
     'New-TestCsvData',
     'New-ProvidedDataRecords',
     'New-CurrentDataRecords',

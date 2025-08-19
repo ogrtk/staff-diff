@@ -14,8 +14,8 @@ $ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.FullName
 $TestHelpersPath = Join-Path $PSScriptRoot "TestHelpers"
 
 # テストヘルパーの読み込み
-if (Test-Path (Join-Path $TestHelpersPath "TestDataGenerator.psm1")) {
-    Import-Module (Join-Path $TestHelpersPath "TestDataGenerator.psm1") -Force
+if (Test-Path (Join-Path $TestHelpersPath "TestEnvironmentHelpers.psm1")) {
+    Import-Module (Join-Path $TestHelpersPath "TestEnvironmentHelpers.psm1") -Force
 }
 
 # 出力ディレクトリの設定

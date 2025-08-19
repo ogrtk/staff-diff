@@ -2,9 +2,8 @@
 # 統合テスト（フルシステムワークフロー）
 
 # テストヘルパーの読み込み
-using module "../TestHelpers/LayeredTestHelpers.psm1"
+using module "../TestHelpers/TestEnvironmentHelpers.psm1"
 using module "../TestHelpers/MockHelpers.psm1"
-using module "../TestHelpers/TestDataGenerator.psm1"
 using module "../../scripts/modules/Utils/Foundation/CoreUtils.psm1"
 
 Describe "フルシステム統合テスト" {

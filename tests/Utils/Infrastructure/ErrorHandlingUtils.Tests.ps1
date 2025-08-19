@@ -11,9 +11,8 @@ Import-Module (Join-Path $ProjectRoot "scripts" "modules" "Utils" "Foundation" "
 Import-Module (Join-Path $ProjectRoot "scripts" "modules" "Utils" "Infrastructure" "ConfigurationUtils.psm1") -Force
 
 # テストヘルパーの読み込み
-Import-Module (Join-Path $TestHelpersPath "LayeredTestHelpers.psm1") -Force
+Import-Module (Join-Path $TestHelpersPath "TestEnvironmentHelpers.psm1") -Force
 Import-Module (Join-Path $TestHelpersPath "MockHelpers.psm1") -Force
-Import-Module (Join-Path $TestHelpersPath "TestDataGenerator.psm1") -Force
 
 # テスト対象モジュールの読み込み
 Import-Module $ModulePath -Force
@@ -53,11 +52,10 @@ Describe "ErrorHandlingUtils モジュール" {
         # テスト環境のクリーンアップ
         Clear-TestEnvironment -ProjectRoot $ProjectRoot
         $ErrorActionPreference = $script:OriginalErrorActionPreference
-        Reset-AllMocks
     }
     
     BeforeEach {
-        Reset-AllMocks
+        # モックのリセットは不要。Pesterが自動で管理。
         New-MockLoggingSystem -CaptureMessages -SuppressOutput
     }
 

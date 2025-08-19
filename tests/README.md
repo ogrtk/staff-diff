@@ -426,7 +426,7 @@
       AfterAll {
           Clear-TestEnvironment -ProjectRoot
   $ProjectRoot
-          Reset-AllMocks
+          # モックのリセットは不要。Pesterが自動で管理。
       }
 
       Context "機能テスト" {
