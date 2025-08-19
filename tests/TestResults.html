@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PowerShell & SQLite データ同期システム - テスト結果</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background-color: #f0f0f0; padding: 20px; border-radius: 5px; }
+        .summary { margin: 20px 0; }
+        .passed { color: green; }
+        .failed { color: red; }
+        .skipped { color: orange; }
+        .test-details { margin-top: 20px; }
+        .test-container { border: 1px solid #ddd; margin: 10px 0; padding: 15px; border-radius: 5px; }
+        .test-name { font-weight: bold; }
+        .test-time { color: #666; font-size: 0.9em; }
+        .error-message { background-color: #ffebee; padding: 10px; margin: 10px 0; border-left: 4px solid #f44336; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PowerShell & SQLite データ同期システム</h1>
+        <h2>テスト実行結果</h2>
+        <p>実行日時: 2025年08月19日 06:16:22</p>
+    </div>
+    
+    <div class="summary">
+        <h3>実行サマリー</h3>
+        <table>
+            <tr><th>項目</th><th>件数</th></tr>
+            <tr><td>総テスト数</td><td>256</td></tr>
+            <tr><td class="passed">成功</td><td>185</td></tr>
+            <tr><td class="failed">失敗</td><td>71</td></tr>
+            <tr><td class="skipped">スキップ</td><td>0</td></tr>
+            <tr><td>実行時間</td><td></td></tr>
+        </table>
+    </div>    <div class="test-details">
+        <h3>失敗したテスト</h3>        <div class="test-container">
+            <div class="test-name">sqlite3コマンドが見つからない場合、エラーをスローする</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception with message like '*sqlite3コマンドが見つかりません*' to be thrown, but no exception was thrown.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">Get-Commandでエラーが発生した場合、適切なエラーメッセージをスローする</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception with message like '*SQLite3コマンドの取得に失敗しました*' to be thrown, but no exception was thrown.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">有効なパスが存在する場合、Trueを返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected $true, but got $false.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">正常なクエリの場合、結果を返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                SQLite3の実行に失敗しました: sqlite3コマンドエラー (終了コード: 1 ,クエリ：SELECT * FROM test_table; ,結果：Error: unable to open database "/test/database.db": unable to open database file ）
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">一時ファイルが適切に作成・削除される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                SQLite3の実行に失敗しました: sqlite3コマンドエラー (終了コード: 1 ,クエリ：SELECT 1; ,結果：Error: unable to open database "/test/database.db": unable to open database file ）
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">CSVクエリ結果を正しくパースして返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                SQLiteコマンド実行エラー: Error: unable to open database "/test/database.db": unable to open database file
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">空の結果の場合、空配列を返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                SQLiteコマンド実行エラー: Error: unable to open database "/test/database.db": unable to open database file
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">CSV出力が正常に実行される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                SQLite3 CSV出力の実行に失敗しました: sqlite3 CSV出力エラー (終了コード: 1): Error: unable to open database "/test/database.db": unable to open database file
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">空の結果の場合、0を返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                SQLite3 CSV出力の実行に失敗しました: sqlite3 CSV出力エラー (終了コード: 1): Error: unable to open database "/test/database.db": unable to open database file
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">Invoke-SqliteCommand で空のクエリを処理</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected no exception to be thrown, but an exception "SQLite3の実行に失敗しました: sqlite3コマンドエラー (終了コード: 1 ,クエリ：  ,結果：Error: unable to open database "/test/database.db": unable to open database file ）" was thrown from /workspaces/ps-sqlite/scripts/modules/Utils/Foundation/CoreUtils.psm1:112 char:9<br>    +         throw "SQLite3の実行に失敗しました: $($_.Exception.Message)"<br>    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">Forceスイッチ使用時、キャッシュを無視して再読み込みする</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected strings to be the same, but they were different.<br>String lengths are both 5.<br>Strings differ at index 0.<br>Expected: '2.0.0'<br>But was:  '1.0.0'<br>           ^
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">テスト環境で設定パスが未指定の場合、デフォルト設定を使用する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">file_paths設定が存在する場合、その設定を返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">file_paths設定が存在しない場合、デフォルト値を生成する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">部分的なfile_paths設定の場合、欠損項目にデフォルト値を設定する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">logging設定が存在する場合、その設定を返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">logging設定が存在しない場合、デフォルト値を生成する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">指定されたテーブルのフィルタ設定が存在する場合、その設定を返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">指定されたテーブルのフィルタ設定が存在しない場合、nullを返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">data_filters設定自体が存在しない場合、nullを返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">sync_result_mapping設定が存在する場合、その設定を返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">sync_result_mapping設定が存在しない場合、エラーをスローする</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">sync_rules設定自体が存在しない場合、エラーをスローする</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">有効な設定の場合、エラーなく完了する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected no exception to be thrown, but an exception "設定の検証に失敗しました: テーブル 'IsReadOnly' のカラムが定義されていません。" was thrown from /workspaces/ps-sqlite/scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1:180 char:9<br>    +         throw "設定の検証に失敗しました: $($_.Exception.Message)"<br>    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">必須テーブルが不足している場合、エラーをスローする</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception with message like '*必須テーブル*定義が見つかりません*' to be thrown, but the message was '設定の検証に失敗しました: テーブル 'IsReadOnly' のカラムが定義されていません。'. from /workspaces/ps-sqlite/scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1:180 char:9<br>    +         throw "設定の検証に失敗しました: $($_.Exception.Message)"<br>    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">有効なCSVフォーマット設定の場合、エラーなく完了する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected no exception to be thrown, but an exception "The term 'Test-CsvFormatConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again." was thrown from /workspaces/ps-sqlite/tests/Utils/Infrastructure/ConfigurationUtils.Tests.ps1:421 char:15<br>    +             { Test-CsvFormatConfig -Config $validCsvConfig } | Should …<br>    +               ~~~~~~~~~~~~~~~~~~~~.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">csv_format設定が存在しない場合、エラーをスローする</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception with message like '*csv_format設定が見つかりません*' to be thrown, but the message was 'The term 'Test-CsvFormatConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.'. from /workspaces/ps-sqlite/tests/Utils/Infrastructure/ConfigurationUtils.Tests.ps1:429 char:15<br>    +             { Test-CsvFormatConfig -Config $configWithoutCsvFormat }  …<br>    +               ~~~~~~~~~~~~~~~~~~~~
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">無効なエンコーディングの場合、警告を出力する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Test-CsvFormatConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">has_header設定が不足している場合（provided_data, current_data）、エラーをスローする</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception with message like '*has_header*設定が必要です*' to be thrown, but the message was 'The term 'Test-CsvFormatConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.'. from /workspaces/ps-sqlite/tests/Utils/Infrastructure/ConfigurationUtils.Tests.ps1:470 char:15<br>    +             { Test-CsvFormatConfig -Config $configWithoutHasHeader }  …<br>    +               ~~~~~~~~~~~~~~~~~~~~
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">include_header設定が不足している場合（output）、エラーをスローする</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception with message like '*include_header*設定が必要です*' to be thrown, but the message was 'The term 'Test-CsvFormatConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.'. from /workspaces/ps-sqlite/tests/Utils/Infrastructure/ConfigurationUtils.Tests.ps1:486 char:15<br>    +             { Test-CsvFormatConfig -Config $configWithoutIncludeHeade …<br>    +               ~~~~~~~~~~~~~~~~~~~~
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">不正なJSON構造の詳細なエラー処理</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception to be thrown, but no exception was thrown.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">設定が存在する場合、その設定を返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">error_handling設定が存在しない場合、デフォルト設定を生成する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">設定取得でエラーが発生した場合、最低限のフォールバック設定を返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Get-ErrorHandlingConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">External カテゴリでエラーが発生した場合、設定に従ってリトライする</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected 3, but got 0.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">リトライ対象外カテゴリ（System）の場合、リトライしない</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected 1, but got 0.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">エラー時にクリーンアップスクリプトが実行される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected $true, but got $false.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">設定されたエラーレベルを正しく返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Get-ErrorLevel' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">設定されていないカテゴリの場合、デフォルトレベルを返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Get-ErrorLevel' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">設定された継続フラグを正しく返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Get-ShouldContinueOnError' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">設定されていないカテゴリの場合、デフォルト（false）を返す</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Get-ShouldContinueOnError' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">基本的なエラー情報をログ出力する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Write-ErrorDetails' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">スタックトレースが設定されている場合、スタックトレースを出力する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Write-ErrorDetails' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">コンテキスト情報が提供された場合、コンテキストを出力する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Write-ErrorDetails' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">カテゴリ別の対処方法メッセージを出力する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                The term 'Write-ErrorDetails' is not recognized as a name of a cmdlet, function, script file, or executable program.<br>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">ファイル操作でエラーが発生した場合、External カテゴリでエラーハンドリングされる</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected 2, but got 0.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">適切なコンテキスト情報が設定される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected a value, but got $null or empty.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">ErrorCategory 列挙型が正しく定義されている</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Unable to find type [ErrorCategory].
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">ErrorCategory を文字列として正しく変換できる</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Unable to find type [ErrorCategory].
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">長時間実行されるリトライ処理のタイムアウト</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected the actual value to be less than 2.0, but got 3.0536549.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">無効なログレベルで警告が出力される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Should -Invoke: Could not find Mock for command Write-Warning in module LoggingUtils. Was the mock defined? Did you use the same -ModuleName as on the Mock? When using InModuleScope are InModuleScope, Mock and Should -Invoke using the same -ModuleName?
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">最大ファイル数を超える古いログファイルが削除される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected $false, but got $true.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">空のメッセージでもログが記録される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Cannot bind argument to parameter 'Message' because it is an empty string.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">特殊文字を含むメッセージが正常に処理される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected regular expression '[regex]::Escape' to match '[2023-12-01 12:00:00] [Info] 特殊文字テスト: "引用符" & アンパサンド < 不等号 > | パイプ<br>', because 特殊文字テスト: "引用符" & アンパサンド < 不等号 > | パイプ, but it did not match.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">有効なファイルが履歴ディレクトリに正常にコピーされる</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected regular expression '[regex]::Escape' to match '/workspaces/ps-sqlite/test-data/temp/filesystem/history/source_20231201_120000.csv', because /workspaces/ps-sqlite/test-data/temp/filesystem/history, but it did not match.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">相対パスが絶対パスに変換される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected regular expression '[regex]::Escape' to match '/workspaces/ps-sqlite/relative/path/file.csv', because relative, but it did not match.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">ヘッダーなしCSVファイルが正常に読み込まれる</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Cannot process argument transformation on parameter 'Encoding'. Cannot convert the "UTF8" value of type "System.String" to type "System.Text.Encoding".
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">有効なCSVファイルで検証が成功する</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected $true, but got $false.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">空のCSVファイルで検証が成功する（allow_empty_file=true）</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected Write-SystemLog in module CsvProcessingUtils to be called at least 1 times, but was called 0 times
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">不正なCSVファイルで例外がスローされる</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception with message like '*不正なCSV形式*' to be thrown, but no exception was thrown.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">破損したファイルで適切にエラーがハンドリングされる</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception to be thrown, but no exception was thrown.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">空文字列のテーブル名でも一時テーブル名が生成される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Cannot bind argument to parameter 'BaseTableName' because it is an empty string.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">フィルタあり結果で統計が正常に表示される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">全件除外の場合で統計が正常に表示される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">全件通過の場合で除外警告が表示されない</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">除外データが正常にKEEP用テーブルに保存される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">SQLiteコマンド実行エラーが適切に処理される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception with message like '*データベース接続エラー*' to be thrown, but no exception was thrown.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">Get-CsvColumnsエラーが適切に処理される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception with message like '*カラム取得エラー*' to be thrown, but no exception was thrown.
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">FilteredCountがTotalCountより大きい場合も処理される</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">provided_dataの除外データ保存シナリオ</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">current_dataの除外データ保存シナリオ</div>
+            <div class="test-time">実行時間: </div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times
+            </div>
+        </div></div>    <div class="test-details">
+        <h3>すべてのテスト結果</h3>
+        <table>
+            <tr>
+                <th>テスト名</th>
+                <th>結果</th>
+                <th>実行時間</th>
+                <th>詳細</th>
+            </tr>            <tr>
+                <td>sqlite3コマンドが利用可能な場合、コマンド情報を返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>sqlite3コマンドが見つからない場合、エラーをスローする</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception with message like '*sqlite3コマンドが見つかりません*' to be thrown, but no exception was thrown.</td>
+            </tr>            <tr>
+                <td>Get-Commandでエラーが発生した場合、適切なエラーメッセージをスローする</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception with message like '*SQLite3コマンドの取得に失敗しました*' to be thrown, but no exception was thrown.</td>
+            </tr>            <tr>
+                <td>PowerShell Core (6+) の場合、UTF8 (BOM なし) を返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>Windows PowerShell (5.1) の場合、UTF8 (BOM あり) を返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>有効なパスが存在する場合、Trueを返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected $true, but got $false.</td>
+            </tr>            <tr>
+                <td>パスが存在しない場合、Falseを返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>パスがnullまたは空の場合、Falseを返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>Test-Pathが呼び出されない場合（null/空文字）</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>デフォルトフォーマットでAsia/Tokyoタイムスタンプを返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>カスタムフォーマットでタイムスタンプを返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>異なるタイムゾーンでタイムスタンプを返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>無効なタイムゾーンの場合、フォールバック（UTC+9）を使用する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>正常なクエリの場合、結果を返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>SQLite3の実行に失敗しました: sqlite3コマンドエラー (終了コード: 1 ,クエリ：SELECT * FROM test_table; ,結果：Error: unable to open database "/test/database.db": unable to open database file ）</td>
+            </tr>            <tr>
+                <td>SQLiteコマンドがエラーを返す場合、例外をスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>一時ファイルが適切に作成・削除される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>SQLite3の実行に失敗しました: sqlite3コマンドエラー (終了コード: 1 ,クエリ：SELECT 1; ,結果：Error: unable to open database "/test/database.db": unable to open database file ）</td>
+            </tr>            <tr>
+                <td>CSVクエリ結果を正しくパースして返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>SQLiteコマンド実行エラー: Error: unable to open database "/test/database.db": unable to open database file</td>
+            </tr>            <tr>
+                <td>空の結果の場合、空配列を返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>SQLiteコマンド実行エラー: Error: unable to open database "/test/database.db": unable to open database file</td>
+            </tr>            <tr>
+                <td>SQLiteエラーの場合、例外をスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>CSV出力が正常に実行される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>SQLite3 CSV出力の実行に失敗しました: sqlite3 CSV出力エラー (終了コード: 1): Error: unable to open database "/test/database.db": unable to open database file</td>
+            </tr>            <tr>
+                <td>空の結果の場合、0を返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>SQLite3 CSV出力の実行に失敗しました: sqlite3 CSV出力エラー (終了コード: 1): Error: unable to open database "/test/database.db": unable to open database file</td>
+            </tr>            <tr>
+                <td>SQLiteエラーの場合、例外をスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>すべての期待される関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>実際のタイムスタンプとエンコーディングの組み合わせテスト</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>Test-PathSafeとGet-Timestampの組み合わせテスト</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>Get-Timestamp でフォーマット文字列が無効な場合の処理</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>Invoke-SqliteCommand で空のクエリを処理</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected no exception to be thrown, but an exception "SQLite3の実行に失敗しました: sqlite3コマンドエラー (終了コード: 1 ,クエリ：  ,結果：Error: unable to open database "/test/database.db": unable to open database file ）" was thrown from /workspaces/ps-sqlite/scripts/modules/Utils/Foundation/CoreUtils.psm1:112 char:9
+    +         throw "SQLite3の実行に失敗しました: $($_.Exception.Message)"
+    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.</td>
+            </tr>            <tr>
+                <td>複数の同時実行でのタイムスタンプ一意性確認</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>初回読み込み時、設定ファイルから正しく設定を読み込む</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>キャッシュされた設定がある場合、ファイルを再読み込みしない</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>Forceスイッチ使用時、キャッシュを無視して再読み込みする</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected strings to be the same, but they were different.
+String lengths are both 5.
+Strings differ at index 0.
+Expected: '2.0.0'
+But was:  '1.0.0'
+           ^</td>
+            </tr>            <tr>
+                <td>設定ファイルが存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>テスト環境で設定パスが未指定の場合、デフォルト設定を使用する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
+            </tr>            <tr>
+                <td>非テスト環境で設定パス未指定の場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>JSON解析エラーの場合、適切なエラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>file_paths設定が存在する場合、その設定を返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>file_paths設定が存在しない場合、デフォルト値を生成する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>部分的なfile_paths設定の場合、欠損項目にデフォルト値を設定する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>logging設定が存在する場合、その設定を返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>logging設定が存在しない場合、デフォルト値を生成する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>指定されたテーブルのフィルタ設定が存在する場合、その設定を返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>指定されたテーブルのフィルタ設定が存在しない場合、nullを返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>data_filters設定自体が存在しない場合、nullを返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>sync_result_mapping設定が存在する場合、その設定を返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>sync_result_mapping設定が存在しない場合、エラーをスローする</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>sync_rules設定自体が存在しない場合、エラーをスローする</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>有効な設定の場合、エラーなく完了する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected no exception to be thrown, but an exception "設定の検証に失敗しました: テーブル 'IsReadOnly' のカラムが定義されていません。" was thrown from /workspaces/ps-sqlite/scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1:180 char:9
+    +         throw "設定の検証に失敗しました: $($_.Exception.Message)"
+    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~.</td>
+            </tr>            <tr>
+                <td>tables設定が存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>必須テーブルが不足している場合、エラーをスローする</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception with message like '*必須テーブル*定義が見つかりません*' to be thrown, but the message was '設定の検証に失敗しました: テーブル 'IsReadOnly' のカラムが定義されていません。'. from /workspaces/ps-sqlite/scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1:180 char:9
+    +         throw "設定の検証に失敗しました: $($_.Exception.Message)"
+    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</td>
+            </tr>            <tr>
+                <td>テーブルのカラム定義が空の場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>有効なCSVフォーマット設定の場合、エラーなく完了する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected no exception to be thrown, but an exception "The term 'Test-CsvFormatConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again." was thrown from /workspaces/ps-sqlite/tests/Utils/Infrastructure/ConfigurationUtils.Tests.ps1:421 char:15
+    +             { Test-CsvFormatConfig -Config $validCsvConfig } | Should …
+    +               ~~~~~~~~~~~~~~~~~~~~.</td>
+            </tr>            <tr>
+                <td>csv_format設定が存在しない場合、エラーをスローする</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception with message like '*csv_format設定が見つかりません*' to be thrown, but the message was 'The term 'Test-CsvFormatConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.'. from /workspaces/ps-sqlite/tests/Utils/Infrastructure/ConfigurationUtils.Tests.ps1:429 char:15
+    +             { Test-CsvFormatConfig -Config $configWithoutCsvFormat }  …
+    +               ~~~~~~~~~~~~~~~~~~~~</td>
+            </tr>            <tr>
+                <td>無効なエンコーディングの場合、警告を出力する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Test-CsvFormatConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>has_header設定が不足している場合（provided_data, current_data）、エラーをスローする</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception with message like '*has_header*設定が必要です*' to be thrown, but the message was 'The term 'Test-CsvFormatConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.'. from /workspaces/ps-sqlite/tests/Utils/Infrastructure/ConfigurationUtils.Tests.ps1:470 char:15
+    +             { Test-CsvFormatConfig -Config $configWithoutHasHeader }  …
+    +               ~~~~~~~~~~~~~~~~~~~~</td>
+            </tr>            <tr>
+                <td>include_header設定が不足している場合（output）、エラーをスローする</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception with message like '*include_header*設定が必要です*' to be thrown, but the message was 'The term 'Test-CsvFormatConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.'. from /workspaces/ps-sqlite/tests/Utils/Infrastructure/ConfigurationUtils.Tests.ps1:486 char:15
+    +             { Test-CsvFormatConfig -Config $configWithoutIncludeHeade …
+    +               ~~~~~~~~~~~~~~~~~~~~</td>
+            </tr>            <tr>
+                <td>設定キャッシュが正しくクリアされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>すべての期待される関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>巨大な設定ファイルの処理</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>並行アクセス時の設定キャッシュの動作</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>不正なJSON構造の詳細なエラー処理</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception to be thrown, but no exception was thrown.</td>
+            </tr>            <tr>
+                <td>設定が存在する場合、その設定を返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>error_handling設定が存在しない場合、デフォルト設定を生成する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Mock-ConfigurationSystem' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>設定取得でエラーが発生した場合、最低限のフォールバック設定を返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Get-ErrorHandlingConfig' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>正常なスクリプトブロックの場合、結果を返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>エラーハンドリングが無効の場合、直接実行する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>スクリプトブロックでエラーが発生した場合、例外を再スローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>SuppressThrowスイッチが有効な場合、エラーでもnullを返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>External カテゴリでエラーが発生した場合、設定に従ってリトライする</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected 3, but got 0.</td>
+            </tr>            <tr>
+                <td>リトライ対象外カテゴリ（System）の場合、リトライしない</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected 1, but got 0.</td>
+            </tr>            <tr>
+                <td>最大試行回数に達した場合、最終的にエラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>エラー時にクリーンアップスクリプトが実行される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected $true, but got $false.</td>
+            </tr>            <tr>
+                <td>クリーンアップスクリプトでエラーが発生しても、元のエラーが優先される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>cleanup_on_error設定がfalseの場合、クリーンアップが実行されない</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>Data カテゴリでcontinue_on_errorがtrueの場合、エラーでも継続する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>System カテゴリでcontinue_on_errorがfalseの場合、エラーで停止する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>設定されたエラーレベルを正しく返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Get-ErrorLevel' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>設定されていないカテゴリの場合、デフォルトレベルを返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Get-ErrorLevel' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>設定された継続フラグを正しく返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Get-ShouldContinueOnError' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>設定されていないカテゴリの場合、デフォルト（false）を返す</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Get-ShouldContinueOnError' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>基本的なエラー情報をログ出力する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Write-ErrorDetails' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>スタックトレースが設定されている場合、スタックトレースを出力する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Write-ErrorDetails' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>コンテキスト情報が提供された場合、コンテキストを出力する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Write-ErrorDetails' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>カテゴリ別の対処方法メッセージを出力する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>The term 'Write-ErrorDetails' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</td>
+            </tr>            <tr>
+                <td>ファイル操作が正常な場合、結果を返す</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ファイル操作でエラーが発生した場合、External カテゴリでエラーハンドリングされる</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected 2, but got 0.</td>
+            </tr>            <tr>
+                <td>適切なコンテキスト情報が設定される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected a value, but got $null or empty.</td>
+            </tr>            <tr>
+                <td>すべての期待される関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorCategory 列挙型が正しく定義されている</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Unable to find type [ErrorCategory].</td>
+            </tr>            <tr>
+                <td>ErrorCategory を文字列として正しく変換できる</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Unable to find type [ErrorCategory].</td>
+            </tr>            <tr>
+                <td>複雑なネストしたエラーハンドリング</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>長時間実行されるリトライ処理のタイムアウト</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected the actual value to be less than 2.0, but got 3.0536549.</td>
+            </tr>            <tr>
+                <td>メモリ使用量の大きなエラーコンテキスト処理</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>有効なメッセージでログが正常に出力される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>異なるログレベルで正常に出力される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複数のログメッセージが順次追記される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>日本語メッセージが正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ログディレクトリが存在しない場合、自動作成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ログ設定が無効の場合、ログファイルが作成されない</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>無効なログレベルで警告が出力される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Should -Invoke: Could not find Mock for command Write-Warning in module LoggingUtils. Was the mock defined? Did you use the same -ModuleName as on the Mock? When using InModuleScope are InModuleScope, Mock and Should -Invoke using the same -ModuleName?</td>
+            </tr>            <tr>
+                <td>ログファイルが正常にローテーションされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>最大ファイル数を超える古いログファイルが削除される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected $false, but got $true.</td>
+            </tr>            <tr>
+                <td>ログファイルが存在しない場合でもエラーが発生しない</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ファイルサイズ制限を超えた場合、自動でローテーションされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>書き込み権限がない場合でもエラーで停止しない</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>空のメッセージでもログが記録される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Cannot bind argument to parameter 'Message' because it is an empty string.</td>
+            </tr>            <tr>
+                <td>非常に長いメッセージでも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>特殊文字を含むメッセージが正常に処理される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected regular expression '[regex]::Escape' to match '[2023-12-01 12:00:00] [Info] 特殊文字テスト: "引用符" & アンパサンド < 不等号 > | パイプ
+', because 特殊文字テスト: "引用符" & アンパサンド < 不等号 > | パイプ, but it did not match.</td>
+            </tr>            <tr>
+                <td>設定ファイルの変更がログ出力に反映される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>大量のログ出力でも一定時間内に完了する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>必要な関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>有効なテーブル名でテーブル定義が取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>一時テーブル名（_tempサフィックス）でベーステーブル定義が取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>無効なテーブル名で例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複数のテーブル定義が設定から正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>CSV出力対象カラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>sync_resultテーブルのCSVカラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>一時テーブルでもCSVカラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>必須カラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>current_dataテーブルの必須カラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>sync_resultテーブルの必須カラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>テーブルが存在する場合、正常にクリアされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>テーブルが存在しない場合、スキップメッセージが出力される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ShowStatistics=falseの場合、カウント処理がスキップされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>基本的なテーブル作成SQLが正常に生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>一時テーブルでも正常にSQL生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>PRIMARY KEY制約を含むテーブルでSQL生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>UNIQUE制約がテーブル制約として正常に生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複数のテーブル制約が正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>無効なテーブル名で例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>New-CreateIndexSql関数が存在する場合、インデックス作成SQLが生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>SQLiteコマンド実行エラーが適切に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>設定ファイル読み込みエラーが適切に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>空のカラム定義でも例外が発生しない</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>制約なしテーブルでもSQL生成が正常に動作する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>大きなテーブル定義でも一定時間内にSQL生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>カスタム設定ファイルからテーブル定義が正常に読み込まれる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>必要な関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>基本的なファイル名でタイムスタンプ付きファイル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>拡張子なしファイル名でデフォルト拡張子が使用される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>カスタム拡張子が正常に使用される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複数の拡張子を含むファイル名で正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>日本語ファイル名でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>パス区切り文字を含むファイル名でベース名のみが使用される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>特殊文字を含むファイル名でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>有効なファイルが履歴ディレクトリに正常にコピーされる</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected regular expression '[regex]::Escape' to match '/workspaces/ps-sqlite/test-data/temp/filesystem/history/source_20231201_120000.csv', because /workspaces/ps-sqlite/test-data/temp/filesystem/history, but it did not match.</td>
+            </tr>            <tr>
+                <td>履歴ディレクトリが存在しない場合、自動作成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>履歴ディレクトリが既に存在する場合、作成ログが出力されない</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ソースファイルが存在しない場合、例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>大きなファイルでも正常にコピーされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>日本語を含むファイルでも正常にコピーされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>パラメータが指定された場合、パラメータが優先される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>パラメータが未指定の場合、設定ファイルから取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>パラメータも設定ファイルも無効な場合、例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>無効なConfigKeyが指定された場合、例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>相対パスが絶対パスに変換される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected regular expression '[regex]::Escape' to match '/workspaces/ps-sqlite/relative/path/file.csv', because relative, but it did not match.</td>
+            </tr>            <tr>
+                <td>絶対パスがそのまま返される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>空文字列パラメータの場合、設定ファイルから取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>null パラメータの場合、設定ファイルから取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>読み取り専用ディレクトリでも履歴保存が試行される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>非常に長いパスでも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>特殊文字を含むパスでも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>空のファイルでも履歴保存が正常に動作する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>カスタム設定ファイルからファイルパスが正常に読み込まれる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複数のタイムスタンプで異なる履歴ファイル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複数ファイルの履歴保存が一定時間内に完了する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>必要な関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>provided_dataテーブルのCSV設定が正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>current_dataテーブルのCSV設定が正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>sync_resultテーブル（output設定）が正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>無効なテーブル名で例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>設定ファイルエラーが適切にハンドリングされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>UTF-8がUTF8に変換される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>UTF-16がUnicodeに変換される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>SHIFT_JISが正常に変換される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>小文字のエンコーディング名でも正常に変換される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>未サポートのエンコーディング名でUTF8がデフォルトとして返される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ASCIIエンコーディングが正常に変換される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ISO-8859-1がLatin1に変換される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ヘッダー付きCSVファイルが正常に読み込まれる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ヘッダーなしCSVファイルが正常に読み込まれる</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Cannot process argument transformation on parameter 'Encoding'. Cannot convert the "UTF8" value of type "System.String" to type "System.Text.Encoding".</td>
+            </tr>            <tr>
+                <td>null値が正常に変換される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>日本語を含むCSVファイルが正常に読み込まれる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>存在しないファイルで例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>空のCSVファイルで空の配列が返される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>有効なCSVファイルで検証が成功する</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected $true, but got $false.</td>
+            </tr>            <tr>
+                <td>空のCSVファイルで検証が成功する（allow_empty_file=true）</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected Write-SystemLog in module CsvProcessingUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>空のCSVファイルで検証が失敗する（allow_empty_file=false）</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>不正なCSVファイルで例外がスローされる</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception with message like '*不正なCSV形式*' to be thrown, but no exception was thrown.</td>
+            </tr>            <tr>
+                <td>非常に大きなCSVファイルでも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>特殊文字を含むCSVファイルが正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>異なる区切り文字のCSVファイルが正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>破損したファイルで適切にエラーがハンドリングされる</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception to be thrown, but no exception was thrown.</td>
+            </tr>            <tr>
+                <td>カスタムCSV設定が正常に適用される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複数のCSV設定が同時に利用できる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複数のCSVファイル処理が一定時間内に完了する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>必要な関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>基本的なテーブル名で一時テーブル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>current_dataテーブルで一時テーブル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>sync_resultテーブルで一時テーブル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>カスタムテーブル名で一時テーブル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>既に_tempサフィックスがあるテーブル名でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>空文字列のテーブル名でも一時テーブル名が生成される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Cannot bind argument to parameter 'BaseTableName' because it is an empty string.</td>
+            </tr>            <tr>
+                <td>フィルタあり結果で統計が正常に表示される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>フィルタなし結果で統計が正常に表示される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>全件除外の場合で統計が正常に表示される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>全件通過の場合で除外警告が表示されない</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>データ件数が0の場合で統計が正常に表示される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>少数点を含む通過率が正しく計算される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>除外データが正常にKEEP用テーブルに保存される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>フィルタ条件がない場合、処理がスキップされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>空白文字のみのフィルタ条件でも処理がスキップされる</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>除外データが0件の場合でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複雑なフィルタ条件でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>SQLiteコマンド実行エラーが適切に処理される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception with message like '*データベース接続エラー*' to be thrown, but no exception was thrown.</td>
+            </tr>            <tr>
+                <td>Get-CsvColumnsエラーが適切に処理される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected an exception with message like '*カラム取得エラー*' to be thrown, but no exception was thrown.</td>
+            </tr>            <tr>
+                <td>負の数値での統計表示も正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>FilteredCountがTotalCountより大きい場合も処理される</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>非常に長いテーブル名でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>特殊文字を含むテーブル名でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>provided_dataの除外データ保存シナリオ</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>current_dataの除外データ保存シナリオ</td>
+                <td class="failed">Failed</td>
+                <td></td>
+                <td>Expected Write-SystemLog in module DataFilteringUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>大量データでの統計表示が一定時間内に完了する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複数の一時テーブル名生成が効率的に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>必要な関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>有効なパラメータで正常に処理を完了する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabasePathが未指定の場合、デフォルトパスを設定する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>設定ファイル読み込みが正常に実行される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>SQLite3コマンドが利用可能な場合、成功メッセージをログ出力する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>SQLite3コマンドが見つからない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>実ファイルを使ったパス解決テスト</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>パラメータで指定されたパスが優先される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>パラメータが未指定の場合、設定ファイルから解決される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>解決されたパスでファイル存在チェックが実行される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ファイル存在チェックでエラーが発生した場合、例外をスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>処理パラメータが適切にログ出力される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>各処理段階で適切な進捗ログが出力される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>すべてのファイルが存在する場合、正常に完了する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>提供データファイルが存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>現在データファイルが存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>出力ディレクトリが存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>Invoke-ConfigValidation 関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>空のProjectRootパラメータでエラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>無効なProjectRootパスでエラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>設定検証でエラーが発生した場合、適切にエラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>日本語データを含むファイルパスの処理</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>複数のパラメータが同時に指定された場合の優先順位</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>非常に長いファイルパスでも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>完全なデータ同期処理が正常に実行される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>空のデータファイルでも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>処理されたファイルが履歴ディレクトリに自動保存される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>GLOBパターンによるフィルタリングが正常に動作する</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>不正なCSVファイルでもエラーハンドリングされて処理が継続される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>フィルタリング無効設定で全データが処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>中程度のデータ量（100件）で正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>ログファイルが適切に生成される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>            <tr>
+                <td>コマンドラインパラメータが設定ファイルより優先される</td>
+                <td class="passed">Passed</td>
+                <td></td>
+                <td></td>
+            </tr>        </table>
+    </div>
+</body>
+</html>

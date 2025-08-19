@@ -18,6 +18,54 @@ param(
 $ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.FullName
 $TestsRoot = $PSScriptRoot
 
+# テストファイルパスからモジュール名を抽出
+function Get-ModuleNameFromTest {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TestPath
+    )
+    
+    # ファイル名からモジュール名を抽出
+    $fileName = [System.IO.Path]::GetFileNameWithoutExtension($TestPath)
+    
+    # .Tests サフィックスを削除
+    if ($fileName.EndsWith(".Tests")) {
+        $moduleName = $fileName.Substring(0, $fileName.Length - 6)
+    }
+    else {
+        $moduleName = $fileName
+    }
+    
+    # テストファイルのディレクトリ構造から分類を取得
+    $relativePath = $TestPath -replace [regex]::Escape($TestsRoot), ""
+    $relativePath = $relativePath.TrimStart("\", "/")
+    
+    if ($relativePath -match "^Integration") {
+        return "Integration/$moduleName"
+    }
+    elseif ($relativePath -match "^Process") {
+        return "Process/$moduleName"
+    }
+    elseif ($relativePath -match "^Utils\\Foundation") {
+        return "Utils/Foundation/$moduleName"
+    }
+    elseif ($relativePath -match "^Utils\\Infrastructure") {
+        return "Utils/Infrastructure/$moduleName"
+    }
+    elseif ($relativePath -match "^Utils\\DataAccess") {
+        return "Utils/DataAccess/$moduleName"
+    }
+    elseif ($relativePath -match "^Utils\\DataProcessing") {
+        return "Utils/DataProcessing/$moduleName"
+    }
+    elseif ($relativePath -match "^Utils") {
+        return "Utils/$moduleName"
+    }
+    else {
+        return $moduleName
+    }
+}
+
 # 必要なモジュールの確認とインストール
 function Install-RequiredModules {
     $requiredModules = @("Pester")
@@ -177,6 +225,63 @@ function New-HtmlReport {
             <tr><td>実行時間</td><td>$($TestResult.Time)</td></tr>
         </table>
     </div>
+    
+    <div class="module-summary">
+        <h3>モジュール別実行結果</h3>
+        <table>
+            <tr><th>モジュール</th><th>総数</th><th>成功</th><th>失敗</th><th>スキップ</th><th>実行時間</th></tr>
+"@
+
+    # モジュール別統計を集計
+    $moduleStats = @{}
+    foreach ($test in $TestResult.Tests) {
+        # テスト結果のDescribeブロック名から取得を試行
+        $describeName = if ($test.Block) { $test.Block } else { $test.Name }
+        $moduleName = if ($describeName -match "(.+?)\s+モジュール") {
+            $matches[1]
+        }
+        else {
+            Get-ModuleNameFromTest -TestPath $test.Path
+        }
+        if (-not $moduleStats.ContainsKey($moduleName)) {
+            $moduleStats[$moduleName] = @{
+                Total   = 0
+                Passed  = 0
+                Failed  = 0
+                Skipped = 0
+                Time    = [TimeSpan]::Zero
+            }
+        }
+        
+        $moduleStats[$moduleName].Total++
+        if ($test.Duration) {
+            $moduleStats[$moduleName].Time = $moduleStats[$moduleName].Time.Add($test.Duration)
+        }
+        
+        switch ($test.Result) {
+            "Passed" { $moduleStats[$moduleName].Passed++ }
+            "Failed" { $moduleStats[$moduleName].Failed++ }
+            "Skipped" { $moduleStats[$moduleName].Skipped++ }
+        }
+    }
+    
+    foreach ($module in ($moduleStats.Keys | Sort-Object)) {
+        $stats = $moduleStats[$module]
+        $htmlContent += @"
+            <tr>
+                <td>$module</td>
+                <td>$($stats.Total)</td>
+                <td class="passed">$($stats.Passed)</td>
+                <td class="failed">$($stats.Failed)</td>
+                <td class="skipped">$($stats.Skipped)</td>
+                <td>$($stats.Time.ToString("mm\:ss\.fff"))</td>
+            </tr>
+"@
+    }
+    
+    $htmlContent += @"
+        </table>
+    </div>
 "@
 
     if ($TestResult.Failed.Count -gt 0) {
@@ -185,9 +290,17 @@ function New-HtmlReport {
         <h3>失敗したテスト</h3>
 "@
         foreach ($failedTest in $TestResult.Failed) {
+            # テスト結果のDescribeブロック名から取得を試行
+            $describeName = if ($failedTest.Block) { $failedTest.Block } else { $failedTest.Name }
+            $failedModuleName = if ($describeName -match "(.+?)\s+モジュール") {
+                $matches[1]
+            }
+            else {
+                Get-ModuleNameFromTest -TestPath $failedTest.Path
+            }
             $htmlContent += @"
         <div class="test-container">
-            <div class="test-name">$($failedTest.Name)</div>
+            <div class="test-name">[$failedModuleName] $($failedTest.Name)</div>
             <div class="test-time">実行時間: $($failedTest.Time)</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
@@ -204,6 +317,7 @@ function New-HtmlReport {
         <h3>すべてのテスト結果</h3>
         <table>
             <tr>
+                <th>モジュール</th>
                 <th>テスト名</th>
                 <th>結果</th>
                 <th>実行時間</th>
@@ -226,11 +340,21 @@ function New-HtmlReport {
             ""
         }
         
+        # テスト結果のDescribeブロック名から取得を試行
+        $describeName = if ($test.Block) { $test.Block } else { $test.Name }
+        $moduleName = if ($describeName -match "(.+?)\s+モジュール") {
+            $matches[1]
+        }
+        else {
+            Get-ModuleNameFromTest -TestPath $test.Path
+        }
+        
         $htmlContent += @"
             <tr>
+                <td>$moduleName</td>
                 <td>$($test.Name)</td>
                 <td class="$statusClass">$($test.Result)</td>
-                <td>$($test.Time)</td>
+                <td>$($test.Time.ToString("mm\:ss\.fff"))</td>
                 <td>$details</td>
             </tr>
 "@
@@ -295,6 +419,17 @@ function Invoke-TestExecution {
         $endTime = Get-Date
         $totalDuration = $endTime - $startTime
         
+        # # テスト結果オブジェクトの構造調査（デバッグ用）
+        # if ($result.Tests.Count -gt 0) {
+        #     Write-Host ""
+        #     Write-Host "=== デバッグ: テスト結果オブジェクト構造 ===" -ForegroundColor Magenta
+        #     $firstTest = $result.Tests[0]
+        #     Write-Host "テストオブジェクトのプロパティ:" -ForegroundColor Yellow
+        #     $firstTest | Get-Member -MemberType Property | Select-Object Name, Definition | Format-Table -AutoSize
+        #     Write-Host "テストオブジェクトの値:" -ForegroundColor Yellow
+        #     $firstTest | Format-List * | Out-String | Write-Host
+        # }
+        
         # 結果の表示
         Write-Host ""
         Write-Host "=== テスト実行完了 ===" -ForegroundColor Cyan
@@ -303,6 +438,59 @@ function Invoke-TestExecution {
         Write-Host "成功: $($result.PassedCount)" -ForegroundColor Green
         Write-Host "失敗: $($result.FailedCount)" -ForegroundColor Red
         Write-Host "スキップ: $($result.SkippedCount)" -ForegroundColor Yellow
+        
+        # モジュール別統計の表示
+        Write-Host ""
+        Write-Host "=== モジュール別実行結果 ===" -ForegroundColor Cyan
+        
+        # モジュール別統計を集計
+        $moduleStats = @{}
+        foreach ($test in $result.Tests) {
+            # テスト結果のDescribeブロック名から取得を試行
+            $describeName = if ($test.Block) { $test.Block } else { $test.Name }
+            $moduleName = if ($describeName -match "(.+?)\s+モジュール") {
+                $matches[1]
+            }
+            else {
+                Get-ModuleNameFromTest -TestPath $test.Path
+            }
+            if (-not $moduleStats.ContainsKey($moduleName)) {
+                $moduleStats[$moduleName] = @{
+                    Total   = 0
+                    Passed  = 0
+                    Failed  = 0
+                    Skipped = 0
+                    Time    = [TimeSpan]::Zero
+                }
+            }
+            
+            $moduleStats[$moduleName].Total++
+            if ($test.Time) {
+                $moduleStats[$moduleName].Time = $moduleStats[$moduleName].Time.Add($test.Time)
+            }
+            
+            switch ($test.Result) {
+                "Passed" { $moduleStats[$moduleName].Passed++ }
+                "Failed" { $moduleStats[$moduleName].Failed++ }
+                "Skipped" { $moduleStats[$moduleName].Skipped++ }
+            }
+        }
+        
+        # 表形式で表示
+        $format = "{0,-35} {1,5} {2,5} {3,5} {4,5} {5,8}"
+        Write-Host ($format -f "モジュール", "総数", "成功", "失敗", "スキップ", "時間") -ForegroundColor White
+        Write-Host ($format -f "-----", "----", "----", "----", "------", "--------") -ForegroundColor Gray
+        
+        foreach ($module in ($moduleStats.Keys | Sort-Object)) {
+            $stats = $moduleStats[$module]
+            $timeString = $stats.Time.ToString("mm\:ss\.f")
+            
+            $color = if ($stats.Failed -gt 0) { "Red" } 
+            elseif ($stats.Skipped -gt 0) { "Yellow" } 
+            else { "Green" }
+            
+            Write-Host ($format -f $module, $stats.Total, $stats.Passed, $stats.Failed, $stats.Skipped, $timeString) -ForegroundColor $color
+        }
         
         # HTML レポートの生成
         if ($OutputFormat -eq "HTML") {
@@ -323,21 +511,42 @@ PowerShell & SQLite データ同期システム テスト結果
 実行日時: $(Get-Date -Format "yyyy年MM月dd日 HH:mm:ss")
 総実行時間: $($totalDuration.TotalSeconds) 秒
 
-=== サマリー ===
-総テスト数: $($result.TotalCount)
-成功: $($result.PassedCount)
-失敗: $($result.FailedCount)
-スキップ: $($result.SkippedCount)
+=== モジュール別実行結果 ===
+"@
+            
+            # モジュール別統計をテキストレポートに追加
+            foreach ($module in ($moduleStats.Keys | Sort-Object)) {
+                $stats = $moduleStats[$module]
+                $textReport += "`n$module : 総数=$($stats.Total), 成功=$($stats.Passed), 失敗=$($stats.Failed), スキップ=$($stats.Skipped), 時間=$($stats.Time.ToString("mm\:ss\.fff"))"
+            }
+            
+            $textReport += @"
 
 === 失敗したテスト ===
 "@
             
             foreach ($failedTest in $result.Failed) {
-                $textReport += "`n- $($failedTest.Name)"
+                # テスト結果のDescribeブロック名から取得を試行
+                $describeName = if ($failedTest.Block) { $failedTest.Block } else { $failedTest.Name }
+                $failedModuleName = if ($describeName -match "(.+?)\s+モジュール") {
+                    $matches[1]
+                }
+                else {
+                    Get-ModuleNameFromTest -TestPath $failedTest.Path
+                }
+                $textReport += "`n- [$failedModuleName] $($failedTest.Name)"
                 $textReport += "`n  エラー: $($failedTest.ErrorRecord.Exception.Message)"
                 $textReport += "`n"
             }
-            
+
+            $textReport += @"
+=== サマリー ===
+総テスト数: $($result.TotalCount)
+成功: $($result.PassedCount)
+失敗: $($result.FailedCount)
+スキップ: $($result.SkippedCount)
+"@
+
             $textReport | Out-File -FilePath $OutputPath -Encoding UTF8
             Write-Host "テキストレポートを生成しました: $OutputPath" -ForegroundColor Green
         }
@@ -360,6 +569,15 @@ PowerShell & SQLite データ同期システム テスト結果
                 }
             }
         }
+
+        # 結果の表示
+        Write-Host ""
+        Write-Host "=== テスト実行完了 ===" -ForegroundColor Cyan
+        Write-Host "総実行時間: $($totalDuration.TotalSeconds) 秒" -ForegroundColor Gray
+        Write-Host "総テスト数: $($result.TotalCount)" -ForegroundColor White
+        Write-Host "成功: $($result.PassedCount)" -ForegroundColor Green
+        Write-Host "失敗: $($result.FailedCount)" -ForegroundColor Red
+        Write-Host "スキップ: $($result.SkippedCount)" -ForegroundColor Yellow
         
         # 終了コードの設定
         if ($result.FailedCount -gt 0) {
