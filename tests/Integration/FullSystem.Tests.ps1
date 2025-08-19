@@ -152,12 +152,12 @@ Describe "フルシステム統合テスト" {
             
             # SQLite3コマンドのモック化（実際のSQLiteを使用）
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
-                Mock-SqliteCommand -ReturnValue "" -ExitCode 0
+                New-MockSqliteCommand -ReturnValue "" -ExitCode 0
             }
             
             # Act
             # メインスクリプトの実行
-            $result = & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
+            & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
             
             # Assert
             # 出力ファイルが生成されていることを確認
@@ -203,7 +203,7 @@ Describe "フルシステム統合テスト" {
             "" | Out-File -FilePath $providedCsvPath -Encoding UTF8
             
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
-                Mock-SqliteCommand -ReturnValue "" -ExitCode 0
+                New-MockSqliteCommand -ReturnValue "" -ExitCode 0
             }
             
             # Act
@@ -235,7 +235,7 @@ Describe "フルシステム統合テスト" {
             $currentData | Export-Csv -Path $currentCsvPath -NoTypeInformation -Encoding UTF8
             
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
-                Mock-SqliteCommand -ReturnValue "" -ExitCode 0
+                New-MockSqliteCommand -ReturnValue "" -ExitCode 0
             }
             
             # Act
@@ -291,7 +291,7 @@ Describe "フルシステム統合テスト" {
             $currentData | Export-Csv -Path $currentCsvPath -NoTypeInformation -Encoding UTF8
             
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
-                Mock-SqliteCommand -ReturnValue "" -ExitCode 0
+                New-MockSqliteCommand -ReturnValue "" -ExitCode 0
             }
             
             # Act
@@ -335,7 +335,7 @@ E003,C003
             $validCurrentData | Export-Csv -Path $validCurrentCsvPath -NoTypeInformation -Encoding UTF8
             
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
-                Mock-SqliteCommand -ReturnValue "" -ExitCode 0
+                New-MockSqliteCommand -ReturnValue "" -ExitCode 0
             }
             
             # Act & Assert
@@ -382,7 +382,7 @@ E003,C003
             $currentData | Export-Csv -Path $currentCsvPath -NoTypeInformation -Encoding UTF8
             
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
-                Mock-SqliteCommand -ReturnValue "" -ExitCode 0
+                New-MockSqliteCommand -ReturnValue "" -ExitCode 0
             }
             
             # Act
@@ -411,7 +411,7 @@ E003,C003
             $currentData | Export-Csv -Path $currentCsvPath -NoTypeInformation -Encoding UTF8
             
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
-                Mock-SqliteCommand -ReturnValue "" -ExitCode 0
+                New-MockSqliteCommand -ReturnValue "" -ExitCode 0
             }
             
             # Act
@@ -457,7 +457,7 @@ E003,C003
             "user_id,card_number,name,department,position,email,phone,hire_date" | Out-File -FilePath $currentCsvPath -Encoding UTF8
             
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
-                Mock-SqliteCommand -ReturnValue "" -ExitCode 0
+                New-MockSqliteCommand -ReturnValue "" -ExitCode 0
             }
             
             # Act
@@ -498,7 +498,7 @@ E003,C003
             "user_id,card_number,name,department,position,email,phone,hire_date" | Out-File -FilePath $paramCurrentCsvPath -Encoding UTF8
             
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
-                Mock-SqliteCommand -ReturnValue "" -ExitCode 0
+                New-MockSqliteCommand -ReturnValue "" -ExitCode 0
             }
             
             # Act

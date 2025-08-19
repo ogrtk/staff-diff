@@ -58,7 +58,7 @@ Describe "ErrorHandlingUtils モジュール" {
     
     BeforeEach {
         Reset-AllMocks
-        Mock-LoggingSystem -CaptureMessages -SuppressOutput
+        New-MockLoggingSystem -CaptureMessages -SuppressOutput
     }
 
     Context "Get-ErrorHandlingConfig 関数" {
@@ -97,7 +97,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "設定取得でエラーが発生した場合、最低限のフォールバック設定を返す" {
             # Arrange
-            Mock-Command -CommandName "Get-DataSyncConfig" -MockScript {
+            New-MockCommand -CommandName "Get-DataSyncConfig" -MockScript {
                 throw "設定取得エラー"
             }
             
@@ -116,7 +116,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "正常なスクリプトブロックの場合、結果を返す" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             $testScript = { return "成功" }
             
             # Act
@@ -129,7 +129,7 @@ Describe "ErrorHandlingUtils モジュール" {
         It "エラーハンドリングが無効の場合、直接実行する" {
             # Arrange
             $disabledErrorConfig = @{ enabled = $false }
-            Mock-ErrorHandling -ErrorConfig $disabledErrorConfig
+            New-MockErrorHandling -ErrorConfig $disabledErrorConfig
             $testScript = { return "直接実行" }
             
             # Act
@@ -141,7 +141,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "スクリプトブロックでエラーが発生した場合、例外を再スローする" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             $errorScript = { throw "テストエラー" }
             
             # Act & Assert
@@ -150,7 +150,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "SuppressThrowスイッチが有効な場合、エラーでもnullを返す" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             $errorScript = { throw "テストエラー" }
             
             # Act
@@ -168,7 +168,7 @@ Describe "ErrorHandlingUtils モジュール" {
             $retryConfig = $script:DefaultErrorConfig.Clone()
             $retryConfig.retry_settings.max_attempts = 3
             $retryConfig.retry_settings.delay_seconds = @(0, 0, 0)  # 待機時間を0にしてテストを高速化
-            Mock-ErrorHandling -ErrorConfig $retryConfig
+            New-MockErrorHandling -ErrorConfig $retryConfig
             
             $attemptCount = 0
             $retryScript = {
@@ -189,7 +189,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "リトライ対象外カテゴリ（System）の場合、リトライしない" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             
             $attemptCount = 0
             $noRetryScript = {
@@ -207,7 +207,7 @@ Describe "ErrorHandlingUtils モジュール" {
             $retryConfig = $script:DefaultErrorConfig.Clone()
             $retryConfig.retry_settings.max_attempts = 2
             $retryConfig.retry_settings.delay_seconds = @(0, 0)
-            Mock-ErrorHandling -ErrorConfig $retryConfig
+            New-MockErrorHandling -ErrorConfig $retryConfig
             
             $alwaysFailScript = { throw "常に失敗" }
             
@@ -220,7 +220,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "エラー時にクリーンアップスクリプトが実行される" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             
             $cleanupExecuted = $false
             $cleanupScript = { $script:cleanupExecuted = $true }
@@ -240,7 +240,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "クリーンアップスクリプトでエラーが発生しても、元のエラーが優先される" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             
             $cleanupScript = { throw "クリーンアップエラー" }
             $originalErrorScript = { throw "元のエラー" }
@@ -253,7 +253,7 @@ Describe "ErrorHandlingUtils モジュール" {
             # Arrange
             $noCleanupConfig = $script:DefaultErrorConfig.Clone()
             $noCleanupConfig.cleanup_on_error = $false
-            Mock-ErrorHandling -ErrorConfig $noCleanupConfig
+            New-MockErrorHandling -ErrorConfig $noCleanupConfig
             
             $cleanupExecuted = $false
             $cleanupScript = { $script:cleanupExecuted = $true }
@@ -278,7 +278,7 @@ Describe "ErrorHandlingUtils モジュール" {
             # Arrange
             $continueConfig = $script:DefaultErrorConfig.Clone()
             $continueConfig.continue_on_error.Data = $true
-            Mock-ErrorHandling -ErrorConfig $continueConfig
+            New-MockErrorHandling -ErrorConfig $continueConfig
             
             $errorScript = { throw "Dataエラー" }
             
@@ -291,7 +291,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "System カテゴリでcontinue_on_errorがfalseの場合、エラーで停止する" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             
             $errorScript = { throw "Systemエラー" }
             
@@ -423,7 +423,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "ファイル操作が正常な場合、結果を返す" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             $fileOperation = { return "ファイル操作成功" }
             $filePath = "/test/file.txt"
             
@@ -439,7 +439,7 @@ Describe "ErrorHandlingUtils モジュール" {
             $retryConfig = $script:DefaultErrorConfig.Clone()
             $retryConfig.retry_settings.max_attempts = 2
             $retryConfig.retry_settings.delay_seconds = @(0, 0)
-            Mock-ErrorHandling -ErrorConfig $retryConfig
+            New-MockErrorHandling -ErrorConfig $retryConfig
             
             $attemptCount = 0
             $fileOperation = {
@@ -461,14 +461,14 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "適切なコンテキスト情報が設定される" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             $fileOperation = { throw "ファイルエラー" }
             $filePath = "/test/file.txt"
             $operationType = "削除"
             
             # Invoke-WithErrorHandlingの呼び出しをモック化してコンテキストを確認
             $capturedContext = $null
-            Mock-Command -CommandName "Invoke-WithErrorHandling" -MockScript {
+            New-MockCommand -CommandName "Invoke-WithErrorHandling" -MockScript {
                 param($ScriptBlock, $Category, $Operation, $Context, $CleanupScript)
                 $script:capturedContext = $Context
                 throw "テストエラー"
@@ -530,7 +530,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "複雑なネストしたエラーハンドリング" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             
             $nestedScript = {
                 Invoke-WithErrorHandling -ScriptBlock {
@@ -551,7 +551,7 @@ Describe "ErrorHandlingUtils モジュール" {
             $timeoutConfig = $script:DefaultErrorConfig.Clone()
             $timeoutConfig.retry_settings.max_attempts = 3
             $timeoutConfig.retry_settings.delay_seconds = @(0.1, 0.1, 0.1)  # 短い間隔
-            Mock-ErrorHandling -ErrorConfig $timeoutConfig
+            New-MockErrorHandling -ErrorConfig $timeoutConfig
             
             $startTime = Get-Date
             $timeoutScript = { throw "タイムアウトテスト" }
@@ -573,7 +573,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "メモリ使用量の大きなエラーコンテキスト処理" {
             # Arrange
-            Mock-ErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             
             # 大きなコンテキストデータを作成
             $largeContext = @{}

@@ -13,8 +13,6 @@ using module ”../Utils/DataProcessing/DataFilteringUtils.psm1"
 # 設定検証とパラメータ解決の統合処理
 function Invoke-ConfigValidation {
     param(
-        [Parameter(Mandatory = $true)]
-        [string]$ProjectRoot, 
         [string]$DatabasePath = "",
         [string]$ProvidedDataFilePath = "",
         [string]$CurrentDataFilePath = "",
@@ -30,11 +28,12 @@ function Invoke-ConfigValidation {
         "OutputFilePath"       = $OutputFilePath
         "ConfigFilePath"       = $ConfigFilePath
     } -ScriptBlock {
-        
+        $PrjRoot = Find-ProjectRoot
         # DatabasePathが未指定の場合、デフォルトを設定
         $resolvedDatabasePath = $DatabasePath
         if ([string]::IsNullOrEmpty($resolvedDatabasePath)) {
-            $resolvedDatabasePath = Join-Path $ProjectRoot "database" "data-sync.db"
+            $resolvedDatabasePath = Join-Path $PrjRoot "database" "data-sync.db"
+            # $resolvedDatabasePath = Join-Path $ProjectRoot "database" "data-sync.db"
             Write-SystemLog "DatabasePathが未指定のため、デフォルトパスを使用します: $resolvedDatabasePath" -Level "Info"
         }
     

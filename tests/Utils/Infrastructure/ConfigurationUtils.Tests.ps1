@@ -53,8 +53,8 @@ Describe "ConfigurationUtils モジュール" {
         
         It "初回読み込み時、設定ファイルから正しく設定を読み込む" {
             # Arrange
-            Mock-FileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($script:ValidTestConfig | ConvertTo-Json -Depth 10) }
-            Mock-LoggingSystem -SuppressOutput
+            New-MockFileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($script:ValidTestConfig | ConvertTo-Json -Depth 10) }
+            New-MockLoggingSystem -SuppressOutput
             
             # Act
             $result = Get-DataSyncConfig -ConfigPath $script:TestConfigPath
@@ -70,16 +70,16 @@ Describe "ConfigurationUtils モジュール" {
         It "キャッシュされた設定がある場合、ファイルを再読み込みしない" {
             # Arrange
             $cachedConfig = [PSCustomObject]@{ version = "cached"; test = "data" }
-            Mock-LoggingSystem -SuppressOutput
+            New-MockLoggingSystem -SuppressOutput
             
             # 初回読み込み
-            Mock-FileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($script:ValidTestConfig | ConvertTo-Json -Depth 10) }
+            New-MockFileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($script:ValidTestConfig | ConvertTo-Json -Depth 10) }
             Get-DataSyncConfig -ConfigPath $script:TestConfigPath | Out-Null
             
             # ファイルシステムモックをリセット（2回目の呼び出しでファイル読み込みがないことを確認）
             Reset-AllMocks
-            Mock-Command -CommandName "Test-Path" -MockScript { throw "ファイルアクセスが発生した" }
-            Mock-Command -CommandName "Get-Content" -MockScript { throw "ファイル読み込みが発生した" }
+            New-MockCommand -CommandName "Test-Path" -MockScript { throw "ファイルアクセスが発生した" }
+            New-MockCommand -CommandName "Get-Content" -MockScript { throw "ファイル読み込みが発生した" }
             
             # Act
             $result = Get-DataSyncConfig
@@ -91,8 +91,8 @@ Describe "ConfigurationUtils モジュール" {
         
         It "Forceスイッチ使用時、キャッシュを無視して再読み込みする" {
             # Arrange
-            Mock-FileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($script:ValidTestConfig | ConvertTo-Json -Depth 10) }
-            Mock-LoggingSystem -SuppressOutput
+            New-MockFileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($script:ValidTestConfig | ConvertTo-Json -Depth 10) }
+            New-MockLoggingSystem -SuppressOutput
             
             # 初回読み込み
             Get-DataSyncConfig -ConfigPath $script:TestConfigPath | Out-Null
@@ -100,7 +100,7 @@ Describe "ConfigurationUtils モジュール" {
             # Forceで再読み込み時、新しい設定内容
             $updatedConfig = $script:ValidTestConfig.Clone()
             $updatedConfig.version = "2.0.0"
-            Mock-FileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($updatedConfig | ConvertTo-Json -Depth 10) }
+            New-MockFileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($updatedConfig | ConvertTo-Json -Depth 10) }
             
             # Act
             $result = Get-DataSyncConfig -ConfigPath $script:TestConfigPath -Force
@@ -112,7 +112,7 @@ Describe "ConfigurationUtils モジュール" {
         It "設定ファイルが存在しない場合、エラーをスローする" {
             # Arrange
             $nonExistentPath = "/path/to/nonexistent.json"
-            Mock-FileSystemOperations -FileExists @{ $nonExistentPath = $false }
+            New-MockFileSystemOperations -FileExists @{ $nonExistentPath = $false }
             
             # Act & Assert
             { Get-DataSyncConfig -ConfigPath $nonExistentPath } | Should -Throw "*設定ファイルが見つかりません*"
@@ -121,7 +121,7 @@ Describe "ConfigurationUtils モジュール" {
         It "テスト環境で設定パスが未指定の場合、デフォルト設定を使用する" {
             # Arrange
             $env:PESTER_TEST = "1"
-            Mock-Command -CommandName "Get-Command" -ReturnValue @{ Name = "Describe" }
+            New-MockCommand -CommandName "Get-Command" -ReturnValue @{ Name = "Describe" }
             
             # Act
             $result = Get-DataSyncConfig
@@ -138,7 +138,7 @@ Describe "ConfigurationUtils モジュール" {
         It "非テスト環境で設定パス未指定の場合、エラーをスローする" {
             # Arrange
             Remove-Item Env:PESTER_TEST -ErrorAction SilentlyContinue
-            Mock-Command -CommandName "Get-Command" -ReturnValue $null
+            New-MockCommand -CommandName "Get-Command" -ReturnValue $null
             
             # Act & Assert
             { Get-DataSyncConfig } | Should -Throw "*設定がまだ読み込まれていません*"
@@ -148,7 +148,7 @@ Describe "ConfigurationUtils モジュール" {
             # Arrange
             $invalidJsonPath = "/path/to/invalid.json"
             $invalidJson = "{ invalid json content"
-            Mock-FileSystemOperations -FileExists @{ $invalidJsonPath = $true } -FileContent @{ $invalidJsonPath = $invalidJson }
+            New-MockFileSystemOperations -FileExists @{ $invalidJsonPath = $true } -FileContent @{ $invalidJsonPath = $invalidJson }
             
             # Act & Assert
             { Get-DataSyncConfig -ConfigPath $invalidJsonPath } | Should -Throw
@@ -342,7 +342,7 @@ Describe "ConfigurationUtils モジュール" {
         
         It "有効な設定の場合、エラーなく完了する" {
             # Arrange
-            Mock-LoggingSystem -SuppressOutput
+            New-MockLoggingSystem -SuppressOutput
             
             # Act & Assert
             { Test-DataSyncConfig -Config $script:ValidTestConfig } | Should -Not -Throw
@@ -371,7 +371,7 @@ Describe "ConfigurationUtils モジュール" {
                 csv_format = @{}
                 logging = @{ levels = @("Info") }
             }
-            Mock-LoggingSystem -SuppressOutput
+            New-MockLoggingSystem -SuppressOutput
             
             # Act & Assert
             { Test-DataSyncConfig -Config $incompleteConfig } | Should -Throw "*必須テーブル*定義が見つかりません*"
@@ -444,7 +444,7 @@ Describe "ConfigurationUtils モジュール" {
             
             # モック化してWarningをキャプチャ
             $warningMessages = @()
-            Mock-Command -CommandName "Write-Warning" -MockScript {
+            New-MockCommand -CommandName "Write-Warning" -MockScript {
                 param($Message)
                 $script:warningMessages += $Message
             }
@@ -493,8 +493,8 @@ Describe "ConfigurationUtils モジュール" {
         
         It "設定キャッシュが正しくクリアされる" {
             # Arrange
-            Mock-LoggingSystem -SuppressOutput
-            Mock-FileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($script:ValidTestConfig | ConvertTo-Json -Depth 10) }
+            New-MockLoggingSystem -SuppressOutput
+            New-MockFileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($script:ValidTestConfig | ConvertTo-Json -Depth 10) }
             
             # 設定をキャッシュ
             Get-DataSyncConfig -ConfigPath $script:TestConfigPath | Out-Null
@@ -546,8 +546,8 @@ Describe "ConfigurationUtils モジュール" {
             $largeConfigJson = $largeConfig | ConvertTo-Json -Depth 15
             $largePath = New-TempTestFile -Content $largeConfigJson -Extension ".json" -Prefix "large_config_"
             
-            Mock-FileSystemOperations -FileExists @{ $largePath = $true } -FileContent @{ $largePath = $largeConfigJson }
-            Mock-LoggingSystem -SuppressOutput
+            New-MockFileSystemOperations -FileExists @{ $largePath = $true } -FileContent @{ $largePath = $largeConfigJson }
+            New-MockLoggingSystem -SuppressOutput
             
             try {
                 # Act
@@ -567,8 +567,8 @@ Describe "ConfigurationUtils モジュール" {
         
         It "並行アクセス時の設定キャッシュの動作" {
             # Arrange
-            Mock-FileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($script:ValidTestConfig | ConvertTo-Json -Depth 10) }
-            Mock-LoggingSystem -SuppressOutput
+            New-MockFileSystemOperations -FileExists @{ $script:TestConfigPath = $true } -FileContent @{ $script:TestConfigPath = ($script:ValidTestConfig | ConvertTo-Json -Depth 10) }
+            New-MockLoggingSystem -SuppressOutput
             
             # Act - 複数回の同時アクセスをシミュレート
             $results = @()
@@ -593,7 +593,7 @@ Describe "ConfigurationUtils モジュール" {
             
             foreach ($malformedJson in $malformedConfigs) {
                 $malformedPath = New-TempTestFile -Content $malformedJson -Extension ".json" -Prefix "malformed_"
-                Mock-FileSystemOperations -FileExists @{ $malformedPath = $true } -FileContent @{ $malformedPath = $malformedJson }
+                New-MockFileSystemOperations -FileExists @{ $malformedPath = $true } -FileContent @{ $malformedPath = $malformedJson }
                 
                 # Act & Assert
                 { Get-DataSyncConfig -ConfigPath $malformedPath } | Should -Throw

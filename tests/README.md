@@ -371,16 +371,16 @@
   2. MockHelpers.psm1
 
   # SQLiteコマンドのモック化
-  Mock-SqliteCommand -ReturnValue "test result"
+  New-MockSqliteCommand -ReturnValue "test result"
   -ExitCode 0
 
   # ファイルシステムのモック化
-  Mock-FileSystemOperations -FileExists
+  New-MockFileSystemOperations -FileExists
   @{"/test/file.csv" = $true} -FileContent
   @{"/test/file.csv" = "test,data"}
 
   # ログシステムのモック化
-  Mock-LoggingSystem -CaptureMessages
+  New-MockLoggingSystem -CaptureMessages
   -SuppressOutput
 
   # モック呼び出し履歴の確認

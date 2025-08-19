@@ -1,5 +1,27 @@
 # PowerShell & SQLite データ同期システム
 
+function Find-ProjectRoot {
+    [CmdletBinding()]
+    param(
+        [string[]]$MarkerFiles = @("run.bat"),
+        [string]$StartPath = $PSScriptRoot
+    )
+    
+    $currentPath = $StartPath
+    
+    while ($currentPath -and (Split-Path $currentPath -Parent)) {
+        foreach ($marker in $MarkerFiles) {
+            if (Get-ChildItem -Path $currentPath -Filter $marker -File | Select-Object -First 1) {
+                return $currentPath
+            }
+        }
+        $currentPath = Split-Path $currentPath -Parent
+    }
+    
+    # マーカーファイルが見つからない場合
+    return $StartPath
+}
+
 # SQLite3コマンドパス取得（DRY原則による統一関数）
 function Get-Sqlite3Path {
     try {
@@ -193,5 +215,6 @@ Export-ModuleMember -Function @(
     'Get-Timestamp',
     'Invoke-SqliteCommand',
     'Invoke-SqliteCsvQuery',
-    'Invoke-SqliteCsvExport'
+    'Invoke-SqliteCsvExport',
+    'Find-ProjectRoot'
 )

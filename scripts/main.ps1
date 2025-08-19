@@ -50,7 +50,7 @@ try {
     $startTime = Get-Date
 
     # 1. 設定検証とパラメータ解決
-    $params = Invoke-ConfigValidation -ProjectRoot $ProjectRoot -DatabasePath $DatabasePath -ProvidedDataFilePath $ProvidedDataFilePath -CurrentDataFilePath $CurrentDataFilePath -OutputFilePath $OutputFilePath -ConfigFilePath $configPath
+    $params = Invoke-ConfigValidation -DatabasePath $DatabasePath -ProvidedDataFilePath $ProvidedDataFilePath -CurrentDataFilePath $CurrentDataFilePath -OutputFilePath $OutputFilePath -ConfigFilePath $configPath
 
     # 2. データベースの初期化
     Invoke-DatabaseInitialization -DatabasePath $params.DatabasePath
