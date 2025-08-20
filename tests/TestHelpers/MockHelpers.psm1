@@ -73,7 +73,7 @@ function New-MockFileSystemOperations {
     param(
         [hashtable]$FileExists = @{},
         [hashtable]$FileContent = @{},
-        [switch]$AllowWrite = $true
+        [bool]$AllowWrite = $true
     )
     
     # Test-Pathのモック

@@ -75,7 +75,7 @@ function Invoke-CsvImportMain {
     Write-SystemLog "処理対象ファイル ${FileTypeDescription}CSV: $CsvPath" -Level "Info"
     
     # 履歴ディレクトリにコピー保存(リトライ考慮無し)
-    $historyFilePath = Invoke-WithErrorHandling -Category External -Operation "履歴ファイルコピー" -ScriptBlock {
+    Invoke-WithErrorHandling -Category External -Operation "履歴ファイルコピー" -ScriptBlock {
         return Copy-InputFileToHistory -SourceFilePath $CsvPath -HistoryDirectory $HistoryDirectory
     }
 

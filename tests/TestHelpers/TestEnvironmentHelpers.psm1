@@ -14,7 +14,8 @@ function Get-TestDataPath {
     $ProjectRoot = Find-ProjectRoot
     $basePath = if ($Temp) {
         Join-Path $ProjectRoot "test-data" "temp"
-    } else {
+    }
+    else {
         Join-Path $ProjectRoot "test-data"
     }
     
@@ -35,7 +36,8 @@ function New-TestTempPath {
     
     $tempDir = if ($UseSystemTemp) {
         [System.IO.Path]::GetTempPath()
-    } else {
+    }
+    else {
         Get-TestDataPath -Temp
     }
     
@@ -183,7 +185,7 @@ function New-TestDatabase {
 function New-TestCsvData {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$DataType,  # "provided_data", "current_data", "mixed"
+        [string]$DataType, # "provided_data", "current_data", "mixed"
         
         [int]$RecordCount = 10,
         
@@ -282,12 +284,12 @@ function New-ProvidedDataRecords {
         $record = [PSCustomObject]@{
             employee_id = $employeeId
             card_number = "C{0:D6}" -f (Get-Random -Minimum 100000 -Maximum 999999)
-            name = $name
-            department = $departments | Get-Random
-            position = $positions | Get-Random
-            email = "$($name.Replace(' ', '.').ToLower())@company.com"
-            phone = "0{0}-{1}-{2}" -f (Get-Random -Minimum 10 -Maximum 99), (Get-Random -Minimum 1000 -Maximum 9999), (Get-Random -Minimum 1000 -Maximum 9999)
-            hire_date = (Get-Date).AddDays(-(Get-Random -Minimum 30 -Maximum 3650)).ToString("yyyy-MM-dd")
+            name        = $name
+            department  = $departments | Get-Random
+            position    = $positions | Get-Random
+            email       = "$($name.Replace(' ', '.').ToLower())@company.com"
+            phone       = "0{0}-{1}-{2}" -f (Get-Random -Minimum 10 -Maximum 99), (Get-Random -Minimum 1000 -Maximum 9999), (Get-Random -Minimum 1000 -Maximum 9999)
+            hire_date   = (Get-Date).AddDays( - (Get-Random -Minimum 30 -Maximum 3650)).ToString("yyyy-MM-dd")
         }
         
         $records += $record
@@ -338,14 +340,14 @@ function New-CurrentDataRecords {
         }
         
         $record = [PSCustomObject]@{
-            user_id = $userId
+            user_id     = $userId
             card_number = "C{0:D6}" -f (Get-Random -Minimum 200000 -Maximum 899999)
-            name = $name
-            department = $departments | Get-Random
-            position = $positions | Get-Random
-            email = "$($name.Replace(' ', '.').ToLower())@company.com"
-            phone = "0{0}-{1}-{2}" -f (Get-Random -Minimum 10 -Maximum 99), (Get-Random -Minimum 1000 -Maximum 9999), (Get-Random -Minimum 1000 -Maximum 9999)
-            hire_date = (Get-Date).AddDays(-(Get-Random -Minimum 60 -Maximum 3000)).ToString("yyyy-MM-dd")
+            name        = $name
+            department  = $departments | Get-Random
+            position    = $positions | Get-Random
+            email       = "$($name.Replace(' ', '.').ToLower())@company.com"
+            phone       = "0{0}-{1}-{2}" -f (Get-Random -Minimum 10 -Maximum 99), (Get-Random -Minimum 1000 -Maximum 9999), (Get-Random -Minimum 1000 -Maximum 9999)
+            hire_date   = (Get-Date).AddDays( - (Get-Random -Minimum 60 -Maximum 3000)).ToString("yyyy-MM-dd")
         }
         
         $records += $record
@@ -366,10 +368,10 @@ function New-SyncResultRecords {
     
     $records = @()
     $actionValues = @{
-        "ADD" = "1"
+        "ADD"    = "1"
         "UPDATE" = "2"  
         "DELETE" = "3"
-        "KEEP" = "9"
+        "KEEP"   = "9"
     }
     
     # 追加レコード
@@ -411,21 +413,21 @@ function New-SyncResultRecord {
     
     $names = if ($IncludeJapanese) {
         @("山田太郎", "佐藤花子", "田中一郎", "鈴木美咲", "高橋健太")
-    } else {
+    }
+    else {
         @("John Doe", "Jane Smith", "Mike Johnson", "Lisa Brown", "Tom Wilson")
     }
     
-    $departments = @("営業部", "開発部", "総務部", "人事部", "経理部")
     $positions = @("部長", "課長", "主任", "一般", "マネージャー")
     
     return [PSCustomObject]@{
-        syokuin_no = "S{0:D4}" -f ($Index + 1000)
+        syokuin_no  = "S{0:D4}" -f ($Index + 1000)
         card_number = "C{0:D6}" -f ($Index + 100000)
-        name = $names[($Index - 1) % $names.Length]
-        position = $positions[($Index - 1) % $positions.Length]
-        email = "user$Index@company.com"
-        phone = "999-9999-9999"  # 固定値（設定による）
-        hire_date = (Get-Date).AddDays(-($Index * 30)).ToString("yyyy-MM-dd")
+        name        = $names[($Index - 1) % $names.Length]
+        position    = $positions[($Index - 1) % $positions.Length]
+        email       = "user$Index@company.com"
+        phone       = "999-9999-9999"  # 固定値（設定による）
+        hire_date   = (Get-Date).AddDays( - ($Index * 30)).ToString("yyyy-MM-dd")
         sync_action = $ActionValue
     }
 }
@@ -439,53 +441,53 @@ function New-TestConfig {
     
     # デフォルト設定
     $defaultConfig = @{
-        version = "1.0.0"
-        description = "テスト用設定ファイル"
-        file_paths = @{
-            provided_data_file_path = (Get-TestDataPath -SubPath "test-provided.csv")
-            current_data_file_path = (Get-TestDataPath -SubPath "test-current.csv")
-            output_file_path = (Get-TestDataPath -SubPath "test-output.csv")
+        version              = "1.0.0"
+        description          = "テスト用設定ファイル"
+        file_paths           = @{
+            provided_data_file_path         = (Get-TestDataPath -SubPath "test-provided.csv")
+            current_data_file_path          = (Get-TestDataPath -SubPath "test-current.csv")
+            output_file_path                = (Get-TestDataPath -SubPath "test-output.csv")
             provided_data_history_directory = (Get-TestDataPath -SubPath "temp/provided-data/" -Temp)
-            current_data_history_directory = (Get-TestDataPath -SubPath "temp/current-data/" -Temp)
-            output_history_directory = (Get-TestDataPath -SubPath "temp/output/" -Temp)
-            timezone = "Asia/Tokyo"
+            current_data_history_directory  = (Get-TestDataPath -SubPath "temp/current-data/" -Temp)
+            output_history_directory        = (Get-TestDataPath -SubPath "temp/output/" -Temp)
+            timezone                        = "Asia/Tokyo"
         }
-        csv_format = @{
+        csv_format           = @{
             provided_data = @{
-                encoding = "UTF-8"
-                delimiter = ","
-                newline = "LF"
-                has_header = $false
-                null_values = @("", "NULL", "null")
+                encoding         = "UTF-8"
+                delimiter        = ","
+                newline          = "LF"
+                has_header       = $false
+                null_values      = @("", "NULL", "null")
                 allow_empty_file = $true  # テスト環境では空ファイルを許可
             }
-            current_data = @{
-                encoding = "UTF-8"
-                delimiter = ","
-                newline = "LF"
-                has_header = $true
-                null_values = @("", "NULL", "null")
+            current_data  = @{
+                encoding         = "UTF-8"
+                delimiter        = ","
+                newline          = "LF"
+                has_header       = $true
+                null_values      = @("", "NULL", "null")
                 allow_empty_file = $true
             }
-            output = @{
-                encoding = "UTF-8"
-                delimiter = ","
-                newline = "CRLF"
+            output        = @{
+                encoding       = "UTF-8"
+                delimiter      = ","
+                newline        = "CRLF"
                 include_header = $true
             }
         }
-        tables = @{
+        tables               = @{
             provided_data = @{
-                description = "提供データテーブル"
+                description       = "提供データテーブル"
                 table_constraints = @(
                     @{
-                        name = "uk_provided_employee_id"
-                        type = "UNIQUE"
-                        columns = @("employee_id")
+                        name        = "uk_provided_employee_id"
+                        type        = "UNIQUE"
+                        columns     = @("employee_id")
                         description = "職員IDの一意制約（明示的定義）"
                     }
                 )
-                columns = @(
+                columns           = @(
                     @{ name = "id"; type = "INTEGER"; constraints = "PRIMARY KEY AUTOINCREMENT"; csv_include = $false; description = "内部ID" }
                     @{ name = "employee_id"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "職員ID" }
                     @{ name = "card_number"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "カード番号" }
@@ -496,25 +498,25 @@ function New-TestConfig {
                     @{ name = "phone"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "電話番号" }
                     @{ name = "hire_date"; type = "DATE"; constraints = ""; csv_include = $true; required = $false; description = "入社日" }
                 )
-                indexes = @(
+                indexes           = @(
                     @{
-                        name = "idx_provided_employee_id"
-                        columns = @("employee_id")
+                        name        = "idx_provided_employee_id"
+                        columns     = @("employee_id")
                         description = "職員ID検索用インデックス（大量データ時の比較処理高速化）"
                     }
                 )
             }
-            current_data = @{
-                description = "現在データテーブル"
+            current_data  = @{
+                description       = "現在データテーブル"
                 table_constraints = @(
                     @{
-                        name = "uk_current_user_id"
-                        type = "UNIQUE"
-                        columns = @("user_id")
+                        name        = "uk_current_user_id"
+                        type        = "UNIQUE"
+                        columns     = @("user_id")
                         description = "利用者IDの一意制約（明示的定義）"
                     }
                 )
-                columns = @(
+                columns           = @(
                     @{ name = "id"; type = "INTEGER"; constraints = "PRIMARY KEY AUTOINCREMENT"; csv_include = $false; description = "内部ID" }
                     @{ name = "user_id"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "利用者ID" }
                     @{ name = "card_number"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "カード番号" }
@@ -525,25 +527,25 @@ function New-TestConfig {
                     @{ name = "phone"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "電話番号" }
                     @{ name = "hire_date"; type = "DATE"; constraints = ""; csv_include = $true; required = $false; description = "入社日" }
                 )
-                indexes = @(
+                indexes           = @(
                     @{
-                        name = "idx_current_user_id"
-                        columns = @("user_id")
+                        name        = "idx_current_user_id"
+                        columns     = @("user_id")
                         description = "利用者ID検索用インデックス（大量データ時の比較処理高速化）"
                     }
                 )
             }
-            sync_result = @{
-                description = "同期結果テーブル"
+            sync_result   = @{
+                description       = "同期結果テーブル"
                 table_constraints = @(
                     @{
-                        name = "uk_sync_result_syokuin_no"
-                        type = "UNIQUE"
-                        columns = @("syokuin_no")
+                        name        = "uk_sync_result_syokuin_no"
+                        type        = "UNIQUE"
+                        columns     = @("syokuin_no")
                         description = "職員番号の一意制約（重複レコード防止）"
                     }
                 )
-                columns = @(
+                columns           = @(
                     @{ name = "id"; type = "INTEGER"; constraints = "PRIMARY KEY AUTOINCREMENT"; csv_include = $false; description = "内部ID" }
                     @{ name = "syokuin_no"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "職員ID" }
                     @{ name = "card_number"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "カード番号" }
@@ -555,232 +557,232 @@ function New-TestConfig {
                     @{ name = "hire_date"; type = "DATE"; constraints = ""; csv_include = $true; required = $false; description = "入社日" }
                     @{ name = "sync_action"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "同期アクション (ADD, UPDATE, DELETE, KEEP)" }
                 )
-                indexes = @()
+                indexes           = @()
             }
         }
-        sync_rules = @{
-            key_columns = @{
+        sync_rules           = @{
+            key_columns         = @{
                 provided_data = @("employee_id")
-                current_data = @("user_id")
-                sync_result = @("syokuin_no")
+                current_data  = @("user_id")
+                sync_result   = @("syokuin_no")
             }
-            column_mappings = @{
+            column_mappings     = @{
                 description = "テーブル間の比較項目対応付け（provided_dataの項目:current_dataの項目）"
-                mappings = @{
+                mappings    = @{
                     employee_id = "user_id"
                     card_number = "card_number"
-                    name = "name"
-                    department = "department"
-                    position = "position"
-                    email = "email"
-                    phone = "phone"
-                    hire_date = "hire_date"
+                    name        = "name"
+                    department  = "department"
+                    position    = "position"
+                    email       = "email"
+                    phone       = "phone"
+                    hire_date   = "hire_date"
                 }
             }
             sync_result_mapping = @{
                 description = "sync_resultテーブルへの格納項目対応付け（テスト用完全版）"
-                mappings = @{
-                    syokuin_no = @{
+                mappings    = @{
+                    syokuin_no  = @{
                         description = "職員番号"
-                        sources = @(
+                        sources     = @(
                             @{
-                                type = "provided_data"
-                                field = "employee_id"
-                                priority = 1
+                                type        = "provided_data"
+                                field       = "employee_id"
+                                priority    = 1
                                 description = "提供データの職員ID（最優先）"
                             }
                             @{
-                                type = "current_data"
-                                field = "user_id"
-                                priority = 2
+                                type        = "current_data"
+                                field       = "user_id"
+                                priority    = 2
                                 description = "現在データの利用者ID（フォールバック）"
                             }
                         )
                     }
                     card_number = @{
                         description = "カード番号"
-                        sources = @(
+                        sources     = @(
                             @{
-                                type = "provided_data"
-                                field = "card_number"
-                                priority = 1
+                                type        = "provided_data"
+                                field       = "card_number"
+                                priority    = 1
                                 description = "提供データのカード番号（最優先）"
                             }
                             @{
-                                type = "current_data"
-                                field = "card_number"
-                                priority = 2
+                                type        = "current_data"
+                                field       = "card_number"
+                                priority    = 2
                                 description = "現在データのカード番号（フォールバック）"
                             }
                         )
                     }
-                    name = @{
+                    name        = @{
                         description = "氏名"
-                        sources = @(
+                        sources     = @(
                             @{
-                                type = "provided_data"
-                                field = "name"
-                                priority = 1
+                                type        = "provided_data"
+                                field       = "name"
+                                priority    = 1
                                 description = "提供データの氏名（最優先）"
                             }
                             @{
-                                type = "current_data"
-                                field = "name"
-                                priority = 2
+                                type        = "current_data"
+                                field       = "name"
+                                priority    = 2
                                 description = "現在データの氏名（フォールバック）"
                             }
                         )
                     }
-                    department = @{
+                    department  = @{
                         description = "部署"
-                        sources = @(
+                        sources     = @(
                             @{
-                                type = "provided_data"
-                                field = "department"
-                                priority = 1
+                                type        = "provided_data"
+                                field       = "department"
+                                priority    = 1
                                 description = "提供データの部署（最優先）"
                             }
                             @{
-                                type = "current_data"
-                                field = "department"
-                                priority = 2
+                                type        = "current_data"
+                                field       = "department"
+                                priority    = 2
                                 description = "現在データの部署（フォールバック）"
                             }
                             @{
-                                type = "fixed_value"
-                                value = "未設定"
-                                priority = 3
+                                type        = "fixed_value"
+                                value       = "未設定"
+                                priority    = 3
                                 description = "デフォルト部署名（最終フォールバック）"
                             }
                         )
                     }
-                    position = @{
+                    position    = @{
                         description = "役職"
-                        sources = @(
+                        sources     = @(
                             @{
-                                type = "provided_data"
-                                field = "position"
-                                priority = 1
+                                type        = "provided_data"
+                                field       = "position"
+                                priority    = 1
                                 description = "提供データの役職（最優先）"
                             }
                             @{
-                                type = "current_data"
-                                field = "position"
-                                priority = 2
+                                type        = "current_data"
+                                field       = "position"
+                                priority    = 2
                                 description = "現在データの役職（フォールバック）"
                             }
                         )
                     }
-                    email = @{
+                    email       = @{
                         description = "メールアドレス"
-                        sources = @(
+                        sources     = @(
                             @{
-                                type = "provided_data"
-                                field = "email"
-                                priority = 1
+                                type        = "provided_data"
+                                field       = "email"
+                                priority    = 1
                                 description = "提供データのメールアドレス（最優先）"
                             }
                             @{
-                                type = "current_data"
-                                field = "email"
-                                priority = 2
+                                type        = "current_data"
+                                field       = "email"
+                                priority    = 2
                                 description = "現在データのメールアドレス（フォールバック）"
                             }
                         )
                     }
-                    phone = @{
+                    phone       = @{
                         description = "電話番号"
-                        sources = @(
+                        sources     = @(
                             @{
-                                type = "fixed_value"
-                                value = "999-9999-9999"
-                                priority = 1
+                                type        = "fixed_value"
+                                value       = "999-9999-9999"
+                                priority    = 1
                                 description = "固定値"
                             }
                         )
                     }
-                    hire_date = @{
+                    hire_date   = @{
                         description = "入社日"
-                        sources = @(
+                        sources     = @(
                             @{
-                                type = "provided_data"
-                                field = "hire_date"
-                                priority = 1
+                                type        = "provided_data"
+                                field       = "hire_date"
+                                priority    = 1
                                 description = "提供データの入社日（最優先）"
                             }
                             @{
-                                type = "current_data"
-                                field = "hire_date"
-                                priority = 2
+                                type        = "current_data"
+                                field       = "hire_date"
+                                priority    = 2
                                 description = "現在データの入社日（フォールバック）"
                             }
                         )
                     }
                 }
             }
-            sync_action_labels = @{
+            sync_action_labels  = @{
                 mappings = @{
-                    ADD = @{ value = "1"; description = "新規追加" }
+                    ADD    = @{ value = "1"; description = "新規追加" }
                     UPDATE = @{ value = "2"; description = "更新" }
                     DELETE = @{ value = "3"; description = "削除" }
-                    KEEP = @{ value = "9"; description = "変更なし" }
+                    KEEP   = @{ value = "9"; description = "変更なし" }
                 }
             }
         }
-        data_filters = @{
+        data_filters         = @{
             provided_data = @{
                 enabled = $false
-                rules = @()
+                rules   = @()
             }
-            current_data = @{
-                enabled = $false
-                rules = @()
+            current_data  = @{
+                enabled                 = $false
+                rules                   = @()
                 output_excluded_as_keep = @{
                     enabled = $false
                 }
             }
         }
-        logging = @{
-            enabled = $true
-            log_directory = (Get-TestDataPath -SubPath "temp/logs/" -Temp)
-            log_file_name = "test-system.log"
+        logging              = @{
+            enabled          = $true
+            log_directory    = (Get-TestDataPath -SubPath "temp/logs/" -Temp)
+            log_file_name    = "test-system.log"
             max_file_size_mb = 5
-            max_files = 3
-            levels = @("Info", "Warning", "Error", "Success")
+            max_files        = 3
+            levels           = @("Info", "Warning", "Error", "Success")
         }
         performance_settings = @{
-            description = "性能最適化設定"
-            index_threshold = 100000
-            batch_size = 1000
+            description       = "性能最適化設定"
+            index_threshold   = 100000
+            batch_size        = 1000
             auto_optimization = $true
-            sqlite_pragmas = @{
+            sqlite_pragmas    = @{
                 journal_mode = "WAL"
-                synchronous = "NORMAL"
-                temp_store = "MEMORY"
-                cache_size = 10000
+                synchronous  = "NORMAL"
+                temp_store   = "MEMORY"
+                cache_size   = 10000
             }
         }
-        error_handling = @{
-            enabled = $true
-            log_stack_trace = $true
-            retry_settings = @{
-                enabled = $false
-                max_attempts = 1
-                delay_seconds = @(1)
+        error_handling       = @{
+            enabled           = $true
+            log_stack_trace   = $true
+            retry_settings    = @{
+                enabled              = $false
+                max_attempts         = 1
+                delay_seconds        = @(1)
                 retryable_categories = @()
             }
-            error_levels = @{
+            error_levels      = @{
                 description = "エラーカテゴリ別のログレベル設定"
-                System = "Error"
-                Data = "Warning"
-                External = "Error"
+                System      = "Error"
+                Data        = "Warning"
+                External    = "Error"
             }
             continue_on_error = @{
-                System = $false
-                Data = $true
+                System   = $false
+                Data     = $true
                 External = $false
             }
-            cleanup_on_error = $true
+            cleanup_on_error  = $true
         }
     }
     

@@ -67,7 +67,7 @@ Describe "ConfigurationUtils モジュール" {
         
         It "キャッシュされた設定がある場合、ファイルを再読み込みしない" {
             # Arrange
-            $cachedConfig = [PSCustomObject]@{ version = "cached"; test = "data" }
+            # $cachedConfig = [PSCustomObject]@{ version = "cached"; test = "data" }
             New-MockLoggingSystem -SuppressOutput
             
             # 初回読み込み
@@ -160,9 +160,9 @@ Describe "ConfigurationUtils モジュール" {
             $configWithPaths = $script:ValidTestConfig.Clone()
             $configWithPaths.file_paths = @{
                 provided_data_history_directory = "./custom/provided/"
-                current_data_history_directory = "./custom/current/"
-                output_history_directory = "./custom/output/"
-                timezone = "UTC"
+                current_data_history_directory  = "./custom/current/"
+                output_history_directory        = "./custom/output/"
+                timezone                        = "UTC"
             }
             Mock-ConfigurationSystem -MockConfig $configWithPaths
             
@@ -199,7 +199,7 @@ Describe "ConfigurationUtils モジュール" {
                 file_paths = @{
                     provided_data_history_directory = "./custom/provided/"
                     # current_data_history_directory と output_history_directory は未設定
-                    timezone = "UTC"
+                    timezone                        = "UTC"
                 }
             }
             Mock-ConfigurationSystem -MockConfig $partialConfig
@@ -260,7 +260,7 @@ Describe "ConfigurationUtils モジュール" {
                 data_filters = @{
                     provided_data = @{
                         enabled = $true
-                        rules = @(
+                        rules   = @(
                             @{ field = "employee_id"; type = "exclude"; glob = "Z*" }
                         )
                     }
@@ -357,17 +357,17 @@ Describe "ConfigurationUtils モジュール" {
         It "必須テーブルが不足している場合、エラーをスローする" {
             # Arrange
             $incompleteConfig = @{
-                tables = @{
+                tables     = @{
                     provided_data = @{ columns = @() }
                     # current_data と sync_result が不足
                 }
                 sync_rules = @{
-                    column_mappings = @{ mappings = @{} }
-                    key_columns = @{}
+                    column_mappings     = @{ mappings = @{} }
+                    key_columns         = @{}
                     sync_result_mapping = @{ mappings = @{} }
                 }
                 csv_format = @{}
-                logging = @{ levels = @("Info") }
+                logging    = @{ levels = @("Info") }
             }
             New-MockLoggingSystem -SuppressOutput
             
@@ -380,8 +380,8 @@ Describe "ConfigurationUtils モジュール" {
             $configWithEmptyColumns = @{
                 tables = @{
                     provided_data = @{ columns = @() }  # 空のカラム定義
-                    current_data = @{ columns = @() }
-                    sync_result = @{ columns = @() }
+                    current_data  = @{ columns = @() }
+                    sync_result   = @{ columns = @() }
                 }
             }
             
@@ -397,21 +397,21 @@ Describe "ConfigurationUtils モジュール" {
             $validCsvConfig = @{
                 csv_format = @{
                     provided_data = @{
-                        encoding = "UTF-8"
-                        delimiter = ","
-                        newline = "LF"
+                        encoding   = "UTF-8"
+                        delimiter  = ","
+                        newline    = "LF"
                         has_header = $false
                     }
-                    current_data = @{
-                        encoding = "UTF-8"
-                        delimiter = ","
-                        newline = "CRLF"
+                    current_data  = @{
+                        encoding   = "UTF-8"
+                        delimiter  = ","
+                        newline    = "CRLF"
                         has_header = $true
                     }
-                    output = @{
-                        encoding = "UTF-8"
-                        delimiter = ","
-                        newline = "CRLF"
+                    output        = @{
+                        encoding       = "UTF-8"
+                        delimiter      = ","
+                        newline        = "CRLF"
                         include_header = $true
                     }
                 }
@@ -434,7 +434,7 @@ Describe "ConfigurationUtils モジュール" {
             $configWithInvalidEncoding = @{
                 csv_format = @{
                     provided_data = @{
-                        encoding = "INVALID-ENCODING"
+                        encoding   = "INVALID-ENCODING"
                         has_header = $true
                     }
                 }
@@ -459,7 +459,7 @@ Describe "ConfigurationUtils モジュール" {
             $configWithoutHasHeader = @{
                 csv_format = @{
                     provided_data = @{
-                        encoding = "UTF-8"
+                        encoding  = "UTF-8"
                         delimiter = ","
                         # has_header が不足
                     }
@@ -475,7 +475,7 @@ Describe "ConfigurationUtils モジュール" {
             $configWithoutIncludeHeader = @{
                 csv_format = @{
                     output = @{
-                        encoding = "UTF-8"
+                        encoding  = "UTF-8"
                         delimiter = ","
                         # include_header が不足
                     }
@@ -584,8 +584,8 @@ Describe "ConfigurationUtils モジュール" {
         It "不正なJSON構造の詳細なエラー処理" {
             # Arrange
             $malformedConfigs = @(
-                '{"version": "1.0.0", "tables": }',  # 構文エラー
-                '{"version": 1.0.0}',  # 型エラー（文字列ではなく数値）
+                '{"version": "1.0.0", "tables": }', # 構文エラー
+                '{"version": 1.0.0}', # 型エラー（文字列ではなく数値）
                 '{"version": "1.0.0", "tables": null}'  # null値
             )
             

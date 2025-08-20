@@ -464,10 +464,10 @@ E002;佐藤花子;開発部
             $customConfig = @{
                 csv_format = @{
                     custom_data = @{
-                        encoding = "UTF-16"
-                        delimiter = "|"
-                        has_header = $true
-                        null_values = @("N/A", "NULL", "")
+                        encoding         = "UTF-16"
+                        delimiter        = "|"
+                        has_header       = $true
+                        null_values      = @("N/A", "NULL", "")
                         allow_empty_file = $false
                     }
                 }
@@ -519,8 +519,8 @@ E0${i}1,ユーザー${i}1,部署${i}1
             # Act
             $startTime = Get-Date
             foreach ($csvFile in $csvFiles) {
-                $result = Import-CsvWithFormat -CsvPath $csvFile -TableName "current_data"
-                $validation = Test-CsvFormat -CsvPath $csvFile -TableName "current_data"
+                Import-CsvWithFormat -CsvPath $csvFile -TableName "current_data"
+                Test-CsvFormat -CsvPath $csvFile -TableName "current_data"
             }
             $endTime = Get-Date
             $duration = ($endTime - $startTime).TotalSeconds
