@@ -1,8 +1,8 @@
 # PowerShell & SQLite データ同期システム
 # Layer 2: Logging ユーティリティライブラリ（高度なログ機能）
 
-using module ”../Foundation/CoreUtils.psm1"
-using module ”./ConfigurationUtils.psm1"
+using module "../Foundation/CoreUtils.psm1"
+using module "./ConfigurationUtils.psm1"
 
 # ログファイルのローテーション（ユーティリティ関数）
 function Move-LogFileToRotate {

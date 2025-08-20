@@ -1,14 +1,14 @@
 # PowerShell & SQLite データ管理システム
 # CSVデータインポート処理スクリプト（レイヤー化版）
 
-using module ”../Utils/Foundation/CoreUtils.psm1"
-using module ”../Utils/Infrastructure/LoggingUtils.psm1"
-using module ”../Utils/Infrastructure/ConfigurationUtils.psm1"
-using module ”../Utils/Infrastructure/ErrorHandlingUtils.psm1"
-using module ”../Utils/DataAccess/DatabaseUtils.psm1"
-using module ”../Utils/DataAccess/FileSystemUtils.psm1"
-using module ”../Utils/DataProcessing/CsvProcessingUtils.psm1"
-using module ”../Utils/DataProcessing/DataFilteringUtils.psm1"
+using module "../Utils/Foundation/CoreUtils.psm1"
+using module "../Utils/Infrastructure/LoggingUtils.psm1"
+using module "../Utils/Infrastructure/ConfigurationUtils.psm1"
+using module "../Utils/Infrastructure/ErrorHandlingUtils.psm1"
+using module "../Utils/DataAccess/DatabaseUtils.psm1"
+using module "../Utils/DataAccess/FileSystemUtils.psm1"
+using module "../Utils/DataProcessing/CsvProcessingUtils.psm1"
+using module "../Utils/DataProcessing/DataFilteringUtils.psm1"
 
 # 統合されたデータインポート関数（冪等性対応）
 function Invoke-CsvImport {
@@ -331,9 +331,9 @@ function Import-CsvToSqliteTable {
         throw "CSVファイルが見つかりません: $CsvFilePath"
     }
     
-    # ヘッダー行をスキップしてインポートするため、一時ファイルを作成
-    $tempFile = [System.IO.Path]::GetTempFileName()
-    $tempCsvFile = $tempFile + ".csv"
+    # 一時ファイルのパス
+    $tempCsvFile = [System.IO.Path]::GetTempFileName() + ".csv"
+    $tempSqlFile = [System.IO.Path]::GetTempFileName() + ".sql"
     
     try {
         # CSVファイルの内容を読み込み、ヘッダー行（1行目）をスキップ
@@ -344,23 +344,38 @@ function Import-CsvToSqliteTable {
             Write-SystemLog "ヘッダー行をスキップした一時ファイルを作成: $(Split-Path -Leaf $tempCsvFile)" -Level "Info"
         }
         else {
-            Write-SystemLog "CSVファイルにデータ行がありません（ヘッダーのみ）: $CsvFilePath" -Level "Warning"
+            Write-SystemLog "CSVファイルにデータ行がありません: $CsvFilePath" -Level "Warning"
             return
         }
         
-        # SQLite3の.importコマンドを使用した直接インポート（ヘッダー行除去済み）
-        $result = & sqlite3 $DatabasePath ".mode csv" ".import `"$tempCsvFile`" $TableName" 2>&1
-            
+        # パスをSQLite用に正規化（Windowsでのバックスラッシュをスラッシュに変換）
+        $normalizedTempCsvFile = $tempCsvFile -replace '\\', '/'
+        $normalizedDatabasePath = $DatabasePath -replace '\\', '/'
+
+        Write-SystemLog "SQLite .import実行中 - DB: $normalizedDatabasePath, CSV: $normalizedTempCsvFile, Table: $TableName" -Level "Info"
+
+        # 一時SQLファイルを作成
+        $sqlCommands = @"
+.mode csv
+.import "$normalizedTempCsvFile" $TableName
+"@
+        $sqlCommands | Out-File -FilePath $tempSqlFile -Encoding UTF8 -NoNewline
+        
+        # SQLファイルを実行
+        $result = & sqlite3 $normalizedDatabasePath ".read $tempSqlFile" 2>&1
+        
         if ($LASTEXITCODE -ne 0) {
-            throw "SQLite .import エラー (終了コード: $LASTEXITCODE): $result"
+            throw "SQLite .importに失敗 $result"
         }
-            
-        Write-SystemLog "CSV直接インポート完了: $TableName (ヘッダー行スキップ済み)" -Level "Success"
+
+    }
+    catch {
+        throw "SQLiteへのCSVインポート中にエラーが発生: $($_.Exception.Message)"
     }
     finally {
         # 一時ファイルのクリーンアップ
-        if (Test-Path $tempFile) {
-            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+        if (Test-Path $tempSqlFile) {
+            Remove-Item $tempSqlFile -Force -ErrorAction SilentlyContinue
         }
         if (Test-Path $tempCsvFile) {
             Remove-Item $tempCsvFile -Force -ErrorAction SilentlyContinue

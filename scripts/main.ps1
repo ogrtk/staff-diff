@@ -1,21 +1,21 @@
 # PowerShell & SQLite データ同期システム
 # メインスクリプト（エントリーポイント）
 
-using module ”./modules/Utils/Foundation/CoreUtils.psm1"
-using module ”./modules/Utils/Infrastructure/LoggingUtils.psm1"
-using module ”./modules/Utils/Infrastructure/ConfigurationUtils.psm1"
-using module ”./modules/Utils/Infrastructure/ErrorHandlingUtils.psm1"
-using module ”./modules/Utils/DataAccess/DatabaseUtils.psm1"
-using module ”./modules/Utils/DataAccess/FileSystemUtils.psm1"
-using module ”./modules/Utils/DataProcessing/CsvProcessingUtils.psm1"
-using module ”./modules/Utils/DataProcessing/DataFilteringUtils.psm1"
-using module ”./modules/Process/Invoke-ConfigValidation.psm1"
-using module ”./modules/Process/Invoke-CsvExport.psm1"
-using module ”./modules/Process/Invoke-CsvImport.psm1"
-using module ”./modules/Process/Invoke-DatabaseInitialization.psm1"
-using module ”./modules/Process/Invoke-DataSync.psm1"
-using module ”./modules/Process/Show-SyncResult.psm1"
-using module ”./modules/Process/Test-DataConsistency.psm1"
+using module "./modules/Utils/Foundation/CoreUtils.psm1"
+using module "./modules/Utils/Infrastructure/LoggingUtils.psm1"
+using module "./modules/Utils/Infrastructure/ConfigurationUtils.psm1"
+using module "./modules/Utils/Infrastructure/ErrorHandlingUtils.psm1"
+using module "./modules/Utils/DataAccess/DatabaseUtils.psm1"
+using module "./modules/Utils/DataAccess/FileSystemUtils.psm1"
+using module "./modules/Utils/DataProcessing/CsvProcessingUtils.psm1"
+using module "./modules/Utils/DataProcessing/DataFilteringUtils.psm1"
+using module "./modules/Process/Invoke-ConfigValidation.psm1"
+using module "./modules/Process/Invoke-CsvExport.psm1"
+using module "./modules/Process/Invoke-CsvImport.psm1"
+using module "./modules/Process/Invoke-DatabaseInitialization.psm1"
+using module "./modules/Process/Invoke-DataSync.psm1"
+using module "./modules/Process/Show-SyncResult.psm1"
+using module "./modules/Process/Test-DataConsistency.psm1"
 
 # パラメータ定義
 param(

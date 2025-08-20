@@ -1,6 +1,6 @@
 # PowerShell & SQLite データ同期システム
 # Layer 2: Configuration ユーティリティライブラリ（設定管理専用）
-using module ”../Foundation/CoreUtils.psm1"
+using module "../Foundation/CoreUtils.psm1"
 
 # モジュールスコープの変数で設定をキャッシュ
 $script:DataSyncConfig = $null

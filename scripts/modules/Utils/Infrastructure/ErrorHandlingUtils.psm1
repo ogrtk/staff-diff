@@ -1,9 +1,9 @@
 # PowerShell & SQLite データ同期システム
 # Layer 2: Error Handling ユーティリティライブラリ（エラーハンドリング専用）
 
-using module ”../Foundation/CoreUtils.psm1"
-using module ”./LoggingUtils.psm1"
-using module ”./ConfigurationUtils.psm1"
+using module "../Foundation/CoreUtils.psm1"
+using module "./LoggingUtils.psm1"
+using module "./ConfigurationUtils.psm1"
 
 # エラー分類の定義
 enum ErrorCategory {

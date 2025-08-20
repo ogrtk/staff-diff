@@ -1,9 +1,9 @@
 # PowerShell & SQLite データ同期システム
 # Layer 4: CSV Processing ユーティリティライブラリ（CSV処理専用）
 
-using module ”../Foundation/CoreUtils.psm1"
-using module ”../Infrastructure/LoggingUtils.psm1"
-using module ”../Infrastructure/ConfigurationUtils.psm1"
+using module "../Foundation/CoreUtils.psm1"
+using module "../Infrastructure/LoggingUtils.psm1"
+using module "../Infrastructure/ConfigurationUtils.psm1"
 
 # CSVフォーマット設定取得関数
 function Get-CsvFormatConfig {

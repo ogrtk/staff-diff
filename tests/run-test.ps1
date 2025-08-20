@@ -5,7 +5,7 @@ param(
     [string]$TestPath = "",
     [ValidateSet("All", "Unit", "Integration", "Foundation", "Infrastructure", "Process")]
     [string]$TestType = "All",
-    [ValidateSet("NUnitXml", "HTML", "Text", "Console")]
+    [ValidateSet("NUnitXml", "HTML", "Console")]
     [string]$OutputFormat = "Console",
     [string]$OutputPath = "",
     [switch]$ShowCoverage,
@@ -18,52 +18,354 @@ param(
 $ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.FullName
 $TestsRoot = $PSScriptRoot
 
-# テストファイルパスからモジュール名を抽出
+# TestPathとTestTypeからテスト対象のパスを特定する統一関数
+function Get-TestTargetPaths {
+    param(
+        [string]$TestPath,
+        [string]$TestType,
+        [string]$TestsRoot,
+        [string]$ProjectRoot
+    )
+    
+    $result = @{
+        TestPaths        = @()
+        IsSpecificFile   = $false
+        ResolvedTestPath = ""
+    }
+    
+    # 特定のテストパスが指定された場合
+    if (-not [string]::IsNullOrEmpty($TestPath)) {
+        $fullTestPath = if ([System.IO.Path]::IsPathRooted($TestPath)) {
+            $TestPath
+        }
+        else {
+            Join-Path $TestsRoot $TestPath
+        }
+        
+        if (-not (Test-Path $fullTestPath)) {
+            throw "指定されたテストパスが見つかりません: $fullTestPath"
+        }
+        
+        $result.TestPaths = @($fullTestPath)
+        $result.IsSpecificFile = $true
+        $result.ResolvedTestPath = $fullTestPath
+    }
+    else {
+        # TestTypeに基づくパス決定
+        switch ($TestType) {
+            "Unit" {
+                $result.TestPaths = @(
+                    (Join-Path $TestsRoot "Utils"),
+                    (Join-Path $TestsRoot "Process")
+                )
+            }
+            "Integration" {
+                $result.TestPaths = @(Join-Path $TestsRoot "Integration")
+            }
+            "Foundation" {
+                $result.TestPaths = @(Join-Path $TestsRoot "Utils" "Foundation")
+            }
+            "Infrastructure" {
+                $result.TestPaths = @(Join-Path $TestsRoot "Utils" "Infrastructure")
+            }
+            "Process" {
+                $result.TestPaths = @(Join-Path $TestsRoot "Process")
+            }
+            default {
+                $result.TestPaths = @($TestsRoot)
+            }
+        }
+        $result.IsSpecificFile = $false
+    }
+    
+    return $result
+}
+
+# テスト結果からモジュール名を抽出（改良版）
+function Get-ModuleNameFromTestResult {
+    param(
+        [Parameter(Mandatory = $true)]
+        $TestObject,
+        [Parameter(Mandatory = $false)]
+        $TestTargets = $null
+    )
+    
+    # ScriptBlockからファイルパスを取得を試行
+    if ($TestObject.ScriptBlock -and $TestObject.ScriptBlock.File) {
+        $filePath = $TestObject.ScriptBlock.File
+        $fileName = [System.IO.Path]::GetFileNameWithoutExtension($filePath)
+        if ($fileName.EndsWith(".Tests")) {
+            return $fileName.Substring(0, $fileName.Length - 6)
+        }
+        else {
+            return $fileName
+        }
+    }
+    
+    # TestTargetsから推測（設定されたパスから）
+    if ($TestTargets -and $TestTargets.TestPaths) {
+        foreach ($path in $TestTargets.TestPaths) {
+            if (Test-Path $path -PathType Leaf) {
+                # 単一ファイル
+                $fileName = [System.IO.Path]::GetFileNameWithoutExtension($path)
+                if ($fileName.EndsWith(".Tests")) {
+                    return $fileName.Substring(0, $fileName.Length - 6)
+                }
+                else {
+                    return $fileName
+                }
+            }
+        }
+    }
+    
+    # フォールバック: Path から最初の単語を取得
+    if ($TestObject.Path) {
+        $parts = $TestObject.Path -split '\s+'
+        if ($parts.Count -gt 0) {
+            $firstPart = $parts[0]
+            # "モジュール" サフィックスを削除
+            if ($firstPart.EndsWith("モジュール")) {
+                return $firstPart.Substring(0, $firstPart.Length - 4)
+            }
+            else {
+                return $firstPart
+            }
+        }
+    }
+    
+    # 最終フォールバック
+    return "不明"
+}
+
+# ファイルパスからモジュール名を抽出（シンプル版 - レガシー）
+function Get-ModuleNameFromPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$FilePath
+    )
+    
+    # ファイルパスが実際のパスかどうかを確認
+    if ([System.IO.Path]::IsPathRooted($FilePath) -or $FilePath.Contains('\') -or $FilePath.Contains('/')) {
+        # 実際のファイルパス
+        $fileName = [System.IO.Path]::GetFileNameWithoutExtension($FilePath)
+    }
+    else {
+        # Path から最初の単語を取得
+        $parts = $FilePath -split '\s+'
+        if ($parts.Count -gt 0) {
+            $firstPart = $parts[0]
+            # "モジュール" サフィックスを削除
+            if ($firstPart.EndsWith("モジュール")) {
+                return $firstPart.Substring(0, $firstPart.Length - 4)
+            }
+            else {
+                return $firstPart
+            }
+        }
+        $fileName = $FilePath
+    }
+    
+    # .Tests サフィックスを削除
+    if ($fileName.EndsWith(".Tests")) {
+        $result = $fileName.Substring(0, $fileName.Length - 6)
+    }
+    else {
+        $result = $fileName
+    }
+    
+    return $result
+}
+
+# Block情報から分類（Describe/Context）を取得
+function Get-TestClassification {
+    param(
+        [Parameter(Mandatory = $true)]
+        $TestObject
+    )
+    
+    # Blockプロパティまたは階層情報から分類を取得
+    if ($TestObject.Block) {
+        return $TestObject.Block
+    }
+    elseif ($TestObject.ExpandedName) {
+        # ExpandedNameから最初のDescribeブロック名を抽出
+        $parts = $TestObject.ExpandedName -split '\.'
+        if ($parts.Count -gt 1) {
+            return $parts[0]
+        }
+    }
+    elseif ($TestObject.Name) {
+        # 他のプロパティから推測を試行
+        $testName = $TestObject.Name
+        if ($testName -match "^(.+?)\s+モジュール") {
+            return $matches[1] + " モジュール"
+        }
+    }
+    
+    # デフォルト値
+    return "テスト"
+}
+
+# テストファイルパスからモジュール名を抽出（レガシー関数 - 後方互換性のため保持）
 function Get-ModuleNameFromTest {
     param(
         [Parameter(Mandatory = $true)]
         [string]$TestPath
     )
     
-    # ファイル名からモジュール名を抽出
-    $fileName = [System.IO.Path]::GetFileNameWithoutExtension($TestPath)
+    return Get-ModuleNameFromPath -FilePath $TestPath
+}
+
+# テストファイルから対応するモジュールファイルパスを取得
+function Get-ModulePathFromTest {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$TestPath,
+        [Parameter(Mandatory = $true)]
+        [string]$ProjectRoot
+    )
     
-    # .Tests サフィックスを削除
+    # ファイル名からモジュール名を抽出（.Tests サフィックスを削除）
+    $fileName = [System.IO.Path]::GetFileNameWithoutExtension($TestPath)
     if ($fileName.EndsWith(".Tests")) {
-        $moduleName = $fileName.Substring(0, $fileName.Length - 6)
+        $moduleName = $fileName.Substring(0, $fileName.Length - 6) + ".psm1"
     }
     else {
-        $moduleName = $fileName
+        $moduleName = $fileName + ".psm1"
     }
     
-    # テストファイルのディレクトリ構造から分類を取得
-    $relativePath = $TestPath -replace [regex]::Escape($TestsRoot), ""
-    $relativePath = $relativePath.TrimStart("\", "/")
+    # テストファイルのディレクトリ構造から対応するモジュールパスを特定
+    $testsRoot = Join-Path $ProjectRoot "tests"
+    $relativePath = $TestPath -replace [regex]::Escape($testsRoot), ""
+    $relativePath = $relativePath.TrimStart("\", "/").Replace("\", "/")
+    
+    $moduleBasePath = Join-Path $ProjectRoot "scripts" "modules"
+    
     
     if ($relativePath -match "^Integration") {
-        return "Integration/$moduleName"
+        # 統合テストの場合、すべてのモジュールが対象なので空を返す
+        return $null
     }
     elseif ($relativePath -match "^Process") {
-        return "Process/$moduleName"
+        return Join-Path $moduleBasePath "Process" $moduleName
     }
-    elseif ($relativePath -match "^Utils\\Foundation") {
-        return "Utils/Foundation/$moduleName"
+    elseif ($relativePath -match "^Utils/Foundation") {
+        return Join-Path $moduleBasePath "Utils" "Foundation" $moduleName
     }
-    elseif ($relativePath -match "^Utils\\Infrastructure") {
-        return "Utils/Infrastructure/$moduleName"
+    elseif ($relativePath -match "^Utils/Infrastructure") {
+        return Join-Path $moduleBasePath "Utils" "Infrastructure" $moduleName
     }
-    elseif ($relativePath -match "^Utils\\DataAccess") {
-        return "Utils/DataAccess/$moduleName"
+    elseif ($relativePath -match "^Utils/DataAccess") {
+        return Join-Path $moduleBasePath "Utils" "DataAccess" $moduleName
     }
-    elseif ($relativePath -match "^Utils\\DataProcessing") {
-        return "Utils/DataProcessing/$moduleName"
+    elseif ($relativePath -match "^Utils/DataProcessing") {
+        return Join-Path $moduleBasePath "Utils" "DataProcessing" $moduleName
     }
     elseif ($relativePath -match "^Utils") {
-        return "Utils/$moduleName"
+        return Join-Path $moduleBasePath "Utils" $moduleName
     }
     else {
-        return $moduleName
+        return $null
     }
+}
+
+# テスト対象に基づくカバレッジファイル特定関数
+function Get-CoverageFilePaths {
+    param(
+        [string]$ProjectRoot,
+        [hashtable]$TestTargets
+    )
+    
+    $coveragePaths = @()
+    $utilsPath = Join-Path $ProjectRoot "scripts" "modules" "Utils"
+    $processPath = Join-Path $ProjectRoot "scripts" "modules" "Process"
+    
+    # 特定のテストファイルが指定された場合
+    if ($TestTargets.IsSpecificFile) {
+        $targetModulePath = Get-ModulePathFromTest -TestPath $TestTargets.ResolvedTestPath -ProjectRoot $ProjectRoot
+        if ($targetModulePath -and (Test-Path $targetModulePath)) {
+            $coveragePaths += $targetModulePath
+        }
+    }
+    # TestTypeに基づく絞り込み（$TestTargets.TestPathsから推定）
+    else {
+        # TestPathsからTestTypeを推定
+        $firstTestPath = $TestTargets.TestPaths[0]
+        $testType = ""
+        
+        if ($firstTestPath -match "\\Utils\\Foundation$" -or $firstTestPath -match "/Utils/Foundation$") {
+            $testType = "Foundation"
+        }
+        elseif ($firstTestPath -match "\\Utils\\Infrastructure$" -or $firstTestPath -match "/Utils/Infrastructure$") {
+            $testType = "Infrastructure"
+        }
+        elseif ($firstTestPath -match "\\Process$" -or $firstTestPath -match "/Process$") {
+            $testType = "Process"
+        }
+        elseif ($firstTestPath -match "\\Integration$" -or $firstTestPath -match "/Integration$") {
+            $testType = "Integration"
+        }
+        elseif ($TestTargets.TestPaths.Count -eq 2 -and 
+                ($TestTargets.TestPaths -contains (Join-Path $TestsRoot "Utils")) -and 
+                ($TestTargets.TestPaths -contains (Join-Path $TestsRoot "Process"))) {
+            $testType = "Unit"
+        }
+        else {
+            $testType = "All"
+        }
+        
+        switch ($testType) {
+            "Foundation" {
+                $foundationPath = Join-Path $utilsPath "Foundation"
+                if (Test-Path $foundationPath) {
+                    $foundationFiles = Get-ChildItem -Path $foundationPath -Filter "*.psm1" | Select-Object -ExpandProperty FullName
+                    $coveragePaths += $foundationFiles
+                }
+            }
+            "Infrastructure" {
+                $infrastructurePath = Join-Path $utilsPath "Infrastructure"
+                if (Test-Path $infrastructurePath) {
+                    $infrastructureFiles = Get-ChildItem -Path $infrastructurePath -Filter "*.psm1" | Select-Object -ExpandProperty FullName
+                    $coveragePaths += $infrastructureFiles
+                }
+            }
+            "Process" {
+                if (Test-Path $processPath) {
+                    $processFiles = Get-ChildItem -Path $processPath -Filter "*.psm1" | Select-Object -ExpandProperty FullName
+                    $coveragePaths += $processFiles
+                }
+            }
+            "Unit" {
+                # Unit = Utils (Foundation + Infrastructure + DataAccess + DataProcessing)
+                if (Test-Path $utilsPath) {
+                    $utilsFiles = Get-ChildItem -Path $utilsPath -Recurse -Filter "*.psm1" | Select-Object -ExpandProperty FullName
+                    $coveragePaths += $utilsFiles
+                }
+                if (Test-Path $processPath) {
+                    $processFiles = Get-ChildItem -Path $processPath -Filter "*.psm1" | Select-Object -ExpandProperty FullName
+                    $coveragePaths += $processFiles
+                }
+            }
+            default {
+                # All または Integration の場合はすべてのファイル
+                if (Test-Path $utilsPath) {
+                    $utilsFiles = Get-ChildItem -Path $utilsPath -Recurse -Filter "*.psm1" | Select-Object -ExpandProperty FullName
+                    $coveragePaths += $utilsFiles
+                }
+                if (Test-Path $processPath) {
+                    $processFiles = Get-ChildItem -Path $processPath -Filter "*.psm1" | Select-Object -ExpandProperty FullName
+                    $coveragePaths += $processFiles
+                }
+            }
+        }
+    }
+    
+    Write-Host "カバレッジ対象ファイル数: $($coveragePaths.Count)" -ForegroundColor Yellow
+    foreach ($path in $coveragePaths) {
+        Write-Host "  - $path" -ForegroundColor Gray
+    }
+    
+    return $coveragePaths
 }
 
 # 必要なモジュールの確認とインストール
@@ -88,40 +390,30 @@ function Install-RequiredModules {
 # Pesterの設定
 function Initialize-PesterConfiguration {
     param(
+        [string]$TestPath,
         [string]$TestType,
         [string]$OutputFormat,
         [string]$OutputPath,
         [bool]$ShowCoverage,
         [bool]$SkipSlowTests,
-        [int]$TimeoutMinutes
+        [int]$TimeoutMinutes,
+        [string]$ProjectRoot,
+        [bool]$Detailed
     )
     
     # Pester 5.x の設定
     $config = New-PesterConfiguration
     
-    # 実行対象の設定
-    switch ($TestType) {
-        "Unit" {
-            $config.Run.Path = @(
-                (Join-Path $TestsRoot "Utils"),
-                (Join-Path $TestsRoot "Process")
-            )
-        }
-        "Integration" {
-            $config.Run.Path = Join-Path $TestsRoot "Integration"
-        }
-        "Foundation" {
-            $config.Run.Path = Join-Path $TestsRoot "Utils" "Foundation"
-        }
-        "Infrastructure" {
-            $config.Run.Path = Join-Path $TestsRoot "Utils" "Infrastructure"
-        }
-        "Process" {
-            $config.Run.Path = Join-Path $TestsRoot "Process"
-        }
-        default {
-            $config.Run.Path = $TestsRoot
-        }
+    # テスト対象パスを統一関数で取得
+    $testTargets = Get-TestTargetPaths -TestPath $TestPath -TestType $TestType -TestsRoot $TestsRoot -ProjectRoot $ProjectRoot
+    $config.Run.Path = $testTargets.TestPaths
+    
+    # 特定ファイル実行時のメッセージ表示
+    if ($testTargets.IsSpecificFile) {
+        Write-Host "特定のテストを実行中: $($testTargets.ResolvedTestPath)" -ForegroundColor Yellow
+    }
+    else {
+        Write-Host "テストタイプ: $TestType" -ForegroundColor Yellow
     }
     
     # 出力設定
@@ -154,25 +446,16 @@ function Initialize-PesterConfiguration {
             }
             # HTML出力は別途処理
         }
-        "Text" {
-            if ([string]::IsNullOrEmpty($OutputPath)) {
-                $OutputPath = Join-Path $TestsRoot "TestResults.txt"
-            }
-            # テキスト出力は別途処理
-        }
     }
     
     # カバレッジ設定
     if ($ShowCoverage) {
         $config.CodeCoverage.Enabled = $true
-        $config.CodeCoverage.Path = @(
-            (Join-Path $ProjectRoot "scripts" "modules" "Utils" "*.psm1"),
-            (Join-Path $ProjectRoot "scripts" "modules" "Process" "*.psm1")
-        )
+        $coveragePaths = Get-CoverageFilePaths -ProjectRoot $ProjectRoot -TestTargets $TestTargets
+        $config.CodeCoverage.Path = $coveragePaths
         $config.CodeCoverage.OutputFormat = "JaCoCo"
         $config.CodeCoverage.OutputPath = Join-Path $TestsRoot "Coverage.xml"
-    }
-    
+    }   
     return $config
 }
 
@@ -181,7 +464,8 @@ function New-HtmlReport {
     param(
         [Parameter(Mandatory = $true)]
         $TestResult,
-        [string]$OutputPath
+        [string]$OutputPath,
+        $TestTargets = $null
     )
     
     $htmlContent = @"
@@ -222,7 +506,7 @@ function New-HtmlReport {
             <tr><td class="passed">成功</td><td>$($TestResult.PassedCount)</td></tr>
             <tr><td class="failed">失敗</td><td>$($TestResult.FailedCount)</td></tr>
             <tr><td class="skipped">スキップ</td><td>$($TestResult.SkippedCount)</td></tr>
-            <tr><td>実行時間</td><td>$($TestResult.Time)</td></tr>
+            <tr><td>実行時間</td><td>$(if ($TestResult.Duration) { $TestResult.Duration.ToString("mm\:ss\.fff") } else { "00:00.000" })</td></tr>
         </table>
     </div>
     
@@ -232,17 +516,11 @@ function New-HtmlReport {
             <tr><th>モジュール</th><th>総数</th><th>成功</th><th>失敗</th><th>スキップ</th><th>実行時間</th></tr>
 "@
 
-    # モジュール別統計を集計
+    # モジュール別統計を集計（分類は除外し、モジュール単位で集計）
     $moduleStats = @{}
     foreach ($test in $TestResult.Tests) {
-        # テスト結果のDescribeブロック名から取得を試行
-        $describeName = if ($test.Block) { $test.Block } else { $test.Name }
-        $moduleName = if ($describeName -match "(.+?)\s+モジュール") {
-            $matches[1]
-        }
-        else {
-            Get-ModuleNameFromTest -TestPath $test.Path
-        }
+        $moduleName = Get-ModuleNameFromTestResult -TestObject $test -TestTargets $testTargets
+        
         if (-not $moduleStats.ContainsKey($moduleName)) {
             $moduleStats[$moduleName] = @{
                 Total   = 0
@@ -265,11 +543,11 @@ function New-HtmlReport {
         }
     }
     
-    foreach ($module in ($moduleStats.Keys | Sort-Object)) {
-        $stats = $moduleStats[$module]
+    foreach ($moduleName in ($moduleStats.Keys | Sort-Object)) {
+        $stats = $moduleStats[$moduleName]
         $htmlContent += @"
             <tr>
-                <td>$module</td>
+                <td>$moduleName</td>
                 <td>$($stats.Total)</td>
                 <td class="passed">$($stats.Passed)</td>
                 <td class="failed">$($stats.Failed)</td>
@@ -290,18 +568,12 @@ function New-HtmlReport {
         <h3>失敗したテスト</h3>
 "@
         foreach ($failedTest in $TestResult.Failed) {
-            # テスト結果のDescribeブロック名から取得を試行
-            $describeName = if ($failedTest.Block) { $failedTest.Block } else { $failedTest.Name }
-            $failedModuleName = if ($describeName -match "(.+?)\s+モジュール") {
-                $matches[1]
-            }
-            else {
-                Get-ModuleNameFromTest -TestPath $failedTest.Path
-            }
+            $moduleName = Get-ModuleNameFromTestResult -TestObject $failedTest -TestTargets $testTargets
+            $classification = Get-TestClassification -TestObject $failedTest
             $htmlContent += @"
         <div class="test-container">
-            <div class="test-name">[$failedModuleName] $($failedTest.Name)</div>
-            <div class="test-time">実行時間: $($failedTest.Time)</div>
+            <div class="test-name">[$moduleName] $classification - $($failedTest.Name)</div>
+            <div class="test-time">実行時間: $(if ($failedTest.Duration) { $failedTest.Duration.ToString("mm\:ss\.fff") } else { "00:00.000" })</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
                 $($failedTest.ErrorRecord.Exception.Message -replace "`n", "<br>")
@@ -318,6 +590,7 @@ function New-HtmlReport {
         <table>
             <tr>
                 <th>モジュール</th>
+                <th>分類</th>
                 <th>テスト名</th>
                 <th>結果</th>
                 <th>実行時間</th>
@@ -340,21 +613,16 @@ function New-HtmlReport {
             ""
         }
         
-        # テスト結果のDescribeブロック名から取得を試行
-        $describeName = if ($test.Block) { $test.Block } else { $test.Name }
-        $moduleName = if ($describeName -match "(.+?)\s+モジュール") {
-            $matches[1]
-        }
-        else {
-            Get-ModuleNameFromTest -TestPath $test.Path
-        }
+        $moduleName = Get-ModuleNameFromTestResult -TestObject $test -TestTargets $testTargets
+        $classification = Get-TestClassification -TestObject $test
         
         $htmlContent += @"
             <tr>
                 <td>$moduleName</td>
+                <td>$classification</td>
                 <td>$($test.Name)</td>
                 <td class="$statusClass">$($test.Result)</td>
-                <td>$($test.Time.ToString("mm\:ss\.fff"))</td>
+                <td>$(if ($test.Duration) { $test.Duration.ToString("mm\:ss\.fff") } else { "00:00.000" })</td>
                 <td>$details</td>
             </tr>
 "@
@@ -363,6 +631,133 @@ function New-HtmlReport {
     $htmlContent += @"
         </table>
     </div>
+"@
+
+    # カバレッジ情報の追加（すべてのテスト結果の後）
+    if ($null -ne $TestResult.CodeCoverage) {
+        $coverage = $TestResult.CodeCoverage
+        $coveragePercent = $coverage.CoveragePercent
+        $executedCount = if ($coverage.CommandsExecuted) { $coverage.CommandsExecuted.Count } else { 0 }
+        $missedCount = if ($coverage.CommandsMissed) { $coverage.CommandsMissed.Count } else { 0 }
+        $totalAnalyzed = $executedCount + $missedCount
+        
+        $htmlContent += @"
+    <div class="coverage-summary" style="margin-top: 30px; border-top: 3px solid #2196F3; padding-top: 20px;">
+        <h2 style="color: #2196F3; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">📊 コードカバレッジレポート</h2>
+        <table>
+            <tr><th>項目</th><th>値</th></tr>
+            <tr><td>カバレッジ率</td><td>$([math]::Round($coveragePercent, 2))%</td></tr>
+            <tr><td>実行されたコマンド</td><td>$executedCount</td></tr>
+            <tr><td>解析されたコマンド</td><td>$totalAnalyzed</td></tr>
+            <tr><td>未実行のコマンド</td><td>$missedCount</td></tr>
+        </table>
+        <p style="font-size: 0.9em; color: #666;">※ Pester 5.xでは「コマンド」単位で測定（行単位ではない）</p>
+    </div>
+    
+    <div class="file-coverage">
+        <h3 style="color: #2196F3;">📁 ファイル別カバレッジ詳細</h3>
+        <table>
+            <tr>
+                <th>ファイル</th>
+                <th>解析コマンド数</th>
+                <th>実行コマンド数</th>
+                <th>未実行コマンド数</th>
+                <th>カバレッジ率</th>
+            </tr>
+"@
+
+        # ファイル別カバレッジの計算
+        $fileStats = @{}
+        
+        # 実行されたコマンドの集計
+        if ($coverage.CommandsExecuted) {
+            foreach ($cmd in $coverage.CommandsExecuted) {
+                $file = $cmd.File
+                if (-not $fileStats.ContainsKey($file)) {
+                    $fileStats[$file] = @{ Executed = 0; Missed = 0 }
+                }
+                $fileStats[$file].Executed++
+            }
+        }
+        
+        # 未実行コマンドの集計
+        if ($coverage.CommandsMissed) {
+            foreach ($cmd in $coverage.CommandsMissed) {
+                $file = $cmd.File
+                if (-not $fileStats.ContainsKey($file)) {
+                    $fileStats[$file] = @{ Executed = 0; Missed = 0 }
+                }
+                $fileStats[$file].Missed++
+            }
+        }
+        
+        # ファイル別統計の表示
+        foreach ($file in ($fileStats.Keys | Sort-Object)) {
+            $stats = $fileStats[$file]
+            $totalCommands = $stats.Executed + $stats.Missed
+            $fileCoveragePercent = if ($totalCommands -gt 0) { 
+                [math]::Round(($stats.Executed / $totalCommands) * 100, 2) 
+            } else { 
+                0 
+            }
+            
+            # ファイル名を短縮表示（プロジェクトルートからの相対パス）
+            $relativePath = $file -replace [regex]::Escape($ProjectRoot), ""
+            $relativePath = $relativePath.TrimStart("\", "/")
+            
+            $htmlContent += @"
+            <tr>
+                <td>$relativePath</td>
+                <td>$totalCommands</td>
+                <td>$($stats.Executed)</td>
+                <td>$($stats.Missed)</td>
+                <td>$fileCoveragePercent%</td>
+            </tr>
+"@
+        }
+        
+        $htmlContent += @"
+        </table>
+    </div>
+"@
+
+        # 未実行コマンドの詳細表示（すべて表示）
+        $missedCommands = if ($coverage.CommandsMissed) { $coverage.CommandsMissed } else { @() }
+        if ($missedCommands.Count -gt 0) {
+            $htmlContent += @"
+    <div class="missed-commands">
+        <h3 style="color: #ff9800;">⚠️ 未実行コマンド詳細（全 $($missedCommands.Count) 個）</h3>
+        <table>
+            <tr>
+                <th>ファイル</th>
+                <th>行番号</th>
+                <th>コマンド</th>
+            </tr>
+"@
+            
+            # すべての未実行コマンドを表示
+            foreach ($cmd in $missedCommands) {
+                $relativePath = $cmd.File -replace [regex]::Escape($ProjectRoot), ""
+                $relativePath = $relativePath.TrimStart("\", "/")
+                $command = if ($cmd.Command) { $cmd.Command } else { "不明" }
+                
+                $htmlContent += @"
+            <tr>
+                <td>$relativePath</td>
+                <td>$($cmd.Line)</td>
+                <td style="font-family: monospace; font-size: 0.9em;">$command</td>
+            </tr>
+"@
+            }
+            
+            $htmlContent += @"
+        </table>
+    </div>
+"@
+        }
+    }
+
+    $htmlContent += @"
 </body>
 </html>
 "@
@@ -373,199 +768,85 @@ function New-HtmlReport {
 
 # メイン処理
 function Invoke-TestExecution {
+    param(
+        [string]$TestPath = $TestPath,
+        [string]$TestType = $TestType,
+        [string]$OutputFormat = $OutputFormat,
+        [string]$OutputPath = $OutputPath,
+        [switch]$ShowCoverage = $ShowCoverage,
+        [switch]$Detailed = $Detailed,
+        [switch]$SkipSlowTests = $SkipSlowTests,
+        [int]$TimeoutMinutes = $TimeoutMinutes
+    )
     Write-Host "=== PowerShell & SQLite データ同期システム テスト実行 ===" -ForegroundColor Cyan
     Write-Host "プロジェクトルート: $ProjectRoot" -ForegroundColor Gray
     Write-Host "テストルート: $TestsRoot" -ForegroundColor Gray
     Write-Host ""
     
-    # 必要なモジュールのインストール
-    Install-RequiredModules
-    
-    # Pesterモジュールのインポート
-    Import-Module Pester -Force
-    
-    # 特定のテストパスが指定された場合
-    if (-not [string]::IsNullOrEmpty($TestPath)) {
-        $fullTestPath = if ([System.IO.Path]::IsPathRooted($TestPath)) {
-            $TestPath
-        }
-        else {
-            Join-Path $TestsRoot $TestPath
-        }
         
-        if (-not (Test-Path $fullTestPath)) {
-            Write-Error "指定されたテストパスが見つかりません: $fullTestPath"
-            exit 1
-        }
-        
-        Write-Host "特定のテストを実行中: $fullTestPath" -ForegroundColor Yellow
-        $config = New-PesterConfiguration
-        $config.Run.Path = $fullTestPath
-        $config.Output.Verbosity = if ($Detailed) { "Detailed" } else { "Normal" }
-        $config.Run.PassThru = $true
-    }
-    else {
-        Write-Host "テストタイプ: $TestType" -ForegroundColor Yellow
-        $config = Initialize-PesterConfiguration -TestType $TestType -OutputFormat $OutputFormat -OutputPath $OutputPath -ShowCoverage $ShowCoverage -SkipSlowTests $SkipSlowTests -TimeoutMinutes $TimeoutMinutes
-    }
-    
-    # テスト実行
-    Write-Host "テスト実行を開始します..." -ForegroundColor Green
-    $startTime = Get-Date
-    
     try {
+        # 必要なモジュールのインストール
+        Install-RequiredModules
+
+        # Pester設定の初期化
+        $config = Initialize-PesterConfiguration -TestPath $TestPath -TestType $TestType -OutputFormat $OutputFormat -OutputPath $OutputPath -ShowCoverage $ShowCoverage -SkipSlowTests $SkipSlowTests -TimeoutMinutes $TimeoutMinutes -ProjectRoot $ProjectRoot -Detailed $Detailed
+    
+        Write-Host "テストを開始します..." -ForegroundColor Green
+        $startTime = Get-Date
+
+        # テストを実行
         $result = Invoke-Pester -Configuration $config
         
         $endTime = Get-Date
         $totalDuration = $endTime - $startTime
-        
-        # # テスト結果オブジェクトの構造調査（デバッグ用）
-        # if ($result.Tests.Count -gt 0) {
-        #     Write-Host ""
-        #     Write-Host "=== デバッグ: テスト結果オブジェクト構造 ===" -ForegroundColor Magenta
-        #     $firstTest = $result.Tests[0]
-        #     Write-Host "テストオブジェクトのプロパティ:" -ForegroundColor Yellow
-        #     $firstTest | Get-Member -MemberType Property | Select-Object Name, Definition | Format-Table -AutoSize
-        #     Write-Host "テストオブジェクトの値:" -ForegroundColor Yellow
-        #     $firstTest | Format-List * | Out-String | Write-Host
-        # }
-        
-        # 結果の表示
-        Write-Host ""
-        Write-Host "=== テスト実行完了 ===" -ForegroundColor Cyan
-        Write-Host "総実行時間: $($totalDuration.TotalSeconds) 秒" -ForegroundColor Gray
-        Write-Host "総テスト数: $($result.TotalCount)" -ForegroundColor White
-        Write-Host "成功: $($result.PassedCount)" -ForegroundColor Green
-        Write-Host "失敗: $($result.FailedCount)" -ForegroundColor Red
-        Write-Host "スキップ: $($result.SkippedCount)" -ForegroundColor Yellow
-        
-        # モジュール別統計の表示
-        Write-Host ""
-        Write-Host "=== モジュール別実行結果 ===" -ForegroundColor Cyan
-        
-        # モジュール別統計を集計
-        $moduleStats = @{}
-        foreach ($test in $result.Tests) {
-            # テスト結果のDescribeブロック名から取得を試行
-            $describeName = if ($test.Block) { $test.Block } else { $test.Name }
-            $moduleName = if ($describeName -match "(.+?)\s+モジュール") {
-                $matches[1]
-            }
-            else {
-                Get-ModuleNameFromTest -TestPath $test.Path
-            }
-            if (-not $moduleStats.ContainsKey($moduleName)) {
-                $moduleStats[$moduleName] = @{
-                    Total   = 0
-                    Passed  = 0
-                    Failed  = 0
-                    Skipped = 0
-                    Time    = [TimeSpan]::Zero
-                }
-            }
-            
-            $moduleStats[$moduleName].Total++
-            if ($test.Time) {
-                $moduleStats[$moduleName].Time = $moduleStats[$moduleName].Time.Add($test.Time)
-            }
-            
-            switch ($test.Result) {
-                "Passed" { $moduleStats[$moduleName].Passed++ }
-                "Failed" { $moduleStats[$moduleName].Failed++ }
-                "Skipped" { $moduleStats[$moduleName].Skipped++ }
-            }
-        }
-        
-        # 表形式で表示
-        $format = "{0,-35} {1,5} {2,5} {3,5} {4,5} {5,8}"
-        Write-Host ($format -f "モジュール", "総数", "成功", "失敗", "スキップ", "時間") -ForegroundColor White
-        Write-Host ($format -f "-----", "----", "----", "----", "------", "--------") -ForegroundColor Gray
-        
-        foreach ($module in ($moduleStats.Keys | Sort-Object)) {
-            $stats = $moduleStats[$module]
-            $timeString = $stats.Time.ToString("mm\:ss\.f")
-            
-            $color = if ($stats.Failed -gt 0) { "Red" } 
-            elseif ($stats.Skipped -gt 0) { "Yellow" } 
-            else { "Green" }
-            
-            Write-Host ($format -f $module, $stats.Total, $stats.Passed, $stats.Failed, $stats.Skipped, $timeString) -ForegroundColor $color
-        }
-        
+                
         # HTML レポートの生成
         if ($OutputFormat -eq "HTML") {
             if ([string]::IsNullOrEmpty($OutputPath)) {
                 $OutputPath = Join-Path $TestsRoot "TestResults.html"
             }
-            New-HtmlReport -TestResult $result -OutputPath $OutputPath
+            New-HtmlReport -TestResult $result -OutputPath $OutputPath -TestTargets $testTargets
         }
-        
-        # テキスト レポートの生成
-        if ($OutputFormat -eq "Text") {
-            if ([string]::IsNullOrEmpty($OutputPath)) {
-                $OutputPath = Join-Path $TestsRoot "TestResults.txt"
-            }
-            
-            $textReport = @"
-PowerShell & SQLite データ同期システム テスト結果
-実行日時: $(Get-Date -Format "yyyy年MM月dd日 HH:mm:ss")
-総実行時間: $($totalDuration.TotalSeconds) 秒
 
-=== モジュール別実行結果 ===
-"@
-            
-            # モジュール別統計をテキストレポートに追加
-            foreach ($module in ($moduleStats.Keys | Sort-Object)) {
-                $stats = $moduleStats[$module]
-                $textReport += "`n$module : 総数=$($stats.Total), 成功=$($stats.Passed), 失敗=$($stats.Failed), スキップ=$($stats.Skipped), 時間=$($stats.Time.ToString("mm\:ss\.fff"))"
-            }
-            
-            $textReport += @"
-
-=== 失敗したテスト ===
-"@
-            
-            foreach ($failedTest in $result.Failed) {
-                # テスト結果のDescribeブロック名から取得を試行
-                $describeName = if ($failedTest.Block) { $failedTest.Block } else { $failedTest.Name }
-                $failedModuleName = if ($describeName -match "(.+?)\s+モジュール") {
-                    $matches[1]
-                }
-                else {
-                    Get-ModuleNameFromTest -TestPath $failedTest.Path
-                }
-                $textReport += "`n- [$failedModuleName] $($failedTest.Name)"
-                $textReport += "`n  エラー: $($failedTest.ErrorRecord.Exception.Message)"
-                $textReport += "`n"
-            }
-
-            $textReport += @"
-=== サマリー ===
-総テスト数: $($result.TotalCount)
-成功: $($result.PassedCount)
-失敗: $($result.FailedCount)
-スキップ: $($result.SkippedCount)
-"@
-
-            $textReport | Out-File -FilePath $OutputPath -Encoding UTF8
-            Write-Host "テキストレポートを生成しました: $OutputPath" -ForegroundColor Green
-        }
-        
         # カバレッジ情報の表示
-        if ($ShowCoverage -and $result.CodeCoverage) {
+        if ($ShowCoverage) {
             Write-Host ""
             Write-Host "=== コードカバレッジ ===" -ForegroundColor Cyan
-            Write-Host "カバレッジ率: $($result.CodeCoverage.CoveragePercent)%" -ForegroundColor White
-            Write-Host "実行された行: $($result.CodeCoverage.ExecutedLines)" -ForegroundColor Green
-            Write-Host "総行数: $($result.CodeCoverage.TotalLines)" -ForegroundColor White
             
-            if ($result.CodeCoverage.MissedLines.Count -gt 0) {
-                Write-Host "未実行の行があります:" -ForegroundColor Yellow
-                foreach ($missedLine in $result.CodeCoverage.MissedLines | Select-Object -First 10) {
-                    Write-Host "  $($missedLine.File):$($missedLine.Line)" -ForegroundColor Yellow
+            
+            if ($null -ne $result.CodeCoverage) {
+                # Pester 5.x のプロパティ名を使用
+                $coveragePercent = $result.CodeCoverage.CoveragePercent
+                $executedCount = if ($result.CodeCoverage.CommandsExecuted) { $result.CodeCoverage.CommandsExecuted.Count } else { 0 }
+                $missedCount = if ($result.CodeCoverage.CommandsMissed) { $result.CodeCoverage.CommandsMissed.Count } else { 0 }
+                
+                # 解析されたコマンド総数は、実行されたコマンド + 未実行のコマンド
+                $totalAnalyzed = $executedCount + $missedCount
+                
+                Write-Host "カバレッジ率: $([math]::Round($coveragePercent, 2))%" -ForegroundColor White
+                Write-Host "実行されたコマンド: $executedCount" -ForegroundColor Green
+                Write-Host "解析されたコマンド: $totalAnalyzed" -ForegroundColor White
+                Write-Host "未実行のコマンド: $missedCount" -ForegroundColor Yellow
+                Write-Host "注意: Pester 5.xでは「コマンド」単位で測定（行単位ではない）" -ForegroundColor Gray
+                
+                # 解析されたファイル情報
+                if ($result.CodeCoverage.FilesAnalyzed) {
+                    Write-Host "解析されたファイル数: $($result.CodeCoverage.FilesAnalyzed.Count)" -ForegroundColor Cyan
                 }
-                if ($result.CodeCoverage.MissedLines.Count -gt 10) {
-                    Write-Host "  ... 他 $($result.CodeCoverage.MissedLines.Count - 10) 行" -ForegroundColor Yellow
+            }
+            else {
+                Write-Host "CodeCoverageオブジェクトがnullです" -ForegroundColor Red
+            }
+            
+            # 未実行コマンドの表示（Pester 5.x では CommandsMissed）
+            $missedCommands = if ($result.CodeCoverage.CommandsMissed) { $result.CodeCoverage.CommandsMissed } else { @() }
+            if ($missedCommands.Count -gt 0) {
+                Write-Host "未実行のコマンドがあります:" -ForegroundColor Yellow
+                foreach ($missedCommand in $missedCommands | Select-Object -First 10) {
+                    Write-Host "  $($missedCommand.File):$($missedCommand.Line)" -ForegroundColor Yellow
+                }
+                if ($missedCommands.Count -gt 10) {
+                    Write-Host "  ... 他 $($missedCommands.Count - 10) 行" -ForegroundColor Yellow
                 }
             }
         }
@@ -644,4 +925,4 @@ if ($args -contains "-h" -or $args -contains "-help" -or $args -contains "--help
 }
 
 # メイン処理の実行
-Invoke-TestExecution
+Invoke-TestExecution -TestPath $TestPath -TestType $TestType -OutputFormat $OutputFormat -OutputPath $OutputPath -ShowCoverage:$ShowCoverage -Detailed:$Detailed -SkipSlowTests:$SkipSlowTests -TimeoutMinutes $TimeoutMinutes

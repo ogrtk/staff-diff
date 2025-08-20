@@ -1,8 +1,8 @@
 # PowerShell & SQLite データ同期システム
 # Layer 3: Database ユーティリティライブラリ（SQL生成・テーブル定義）
-using module ”../Foundation/CoreUtils.psm1"
-using module ”../Infrastructure/LoggingUtils.psm1"
-using module ”../Infrastructure/ConfigurationUtils.psm1"
+using module "../Foundation/CoreUtils.psm1"
+using module "../Infrastructure/LoggingUtils.psm1"
+using module "../Infrastructure/ConfigurationUtils.psm1"
 
 # テーブル定義の取得（一時テーブル対応）
 function Get-TableDefinition {

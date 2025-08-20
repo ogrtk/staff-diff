@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="23" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2025-08-20" time="03:27:09">
+  <environment user="node" cwd="/workspaces/ps-sqlite" clr-version="8.0.12" user-domain="" machine-name="f389b0d092e5" platform="Linux" nunit-version="2.5.8.0" os-version="6.6.76-08096-g300882a0a131" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="6.9997" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="/workspaces/ps-sqlite/tests/Process/Invoke-ConfigValidation.Tests.ps1" executed="True" result="Success" success="True" time="6.9997" asserts="0" description="/workspaces/ps-sqlite/tests/Process/Invoke-ConfigValidation.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Invoke-ConfigValidation モジュール" executed="True" result="Success" success="True" time="6.2393" asserts="0" description="Invoke-ConfigValidation モジュール">
+            <results>
+              <test-suite type="TestFixture" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - 基本動作" executed="True" result="Success" success="True" time="1.5198" asserts="0" description="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - 基本動作">
+                <results>
+                  <test-case description="有効なパラメータで正常に処理を完了する" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - 基本動作.有効なパラメータで正常に処理を完了する" time="0.8779" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="DatabasePathが未指定の場合、デフォルトパスを設定する" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - 基本動作.DatabasePathが未指定の場合、デフォルトパスを設定する" time="0.1989" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="設定ファイル読み込みが正常に実行される" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - 基本動作.設定ファイル読み込みが正常に実行される" time="0.394" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - 外部依存関係検証" executed="True" result="Success" success="True" time="2.0808" asserts="0" description="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - 外部依存関係検証">
+                <results>
+                  <test-case description="SQLite3コマンドが利用可能な場合、成功メッセージをログ出力する" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - 外部依存関係検証.SQLite3コマンドが利用可能な場合、成功メッセージをログ出力する" time="0.341" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="SQLite3コマンドが見つからない場合、エラーをスローする" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - 外部依存関係検証.SQLite3コマンドが見つからない場合、エラーをスローする" time="0.2005" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ファイルパス解決" executed="True" result="Success" success="True" time="2.8414" asserts="0" description="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ファイルパス解決">
+                <results>
+                  <test-case description="実ファイルを使ったパス解決テスト" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ファイルパス解決.実ファイルを使ったパス解決テスト" time="0.2918" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="パラメータで指定されたパスが優先される" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ファイルパス解決.パラメータで指定されたパスが優先される" time="0.241" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="パラメータが未指定の場合、設定ファイルから解決される" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ファイルパス解決.パラメータが未指定の場合、設定ファイルから解決される" time="0.215" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ファイル存在チェック" executed="True" result="Success" success="True" time="3.4625" asserts="0" description="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ファイル存在チェック">
+                <results>
+                  <test-case description="解決されたパスでファイル存在チェックが実行される" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ファイル存在チェック.解決されたパスでファイル存在チェックが実行される" time="0.4104" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="ファイル存在チェックでエラーが発生した場合、例外をスローする" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ファイル存在チェック.ファイル存在チェックでエラーが発生した場合、例外をスローする" time="0.1908" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ログ出力" executed="True" result="Success" success="True" time="3.9923" asserts="0" description="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ログ出力">
+                <results>
+                  <test-case description="処理パラメータが適切にログ出力される" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ログ出力.処理パラメータが適切にログ出力される" time="0.2479" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="各処理段階で適切な進捗ログが出力される" name="Invoke-ConfigValidation モジュール.Invoke-ConfigValidation 関数 - ログ出力.各処理段階で適切な進捗ログが出力される" time="0.2649" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-ConfigValidation モジュール.ファイル存在チェック（Test-ResolvedFilePaths経由）" executed="True" result="Success" success="True" time="4.9429" asserts="0" description="Invoke-ConfigValidation モジュール.ファイル存在チェック（Test-ResolvedFilePaths経由）">
+                <results>
+                  <test-case description="すべてのファイルが存在する場合、正常に完了する" name="Invoke-ConfigValidation モジュール.ファイル存在チェック（Test-ResolvedFilePaths経由）.すべてのファイルが存在する場合、正常に完了する" time="0.3433" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="提供データファイルが存在しない場合、エラーをスローする" name="Invoke-ConfigValidation モジュール.ファイル存在チェック（Test-ResolvedFilePaths経由）.提供データファイルが存在しない場合、エラーをスローする" time="0.2698" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="現在データファイルが存在しない場合、エラーをスローする" name="Invoke-ConfigValidation モジュール.ファイル存在チェック（Test-ResolvedFilePaths経由）.現在データファイルが存在しない場合、エラーをスローする" time="0.1479" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="出力ディレクトリが存在しない場合、エラーをスローする" name="Invoke-ConfigValidation モジュール.ファイル存在チェック（Test-ResolvedFilePaths経由）.出力ディレクトリが存在しない場合、エラーをスローする" time="0.1762" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-ConfigValidation モジュール.関数のエクスポート確認" executed="True" result="Success" success="True" time="5.0457" asserts="0" description="Invoke-ConfigValidation モジュール.関数のエクスポート確認">
+                <results>
+                  <test-case description="Invoke-ConfigValidation 関数がエクスポートされている" name="Invoke-ConfigValidation モジュール.関数のエクスポート確認.Invoke-ConfigValidation 関数がエクスポートされている" time="0.0889" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-ConfigValidation モジュール.エラーハンドリングとエッジケース" executed="True" result="Success" success="True" time="6.0178" asserts="0" description="Invoke-ConfigValidation モジュール.エラーハンドリングとエッジケース">
+                <results>
+                  <test-case description="空のProjectRootパラメータでエラーをスローする" name="Invoke-ConfigValidation モジュール.エラーハンドリングとエッジケース.空のProjectRootパラメータでエラーをスローする" time="0.0976" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="無効なProjectRootパスでエラーをスローする" name="Invoke-ConfigValidation モジュール.エラーハンドリングとエッジケース.無効なProjectRootパスでエラーをスローする" time="0.1114" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="設定検証でエラーが発生した場合、適切にエラーをスローする" name="Invoke-ConfigValidation モジュール.エラーハンドリングとエッジケース.設定検証でエラーが発生した場合、適切にエラーをスローする" time="0.1069" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="日本語データを含むファイルパスの処理" name="Invoke-ConfigValidation モジュール.エラーハンドリングとエッジケース.日本語データを含むファイルパスの処理" time="0.2486" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="複数のパラメータが同時に指定された場合の優先順位" name="Invoke-ConfigValidation モジュール.エラーハンドリングとエッジケース.複数のパラメータが同時に指定された場合の優先順位" time="0.1721" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="非常に長いファイルパスでも正常に処理される" name="Invoke-ConfigValidation モジュール.エラーハンドリングとエッジケース.非常に長いファイルパスでも正常に処理される" time="0.2208" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>
