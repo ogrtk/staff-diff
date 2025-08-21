@@ -61,9 +61,6 @@ function Initialize-TestEnvironment {
         [switch]$CleanupBefore
     )
     
-    # 環境変数設定（Pesterテスト実行中であることを示す）
-    $env:PESTER_TEST = "1"
-    
     # プロジェクトルートを取得
     $ProjectRoot = Find-ProjectRoot
     

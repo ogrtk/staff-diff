@@ -24,18 +24,18 @@
     <div class="header">
         <h1>PowerShell & SQLite データ同期システム</h1>
         <h2>テスト実行結果</h2>
-        <p>実行日時: 2025年08月20日 23:24:29</p>
+        <p>実行日時: 2025年08月21日 10:39:41</p>
     </div>
     
     <div class="summary">
         <h3>実行サマリー</h3>
         <table>
             <tr><th>項目</th><th>件数</th></tr>
-            <tr><td>総テスト数</td><td>23</td></tr>
+            <tr><td>総テスト数</td><td>31</td></tr>
             <tr><td class="passed">成功</td><td>23</td></tr>
-            <tr><td class="failed">失敗</td><td>0</td></tr>
+            <tr><td class="failed">失敗</td><td>8</td></tr>
             <tr><td class="skipped">スキップ</td><td>0</td></tr>
-            <tr><td>実行時間</td><td>00:06.544</td></tr>
+            <tr><td>実行時間</td><td>00:10.574</td></tr>
         </table>
     </div>
     
@@ -48,9 +48,73 @@
                 <td class="passed">23</td>
                 <td class="failed">0</td>
                 <td class="skipped">0</td>
-                <td>00:05.438</td>
+                <td>00:05.065</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>8</td>
+                <td class="passed">0</td>
+                <td class="failed">8</td>
+                <td class="skipped">0</td>
+                <td>00:04.142</td>
             </tr>        </table>
     </div>    <div class="test-details">
+        <h3>失敗したテスト</h3>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - 全ての同期アクションが有効な場合、フィルタリングなしで出力される</div>
+            <div class="test-time">実行時間: 00:03.469</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                SQLite3 CSV出力の実行に失敗しました: sqlite3 CSV出力エラー (終了コード: 1): Error: in prepare, no such table: sync_result
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - ADDアクションのみ有効な場合、新規作成のみ出力される</div>
+            <div class="test-time">実行時間: 00:00.085</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - KEEPアクションのみ無効な場合、変更なし以外が出力される</div>
+            <div class="test-time">実行時間: 00:00.099</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - 全ての同期アクションが無効な場合、空の結果が出力される</div>
+            <div class="test-time">実行時間: 00:00.082</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - enabled設定がない場合、全レコードが出力される</div>
+            <div class="test-time">実行時間: 00:00.097</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] 履歴保存機能 - 履歴ディレクトリが存在しない場合、作成される</div>
+            <div class="test-time">実行時間: 00:00.096</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] 履歴保存機能 - 出力ファイルが履歴ディレクトリにコピーされる</div>
+            <div class="test-time">実行時間: 00:00.107</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] エラーハンドリング - 出力ファイルパスが指定されていない場合、例外がスローされる</div>
+            <div class="test-time">実行時間: 00:00.103</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                Expected an exception with message like '*出力ファイルパスが指定されていません*' to be thrown, but the message was '設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。'. from /workspaces/ps-sqlite/scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1:21 char:9<br>    +         throw "設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。"<br>    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            </div>
+        </div></div>    <div class="test-details">
         <h3>すべてのテスト結果</h3>
         <table>
             <tr>
@@ -65,2531 +129,220 @@
                 <td>[+] Invoke-ConfigValidation 関数 - 基本動作</td>
                 <td>有効なパラメータで正常に処理を完了する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.868</td>
+                <td>00:00.826</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 基本動作</td>
                 <td>DatabasePathが未指定の場合、デフォルトパスを設定する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.255</td>
+                <td>00:00.230</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 基本動作</td>
                 <td>設定ファイル読み込みが正常に実行される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.283</td>
+                <td>00:00.322</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 外部依存関係検証</td>
                 <td>SQLite3コマンドが利用可能な場合、成功メッセージをログ出力する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.256</td>
+                <td>00:00.269</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 外部依存関係検証</td>
                 <td>SQLite3コマンドが見つからない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.218</td>
+                <td>00:00.185</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイルパス解決</td>
                 <td>実ファイルを使ったパス解決テスト</td>
                 <td class="passed">Passed</td>
-                <td>00:00.314</td>
+                <td>00:00.286</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイルパス解決</td>
                 <td>パラメータで指定されたパスが優先される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.218</td>
+                <td>00:00.223</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイルパス解決</td>
                 <td>パラメータが未指定の場合、設定ファイルから解決される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.237</td>
+                <td>00:00.219</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイル存在チェック</td>
                 <td>解決されたパスでファイル存在チェックが実行される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.234</td>
+                <td>00:00.222</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイル存在チェック</td>
                 <td>ファイル存在チェックでエラーが発生した場合、例外をスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.160</td>
+                <td>00:00.218</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ログ出力</td>
                 <td>処理パラメータが適切にログ出力される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.239</td>
+                <td>00:00.230</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ログ出力</td>
                 <td>各処理段階で適切な進捗ログが出力される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.300</td>
+                <td>00:00.286</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>すべてのファイルが存在する場合、正常に完了する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.265</td>
+                <td>00:00.275</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>提供データファイルが存在しない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.240</td>
+                <td>00:00.163</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>現在データファイルが存在しない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.257</td>
+                <td>00:00.129</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>出力ディレクトリが存在しない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.176</td>
+                <td>00:00.149</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] 関数のエクスポート確認</td>
                 <td>Invoke-ConfigValidation 関数がエクスポートされている</td>
                 <td class="passed">Passed</td>
-                <td>00:00.088</td>
+                <td>00:00.077</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>空のProjectRootパラメータでエラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.106</td>
+                <td>00:00.084</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>無効なProjectRootパスでエラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.095</td>
+                <td>00:00.076</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>設定検証でエラーが発生した場合、適切にエラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.101</td>
+                <td>00:00.094</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>日本語データを含むファイルパスの処理</td>
                 <td class="passed">Passed</td>
-                <td>00:00.186</td>
+                <td>00:00.187</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>複数のパラメータが同時に指定された場合の優先順位</td>
                 <td class="passed">Passed</td>
-                <td>00:00.173</td>
+                <td>00:00.154</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>非常に長いファイルパスでも正常に処理される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.155</td>
+                <td>00:00.147</td>
                 <td></td>
-            </tr>        </table>
-    </div>    <div class="coverage-summary" style="margin-top: 30px; border-top: 3px solid #2196F3; padding-top: 20px;">
-        <h2 style="color: #2196F3; border-bottom: 2px solid #2196F3; padding-bottom: 10px;">📊 コードカバレッジレポート</h2>
-        <table>
-            <tr><th>項目</th><th>値</th></tr>
-            <tr><td>カバレッジ率</td><td>10.33%</td></tr>
-            <tr><td>実行されたコマンド</td><td>50</td></tr>
-            <tr><td>解析されたコマンド</td><td>484</td></tr>
-            <tr><td>未実行のコマンド</td><td>434</td></tr>
-        </table>
-        <p style="font-size: 0.9em; color: #666;">※ Pester 5.xでは「コマンド」単位で測定（行単位ではない）</p>
-    </div>
-    
-    <div class="file-coverage">
-        <h3 style="color: #2196F3;">📁 ファイル別カバレッジ詳細</h3>
-        <table>
-            <tr>
-                <th>ファイル</th>
-                <th>解析コマンド数</th>
-                <th>実行コマンド数</th>
-                <th>未実行コマンド数</th>
-                <th>カバレッジ率</th>
             </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-ConfigValidation.psm1</td>
-                <td>51</td>
-                <td>50</td>
-                <td>1</td>
-                <td>98.04%</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>26</td>
-                <td>0</td>
-                <td>26</td>
-                <td>0%</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>174</td>
-                <td>0</td>
-                <td>174</td>
-                <td>0%</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>68</td>
-                <td>0</td>
-                <td>68</td>
-                <td>0%</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>95</td>
-                <td>0</td>
-                <td>95</td>
-                <td>0%</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>50</td>
-                <td>0</td>
-                <td>50</td>
-                <td>0%</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>20</td>
-                <td>0</td>
-                <td>20</td>
-                <td>0%</td>
-            </tr>        </table>
-    </div>    <div class="missed-commands">
-        <h3 style="color: #ff9800;">⚠️ 未実行コマンド詳細（全 434 個）</h3>
-        <table>
-            <tr>
-                <th>ファイル</th>
-                <th>行番号</th>
-                <th>コマンド</th>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-ConfigValidation.psm1</td>
-                <td>103</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Export-ModuleMember -Function 'Invoke-ConfigValidation'</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>22</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$filePathConfig = Get-FilePathConfig</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>25</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ([string]::IsNullOrEmpty($OutputFilePath)) {
-        throw "出力ファイルパスが指定されていません"
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>26</td>
-                <td style="font-family: monospace; font-size: 0.9em;">throw "出力ファイルパスが指定されていません"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>30</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-WithErrorHandling -Category External -Operation "同期結果CSVエクスポート処理" -Context @{
-        "DatabasePath"   = $DatabasePath
-        "OutputFilePath" = $OutputFilePath
-    } -ScriptBlock {
-        # クエリ準備
-        $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
-        $firstKey = if ($syncResultKeys -is [array]) { $syncResultKeys[0] } else { $syncResultKeys }
-        $query = New-SelectSql -TableName "sync_result" -OrderBy $firstKey
-
-        # クエリ実行
-        $recordCount = Invoke-SqliteCsvExport -DatabasePath $DatabasePath -Query $query -OutputPath $OutputFilePath
-
-        Write-SystemLog "同期結果をCSVファイルに出力しました: $OutputFilePath ($recordCount 件)" -Level "Success"
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>31</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"DatabasePath" = $DatabasePath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>32</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"OutputFilePath" = $OutputFilePath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>35</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultKeys = Get-TableKeyColumns -TableName "sync_result"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>36</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($syncResultKeys -is [array]) { $syncResultKeys[0] } else { $syncResultKeys }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>36</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultKeys[0]</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>36</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultKeys</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>37</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$query = New-SelectSql -TableName "sync_result" -OrderBy $firstKey</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>40</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$recordCount = Invoke-SqliteCsvExport -DatabasePath $DatabasePath -Query $query -OutputPath $OutputFilePath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>42</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "同期結果をCSVファイルに出力しました: $OutputFilePath ($recordCount 件)" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>46</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-WithErrorHandling -Category External -Operation "履歴ファイル出力" -ScriptBlock {
-        # 履歴ディレクトリの作成
-        if (-not (Test-Path $filePathConfig.output_history_directory)) {
-            New-Item -ItemType Directory -Path $filePathConfig.output_history_directory -Force | Out-Null
-            Write-SystemLog "履歴ディレクトリを作成しました: $($filePathConfig.output_history_directory)" -Level "Success"
-        }
-        # 履歴保存パス準備（OutputFilePathのファイル名を使用）
-        $baseFileName = Split-Path -Leaf $OutputFilePath
-        $historyFileName = New-HistoryFileName -BaseFileName $baseFileName
-        $historyPath = Join-Path $filePathConfig.output_history_directory $historyFileName
-        Copy-Item -Path $OutputFilePath -Destination $historyPath -Force
-
-        Write-SystemLog "同期結果を履歴フォルダに出力しました: $historyPath" -Level "Success"
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>48</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (-not (Test-Path $filePathConfig.output_history_directory)) {
-            New-Item -ItemType Directory -Path $filePathConfig.output_history_directory -Force | Out-Null
-            Write-SystemLog "履歴ディレクトリを作成しました: $($filePathConfig.output_history_directory)" -Level "Success"
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>48</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Test-Path $filePathConfig.output_history_directory</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>49</td>
-                <td style="font-family: monospace; font-size: 0.9em;">New-Item -ItemType Directory -Path $filePathConfig.output_history_directory -Force</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>49</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-Null</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>50</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "履歴ディレクトリを作成しました: $($filePathConfig.output_history_directory)" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>50</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$filePathConfig.output_history_directory</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>53</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$baseFileName = Split-Path -Leaf $OutputFilePath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>54</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$historyFileName = New-HistoryFileName -BaseFileName $baseFileName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>55</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$historyPath = Join-Path $filePathConfig.output_history_directory $historyFileName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>56</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Copy-Item -Path $OutputFilePath -Destination $historyPath -Force</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>58</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "同期結果を履歴フォルダに出力しました: $historyPath" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvExport.psm1</td>
-                <td>62</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Export-ModuleMember -Function 'Invoke-CsvExport'</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>27</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$filePathConfig = Get-FilePathConfig</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>30</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$DataType</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>32</td>
-                <td style="font-family: monospace; font-size: 0.9em;">@{
-                TableName        = "provided_data"
-                HistoryDirectory = $filePathConfig.provided_data_history_directory
-                Description      = "提供データ"
-            }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>33</td>
-                <td style="font-family: monospace; font-size: 0.9em;">TableName = "provided_data"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>34</td>
-                <td style="font-family: monospace; font-size: 0.9em;">HistoryDirectory = $filePathConfig.provided_data_history_directory</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>35</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Description = "提供データ"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>39</td>
-                <td style="font-family: monospace; font-size: 0.9em;">@{
-                TableName        = "current_data" 
-                HistoryDirectory = $filePathConfig.current_data_history_directory
-                Description      = "現在データ"
-            }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>40</td>
-                <td style="font-family: monospace; font-size: 0.9em;">TableName = "current_data"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>41</td>
-                <td style="font-family: monospace; font-size: 0.9em;">HistoryDirectory = $filePathConfig.current_data_history_directory</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>42</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Description = "現在データ"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>47</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "$($config.Description)のインポート処理を開始します" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>47</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$config.Description</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>48</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-CsvImportMain -CsvPath $CsvPath -DatabasePath $DatabasePath -TableName $config.TableName -HistoryDirectory $config.HistoryDirectory -FileTypeDescription $config.Description</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>49</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "$($config.Description)のインポート処理が完了しました" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>49</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$config.Description</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>71</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (-not (Test-Path $CsvPath)) {
-        throw "CSVファイルが見つかりません: $CsvPath"
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>71</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Test-Path $CsvPath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>72</td>
-                <td style="font-family: monospace; font-size: 0.9em;">throw "CSVファイルが見つかりません: $CsvPath"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>75</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "処理対象ファイル ${FileTypeDescription}CSV: $CsvPath" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>78</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-WithErrorHandling -Category External -Operation "履歴ファイルコピー" -ScriptBlock {
-        return Copy-InputFileToHistory -SourceFilePath $CsvPath -HistoryDirectory $HistoryDirectory
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>79</td>
-                <td style="font-family: monospace; font-size: 0.9em;">return Copy-InputFileToHistory -SourceFilePath $CsvPath -HistoryDirectory $HistoryDirectory</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>83</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$processingCsvPath = $CsvPath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>84</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tempHeaderFile = $null</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>86</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$formatConfig = Get-CsvFormatConfig -TableName $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>87</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($formatConfig.has_header -eq $false) {
-        $tempHeaderFile = Invoke-WithErrorHandling -Category External -Operation "ヘッダ付き一時CSVファイル作成" -ScriptBlock {
-            New-TempCsvWithHeader -CsvPath $CsvPath -TableName $TableName
-        }
-        $processingCsvPath = $tempHeaderFile
-        Write-SystemLog "ヘッダー付きファイル作成完了: $processingCsvPath" -Level "Info"
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>88</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tempHeaderFile = Invoke-WithErrorHandling -Category External -Operation "ヘッダ付き一時CSVファイル作成" -ScriptBlock {
-            New-TempCsvWithHeader -CsvPath $CsvPath -TableName $TableName
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>89</td>
-                <td style="font-family: monospace; font-size: 0.9em;">New-TempCsvWithHeader -CsvPath $CsvPath -TableName $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>91</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$processingCsvPath = $tempHeaderFile</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>92</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "ヘッダー付きファイル作成完了: $processingCsvPath" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>96</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$csvCleanupScript = {
-        if ($tempHeaderFile -and (Test-Path $tempHeaderFile)) {
-            Remove-Item $tempHeaderFile -Force -ErrorAction SilentlyContinue
-            Write-SystemLog "一時ヘッダーファイルを削除しました: $tempHeaderFile" -Level "Info"
-        }
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>97</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($tempHeaderFile -and (Test-Path $tempHeaderFile)) {
-            Remove-Item $tempHeaderFile -Force -ErrorAction SilentlyContinue
-            Write-SystemLog "一時ヘッダーファイルを削除しました: $tempHeaderFile" -Level "Info"
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>97</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Test-Path $tempHeaderFile</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>98</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Remove-Item $tempHeaderFile -Force -ErrorAction SilentlyContinue</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>99</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "一時ヘッダーファイルを削除しました: $tempHeaderFile" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>104</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "CSVフォーマットの検証開始" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>105</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-WithErrorHandling -Category System -Operation "CSVフォーマットの検証" -CleanupScript $csvCleanupScript -ScriptBlock {
-        if (-not (Test-CsvFormat -CsvPath $processingCsvPath -TableName $TableName)) {
-            throw "CSVフォーマットの検証に失敗しました"
-        }    
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>106</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (-not (Test-CsvFormat -CsvPath $processingCsvPath -TableName $TableName)) {
-            throw "CSVフォーマットの検証に失敗しました"
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>106</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Test-CsvFormat -CsvPath $processingCsvPath -TableName $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>107</td>
-                <td style="font-family: monospace; font-size: 0.9em;">throw "CSVフォーマットの検証に失敗しました"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>112</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データフィルタリング処理開始" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>115</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$csvData = Import-CsvWithFormat -CsvPath $processingCsvPath -TableName $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>116</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (-not $csvData -or $csvData.Count -eq 0) {
-        Write-SystemLog "空のCSVファイルのためフィルタリング処理をスキップします" -Level "Info"
-        $statistics = @{
-            TotalCount    = 0
-            FilteredCount = 0
-            ExcludedCount = 0
-        }
-    }
-    else {
-        $statistics = Invoke-WithErrorHandling -Category External -Operation "データフィルタリング処理" -CleanupScript $csvCleanupScript -ScriptBlock {
-            Invoke-Filtering -DatabasePath $DatabasePath -TableName $TableName -CsvFilePath $processingCsvPath -ShowStatistics:$true
-        }
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>117</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "空のCSVファイルのためフィルタリング処理をスキップします" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>118</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$statistics = @{
-            TotalCount    = 0
-            FilteredCount = 0
-            ExcludedCount = 0
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>119</td>
-                <td style="font-family: monospace; font-size: 0.9em;">TotalCount = 0</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>120</td>
-                <td style="font-family: monospace; font-size: 0.9em;">FilteredCount = 0</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>121</td>
-                <td style="font-family: monospace; font-size: 0.9em;">ExcludedCount = 0</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>125</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$statistics = Invoke-WithErrorHandling -Category External -Operation "データフィルタリング処理" -CleanupScript $csvCleanupScript -ScriptBlock {
-            Invoke-Filtering -DatabasePath $DatabasePath -TableName $TableName -CsvFilePath $processingCsvPath -ShowStatistics:$true
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>126</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-Filtering -DatabasePath $DatabasePath -TableName $TableName -CsvFilePath $processingCsvPath -ShowStatistics:$true</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>131</td>
-                <td style="font-family: monospace; font-size: 0.9em;">& $csvCleanupScript</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>133</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "${FileTypeDescription}CSVのインポートが完了しました。処理件数: $($statistics.FilteredCount) / 読み込み件数: $($statistics.TotalCount)" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>133</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$statistics.FilteredCount</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>133</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$statistics.TotalCount</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>146</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "ヘッダー付き一時CSVファイルを作成。元ファイル: $CsvPath (テーブル: $TableName)" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>150</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tempDir = [System.IO.Path]::GetTempPath()</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>151</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$baseFileName = [System.IO.Path]::GetFileNameWithoutExtension($CsvPath)</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>152</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tempPattern = "${baseFileName}_with_header_*.csv"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>153</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$orphanFiles = Get-ChildItem -Path $tempDir -Filter $tempPattern -ErrorAction SilentlyContinue</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>155</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$orphanFiles</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>157</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($file.CreationTime -lt (Get-Date).AddHours(-1)) {
-                Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue
-                Write-SystemLog "古い一時ファイルを削除しました: $($file.FullName)" -Level "Info"
-            }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>157</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Get-Date</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>158</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>159</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "古い一時ファイルを削除しました: $($file.FullName)" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>159</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$file.FullName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>164</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "古い一時ファイルクリーンアップ中にエラー: $($_.Exception.Message)" -Level "Warning"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>164</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$_.Exception.Message</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>168</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tableColumns = Get-CsvColumns -TableName $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>170</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (-not $tableColumns -or $tableColumns.Count -eq 0) {
-        throw "テーブル '$TableName' のCSVカラム定義が見つかりません"
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>171</td>
-                <td style="font-family: monospace; font-size: 0.9em;">throw "テーブル '$TableName' のCSVカラム定義が見つかりません"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>174</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "生成するヘッダー: $($tableColumns -join ', ')" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>174</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tableColumns -join ', '</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>177</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$baseFileName = [System.IO.Path]::GetFileNameWithoutExtension($CsvPath)</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>178</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$extension = [System.IO.Path]::GetExtension($CsvPath)</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>179</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>180</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tempFileName = "${baseFileName}_with_header_${timestamp}${extension}"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>181</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tempPath = Join-Path ([System.IO.Path]::GetTempPath()) $tempFileName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>181</td>
-                <td style="font-family: monospace; font-size: 0.9em;">[System.IO.Path]::GetTempPath()</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>183</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "一時ファイルパス: $tempPath" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>185</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (Test-Path $tempPath) {
-        Remove-Item $tempPath -Force -ErrorAction SilentlyContinue
-        Write-SystemLog "既存の一時ファイルを削除しました: $tempPath" -Level "Info"
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>186</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Remove-Item $tempPath -Force -ErrorAction SilentlyContinue</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>187</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "既存の一時ファイルを削除しました: $tempPath" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>191</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$formatConfig = Get-CsvFormatConfig -TableName $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>192</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$encoding = ConvertTo-PowerShellEncoding -EncodingName $formatConfig.encoding</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>195</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$headerLine = $tableColumns -join $formatConfig.delimiter</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>198</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$headerLine</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>198</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-File -FilePath $tempPath -Encoding $encoding -NoNewline</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>201</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$formatConfig.newline.ToUpper()</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>202</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"`n"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>202</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-File -FilePath $tempPath -Encoding $encoding -Append -NoNewline</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>203</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"`r"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>203</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-File -FilePath $tempPath -Encoding $encoding -Append -NoNewline</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>204</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"`r`n"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>204</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-File -FilePath $tempPath -Encoding $encoding -Append -NoNewline</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>208</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$originalContent = Get-Content -Path $CsvPath -Encoding $encoding -Raw</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>209</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($originalContent) {
-        $originalContent | Out-File -FilePath $tempPath -Encoding $encoding -Append -NoNewline
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>210</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$originalContent</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>210</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-File -FilePath $tempPath -Encoding $encoding -Append -NoNewline</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>213</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "ヘッダー付き一時CSVファイルを作成完了: $tempPath" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>215</td>
-                <td style="font-family: monospace; font-size: 0.9em;">return $tempPath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>233</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "フィルタリング用に一時テーブルへCSVをインポート: $TableName ($CsvFilePath)" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>236</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Clear-Table -DatabasePath $DatabasePath -TableName $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>239</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$csvData = Import-Csv -Path $CsvFilePath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>240</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$totalRecords = $csvData.Count</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>241</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "フィルタリング前: $totalRecords 件" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>245</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tempTableName = New-TempTableName -BaseTableName $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>247</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$dropTempTableIfExistsSql = "DROP TABLE IF EXISTS $tempTableName;"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>248</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $dropTempTableIfExistsSql</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>249</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "既存の一時テーブルを削除しました: $tempTableName" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>251</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$createTempTableSql = New-CreateTempTableSql -BaseTableName $TableName -TempTableName $tempTableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>252</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $createTempTableSql</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>253</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "一時テーブルを作成しました: $tempTableName" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>256</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Import-CsvToSqliteTable -CsvFilePath $CsvFilePath -DatabasePath $DatabasePath -TableName $tempTableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>257</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "CSVデータを一時テーブルにインポートしました: $tempTableName" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>260</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($TableName -eq "current_data") {
-        $config = Get-DataSyncConfig
-        if ($config.data_filters.current_data.output_excluded_as_keep.enabled -eq $true) {
-            $excludedTableName = "${TableName}_excluded"
-            Save-ExcludedDataForKeep -DatabasePath $DatabasePath -SourceTableName $tempTableName -ExcludedTableName $excludedTableName -FilterConfigTableName $TableName
-        }
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>261</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$config = Get-DataSyncConfig</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>262</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($config.data_filters.current_data.output_excluded_as_keep.enabled -eq $true) {
-            $excludedTableName = "${TableName}_excluded"
-            Save-ExcludedDataForKeep -DatabasePath $DatabasePath -SourceTableName $tempTableName -ExcludedTableName $excludedTableName -FilterConfigTableName $TableName
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>263</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$excludedTableName = "${TableName}_excluded"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>264</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Save-ExcludedDataForKeep -DatabasePath $DatabasePath -SourceTableName $tempTableName -ExcludedTableName $excludedTableName -FilterConfigTableName $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>269</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$whereClause = New-FilterWhereClause -TableName $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>270</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$filteredInsertSql = New-FilteredInsertSql -TargetTableName $TableName -SourceTableName $tempTableName -WhereClause $whereClause</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>271</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$statisticsSql = "SELECT COUNT(*) as filtered_count FROM $TableName;"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>272</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$dropTempTableSql = "DROP TABLE $tempTableName;"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>274</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$filteringAndCleanupSql = @"
-BEGIN TRANSACTION;
-$filteredInsertSql
-$statisticsSql
-$dropTempTableSql
-COMMIT;
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>282</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "フィルタリングとクリーンアップ実行中..." -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>283</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $filteringAndCleanupSql</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>286</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($result -is [array] -and $result.Count -gt 0) { 
-        # 最後の統計クエリの結果を取得
-        [int]($result | Select-Object -Last 1)
-    }
-    else { 
-        [int]$result 
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>288</td>
-                <td style="font-family: monospace; font-size: 0.9em;">[int]($result | Select-Object -Last 1)</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>288</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$result</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>288</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Select-Object -Last 1</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>291</td>
-                <td style="font-family: monospace; font-size: 0.9em;">[int]$result</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>295</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$indexSqls = New-CreateIndexSql -TableName $TableName -RecordCount $filteredCount</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>296</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$indexSqls</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>297</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $indexSql</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>301</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($ShowStatistics) {
-        $whereClauseForDisplay = if ($whereClause) { $whereClause } else { "" }
-        Show-FilteringStatistics -TableName $TableName -TotalCount $totalRecords -FilteredCount $filteredCount -WhereClause $whereClauseForDisplay
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>302</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($whereClause) { $whereClause } else { "" }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>302</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$whereClause</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>302</td>
-                <td style="font-family: monospace; font-size: 0.9em;">""</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>303</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Show-FilteringStatistics -TableName $TableName -TotalCount $totalRecords -FilteredCount $filteredCount -WhereClause $whereClauseForDisplay</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>306</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "SQLベースフィルタリング完了: $filteredCount 件を $TableName に挿入" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>309</td>
-                <td style="font-family: monospace; font-size: 0.9em;">return @{
-        TotalCount    = $totalRecords
-        FilteredCount = $filteredCount
-        TableName     = $TableName
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>310</td>
-                <td style="font-family: monospace; font-size: 0.9em;">TotalCount = $totalRecords</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>311</td>
-                <td style="font-family: monospace; font-size: 0.9em;">FilteredCount = $filteredCount</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>312</td>
-                <td style="font-family: monospace; font-size: 0.9em;">TableName = $TableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>330</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (-not (Test-Path $CsvFilePath)) {
-        throw "CSVファイルが見つかりません: $CsvFilePath"
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>330</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Test-Path $CsvFilePath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>331</td>
-                <td style="font-family: monospace; font-size: 0.9em;">throw "CSVファイルが見つかりません: $CsvFilePath"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>335</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tempCsvFile = [System.IO.Path]::GetTempFileName() + ".csv"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>336</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tempSqlFile = [System.IO.Path]::GetTempFileName() + ".sql"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>340</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$csvContent = Get-Content -Path $CsvFilePath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>341</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($csvContent.Count -gt 1) {
-            # ヘッダー行を除いた内容を一時ファイルに保存
-            $csvContent[1..($csvContent.Count - 1)] | Out-File -FilePath $tempCsvFile -Encoding UTF8
-            Write-SystemLog "ヘッダー行をスキップした一時ファイルを作成: $(Split-Path -Leaf $tempCsvFile)" -Level "Info"
-        }
-        else {
-            Write-SystemLog "CSVファイルにデータ行がありません: $CsvFilePath" -Level "Warning"
-            return
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>343</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$csvContent[1..($csvContent.Count - 1)]</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>343</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$csvContent.Count - 1</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>343</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-File -FilePath $tempCsvFile -Encoding UTF8</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>344</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "ヘッダー行をスキップした一時ファイルを作成: $(Split-Path -Leaf $tempCsvFile)" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>344</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Split-Path -Leaf $tempCsvFile</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>347</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "CSVファイルにデータ行がありません: $CsvFilePath" -Level "Warning"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>352</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$normalizedTempCsvFile = $tempCsvFile -replace '\\', '/'</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>353</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$normalizedDatabasePath = $DatabasePath -replace '\\', '/'</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>355</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "SQLite .import実行中 - DB: $normalizedDatabasePath, CSV: $normalizedTempCsvFile, Table: $TableName" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>358</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$sqlCommands = @"
-.mode csv
-.import "$normalizedTempCsvFile" $TableName
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>362</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$sqlCommands</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>362</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-File -FilePath $tempSqlFile -Encoding UTF8 -NoNewline</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>365</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$result = & sqlite3 $normalizedDatabasePath ".read $tempSqlFile" 2>&1</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>367</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($LASTEXITCODE -ne 0) {
-            throw "SQLite .importに失敗 $result"
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>368</td>
-                <td style="font-family: monospace; font-size: 0.9em;">throw "SQLite .importに失敗 $result"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>373</td>
-                <td style="font-family: monospace; font-size: 0.9em;">throw "SQLiteへのCSVインポート中にエラーが発生: $($_.Exception.Message)"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>373</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$_.Exception.Message</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>377</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (Test-Path $tempSqlFile) {
-            Remove-Item $tempSqlFile -Force -ErrorAction SilentlyContinue
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>378</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Remove-Item $tempSqlFile -Force -ErrorAction SilentlyContinue</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>380</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (Test-Path $tempCsvFile) {
-            Remove-Item $tempCsvFile -Force -ErrorAction SilentlyContinue
-            Write-SystemLog "一時ファイルを削除: $(Split-Path -Leaf $tempCsvFile)" -Level "Info"
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>381</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Remove-Item $tempCsvFile -Force -ErrorAction SilentlyContinue</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>382</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "一時ファイルを削除: $(Split-Path -Leaf $tempCsvFile)" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>382</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Split-Path -Leaf $tempCsvFile</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-CsvImport.psm1</td>
-                <td>387</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Export-ModuleMember -Function 'Invoke-CsvImport'</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>21</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$cleanupScript = {
-        try {
-            # 既存データベースファイルの検証
-            if (Test-Path $DatabasePath) {
-                $dbInfo = Get-Item $DatabasePath -ErrorAction SilentlyContinue
-                if ($dbInfo) {
-                    Write-SystemLog "既存データベースファイル: $($dbInfo.Length) bytes, 最終更新: $($dbInfo.LastWriteTime)" -Level "Info"
-                    
-                    # データベースファイルの整合性チェック（基本的な検証）
-                    if ($dbInfo.Length -eq 0) {
-                        Write-SystemLog "空のデータベースファイルを検出、削除して再作成します" -Level "Warning"
-                        Remove-Item $DatabasePath -Force -ErrorAction SilentlyContinue
-                    }
-                }
-            }
-            
-            # データベースディレクトリの再確認
-            $dbDir = Split-Path -Path $DatabasePath -Parent
-            if (-not (Test-Path $dbDir)) {
-                Write-SystemLog "データベースディレクトリが存在しません。再作成します: $dbDir" -Level "Info"
-                New-Item -ItemType Directory -Path $dbDir -Force -ErrorAction SilentlyContinue | Out-Null
-            }
-        }
-        catch {
-            Write-SystemLog "データベースクリーンアップ中にエラー: $($_.Exception.Message)" -Level "Warning"
-        }
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>24</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (Test-Path $DatabasePath) {
-                $dbInfo = Get-Item $DatabasePath -ErrorAction SilentlyContinue
-                if ($dbInfo) {
-                    Write-SystemLog "既存データベースファイル: $($dbInfo.Length) bytes, 最終更新: $($dbInfo.LastWriteTime)" -Level "Info"
-                    
-                    # データベースファイルの整合性チェック（基本的な検証）
-                    if ($dbInfo.Length -eq 0) {
-                        Write-SystemLog "空のデータベースファイルを検出、削除して再作成します" -Level "Warning"
-                        Remove-Item $DatabasePath -Force -ErrorAction SilentlyContinue
-                    }
-                }
-            }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>25</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$dbInfo = Get-Item $DatabasePath -ErrorAction SilentlyContinue</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>26</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($dbInfo) {
-                    Write-SystemLog "既存データベースファイル: $($dbInfo.Length) bytes, 最終更新: $($dbInfo.LastWriteTime)" -Level "Info"
-                    
-                    # データベースファイルの整合性チェック（基本的な検証）
-                    if ($dbInfo.Length -eq 0) {
-                        Write-SystemLog "空のデータベースファイルを検出、削除して再作成します" -Level "Warning"
-                        Remove-Item $DatabasePath -Force -ErrorAction SilentlyContinue
-                    }
-                }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>27</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "既存データベースファイル: $($dbInfo.Length) bytes, 最終更新: $($dbInfo.LastWriteTime)" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>27</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$dbInfo.Length</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>27</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$dbInfo.LastWriteTime</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>30</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($dbInfo.Length -eq 0) {
-                        Write-SystemLog "空のデータベースファイルを検出、削除して再作成します" -Level "Warning"
-                        Remove-Item $DatabasePath -Force -ErrorAction SilentlyContinue
-                    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>31</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "空のデータベースファイルを検出、削除して再作成します" -Level "Warning"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>32</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Remove-Item $DatabasePath -Force -ErrorAction SilentlyContinue</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>38</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$dbDir = Split-Path -Path $DatabasePath -Parent</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>39</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (-not (Test-Path $dbDir)) {
-                Write-SystemLog "データベースディレクトリが存在しません。再作成します: $dbDir" -Level "Info"
-                New-Item -ItemType Directory -Path $dbDir -Force -ErrorAction SilentlyContinue | Out-Null
-            }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>39</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Test-Path $dbDir</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>40</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データベースディレクトリが存在しません。再作成します: $dbDir" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>41</td>
-                <td style="font-family: monospace; font-size: 0.9em;">New-Item -ItemType Directory -Path $dbDir -Force -ErrorAction SilentlyContinue</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>41</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-Null</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>45</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データベースクリーンアップ中にエラー: $($_.Exception.Message)" -Level "Warning"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>45</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$_.Exception.Message</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>49</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-WithErrorHandling -Category External -Operation "データベース初期化処理" -CleanupScript $cleanupScript -Context @{
-        "DatabasePath" = $DatabasePath
-    } -ScriptBlock {
-        
-        # データベースディレクトリの作成
-        $dbDir = Split-Path -Path $DatabasePath -Parent
-        if (-not (Test-Path $dbDir)) {
-            Invoke-WithErrorHandling -ScriptBlock {
-                New-Item -ItemType Directory -Path $dbDir -Force | Out-Null
-                Write-SystemLog "データベースディレクトリを作成しました: $dbDir" -Level "Info"
-            } -Category External -Operation "ディレクトリ作成" -Context @{"ファイルパス" = $dbDir; "操作種別" = "ディレクトリ作成" } -CleanupScript {
-                # ファイル操作特有のクリーンアップ
-                if (Test-Path $dbDir -ErrorAction SilentlyContinue) {
-                    $fileInfo = Get-Item $dbDir -ErrorAction SilentlyContinue
-                    if ($fileInfo) {
-                        Write-SystemLog "ファイル情報 - サイズ: $($fileInfo.Length) bytes, 最終更新: $($fileInfo.LastWriteTime)" -Level "Info"
-                    }
-                }
-            }
-        }
-        
-        Write-SystemLog "データベース初期化を開始します..." -Level "Info"
-        
-        # 1. SQL文の生成
-        $sqlStatements = New-DatabaseSchema
-        
-        # 2. SQL文の実行（外部コマンド依存）
-        Invoke-WithErrorHandling -ScriptBlock {
-            Invoke-DatabaseInitializationInternal -DatabasePath $DatabasePath -SqlStatements $sqlStatements
-        } -Category External -Operation "データベーススキーマ作成" -Context @{"コマンド名" = "sqlite3"; "操作種別" = "データベーススキーマ作成" } -CleanupScript {
-            # 外部コマンド特有のクリーンアップ
-            Write-SystemLog "外部コマンドの終了コード: $LASTEXITCODE" -Level "Info"
-            
-            # sqlite3コマンドは設定検証で確認済み
-        }
-        
-        Write-SystemLog "データベースが正常に初期化されました: $DatabasePath" -Level "Success"
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>50</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"DatabasePath" = $DatabasePath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>54</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$dbDir = Split-Path -Path $DatabasePath -Parent</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>55</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (-not (Test-Path $dbDir)) {
-            Invoke-WithErrorHandling -ScriptBlock {
-                New-Item -ItemType Directory -Path $dbDir -Force | Out-Null
-                Write-SystemLog "データベースディレクトリを作成しました: $dbDir" -Level "Info"
-            } -Category External -Operation "ディレクトリ作成" -Context @{"ファイルパス" = $dbDir; "操作種別" = "ディレクトリ作成" } -CleanupScript {
-                # ファイル操作特有のクリーンアップ
-                if (Test-Path $dbDir -ErrorAction SilentlyContinue) {
-                    $fileInfo = Get-Item $dbDir -ErrorAction SilentlyContinue
-                    if ($fileInfo) {
-                        Write-SystemLog "ファイル情報 - サイズ: $($fileInfo.Length) bytes, 最終更新: $($fileInfo.LastWriteTime)" -Level "Info"
-                    }
-                }
-            }
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>55</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Test-Path $dbDir</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>56</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-WithErrorHandling -ScriptBlock {
-                New-Item -ItemType Directory -Path $dbDir -Force | Out-Null
-                Write-SystemLog "データベースディレクトリを作成しました: $dbDir" -Level "Info"
-            } -Category External -Operation "ディレクトリ作成" -Context @{"ファイルパス" = $dbDir; "操作種別" = "ディレクトリ作成" } -CleanupScript {
-                # ファイル操作特有のクリーンアップ
-                if (Test-Path $dbDir -ErrorAction SilentlyContinue) {
-                    $fileInfo = Get-Item $dbDir -ErrorAction SilentlyContinue
-                    if ($fileInfo) {
-                        Write-SystemLog "ファイル情報 - サイズ: $($fileInfo.Length) bytes, 最終更新: $($fileInfo.LastWriteTime)" -Level "Info"
-                    }
-                }
-            }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>57</td>
-                <td style="font-family: monospace; font-size: 0.9em;">New-Item -ItemType Directory -Path $dbDir -Force</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>57</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-Null</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>58</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データベースディレクトリを作成しました: $dbDir" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>59</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"ファイルパス" = $dbDir</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>59</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"操作種別" = "ディレクトリ作成"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>61</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (Test-Path $dbDir -ErrorAction SilentlyContinue) {
-                    $fileInfo = Get-Item $dbDir -ErrorAction SilentlyContinue
-                    if ($fileInfo) {
-                        Write-SystemLog "ファイル情報 - サイズ: $($fileInfo.Length) bytes, 最終更新: $($fileInfo.LastWriteTime)" -Level "Info"
-                    }
-                }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>62</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$fileInfo = Get-Item $dbDir -ErrorAction SilentlyContinue</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>63</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($fileInfo) {
-                        Write-SystemLog "ファイル情報 - サイズ: $($fileInfo.Length) bytes, 最終更新: $($fileInfo.LastWriteTime)" -Level "Info"
-                    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>64</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "ファイル情報 - サイズ: $($fileInfo.Length) bytes, 最終更新: $($fileInfo.LastWriteTime)" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>64</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$fileInfo.Length</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>64</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$fileInfo.LastWriteTime</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>70</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データベース初期化を開始します..." -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>73</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$sqlStatements = New-DatabaseSchema</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>76</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-WithErrorHandling -ScriptBlock {
-            Invoke-DatabaseInitializationInternal -DatabasePath $DatabasePath -SqlStatements $sqlStatements
-        } -Category External -Operation "データベーススキーマ作成" -Context @{"コマンド名" = "sqlite3"; "操作種別" = "データベーススキーマ作成" } -CleanupScript {
-            # 外部コマンド特有のクリーンアップ
-            Write-SystemLog "外部コマンドの終了コード: $LASTEXITCODE" -Level "Info"
-            
-            # sqlite3コマンドは設定検証で確認済み
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>77</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-DatabaseInitializationInternal -DatabasePath $DatabasePath -SqlStatements $sqlStatements</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>78</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"コマンド名" = "sqlite3"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>78</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"操作種別" = "データベーススキーマ作成"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>80</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "外部コマンドの終了コード: $LASTEXITCODE" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>85</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データベースが正常に初期化されました: $DatabasePath" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>91</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$config = Get-DataSyncConfig</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>92</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$allSqlStatements = @()</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>95</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$pragmas = New-OptimizationPragmas</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>96</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$allSqlStatements += $pragmas</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>99</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$config.tables.PSObject.Properties.Name</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>100</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "テーブル定義を生成中: $tableName" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>103</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$dropTableSql = "DROP TABLE IF EXISTS $tableName;"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>104</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$allSqlStatements += $dropTableSql</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>106</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$createTableSql = New-CreateTableSql -TableName $tableName</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>107</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$allSqlStatements += $createTableSql</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>110</td>
-                <td style="font-family: monospace; font-size: 0.9em;">return $allSqlStatements</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>123</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$combinedSql = $SqlStatements -join "`n`n"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>125</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-SqliteSchemaCommand -DatabasePath $DatabasePath -SqlContent $combinedSql</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>138</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tempSqlFile = [System.IO.Path]::GetTempFileName() + ".sql"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>140</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$encoding = Get-CrossPlatformEncoding</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>141</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$SqlContent</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>141</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Out-File -FilePath $tempSqlFile -Encoding $encoding</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>143</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "sqlite3コマンドでSQL実行中..." -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>146</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$sqliteResult = & sqlite3 $DatabasePath ".read $tempSqlFile" 2>&1</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>148</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($LASTEXITCODE -ne 0) {
-            throw "sqlite3コマンドの実行に失敗しました。終了コード: $LASTEXITCODE, 出力: $sqliteResult"
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>149</td>
-                <td style="font-family: monospace; font-size: 0.9em;">throw "sqlite3コマンドの実行に失敗しました。終了コード: $LASTEXITCODE, 出力: $sqliteResult"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>152</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "sqlite3コマンドでの実行が完了しました" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>155</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (Test-Path $tempSqlFile) {
-            Remove-Item -Path $tempSqlFile -Force
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>156</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Remove-Item -Path $tempSqlFile -Force</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DatabaseInitialization.psm1</td>
-                <td>161</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Export-ModuleMember -Function 'Invoke-DatabaseInitialization'</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>20</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$config = Get-DataSyncConfig</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>21</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncActionLabels = $config.sync_rules.sync_action_labels.mappings</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>24</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$cleanupScript = {
-        try {
-            Clear-Table -DatabasePath $DatabasePath -TableName "sync_result" -ShowStatistics:$false
-            Write-SystemLog "リトライ準備: sync_resultテーブルをクリアしました" -Level "Info"
-        }
-        catch {
-            Write-SystemLog "sync_resultテーブルクリア中にエラー: $($_.Exception.Message)" -Level "Warning"
-        }
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>26</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Clear-Table -DatabasePath $DatabasePath -TableName "sync_result" -ShowStatistics:$false</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>27</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "リトライ準備: sync_resultテーブルをクリアしました" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>30</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "sync_resultテーブルクリア中にエラー: $($_.Exception.Message)" -Level "Warning"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>30</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$_.Exception.Message</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>34</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-WithErrorHandling -Category External -Operation "データ同期処理" -CleanupScript $cleanupScript -Context @{
-        "DatabasePath" = $DatabasePath
-    } -ScriptBlock {
-        
-        Write-SystemLog "データ同期処理を開始します..." -Level "Info"
-        
-        # 0. リトライ対応: sync_resultテーブルを初期化
-        Clear-Table -DatabasePath $DatabasePath -TableName "sync_result"
-        
-        # 1. 現在データに存在しないレコード（新規追加対象）を特定
-        Add-NewRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
-        
-        # 2. 更新があったレコードを処理
-        Add-UpdateRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
-        
-        # 3. 現在データにしか存在しないレコード（削除対象）を特定
-        Add-DeleteRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
-        
-        # 4. 変更のないレコードを保持
-        Add-KeepRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
-        
-        # 5. フィルタ除外されたcurrent_dataをKEEPとして追加（設定有効時のみ）
-        $config = Get-DataSyncConfig
-        if ($config.data_filters.current_data.output_excluded_as_keep.enabled -eq $true) {
-            Add-ExcludedCurrentDataAsKeep -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
-        }
-        else {
-            Write-SystemLog "除外データのKEEP出力設定が無効のため、スキップします" -Level "Info"
-        }
-        
-        Write-SystemLog "データ同期処理が完了しました。" -Level "Success"
-        
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>35</td>
-                <td style="font-family: monospace; font-size: 0.9em;">"DatabasePath" = $DatabasePath</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>38</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データ同期処理を開始します..." -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>41</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Clear-Table -DatabasePath $DatabasePath -TableName "sync_result"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>44</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Add-NewRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>47</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Add-UpdateRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>50</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Add-DeleteRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>53</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Add-KeepRecords -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>56</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$config = Get-DataSyncConfig</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>57</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($config.data_filters.current_data.output_excluded_as_keep.enabled -eq $true) {
-            Add-ExcludedCurrentDataAsKeep -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels
-        }
-        else {
-            Write-SystemLog "除外データのKEEP出力設定が無効のため、スキップします" -Level "Info"
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>58</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Add-ExcludedCurrentDataAsKeep -DatabasePath $DatabasePath -SyncActionLabels $syncActionLabels</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>61</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "除外データのKEEP出力設定が無効のため、スキップします" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>64</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データ同期処理が完了しました。" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>80</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$joinCondition = New-JoinCondition -LeftTableName "provided_data" -RightTableName "current_data" -LeftAlias "pd" -RightAlias "cd"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>81</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$currentDataKeys = Get-TableKeyColumns -TableName "current_data"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>82</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$currentDataKey = ($currentDataKeys | Select-Object -First 1)</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>82</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$currentDataKeys</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>82</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Select-Object -First 1</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>84</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "新規レコードを特定中..." -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>87</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumns = Get-SyncResultInsertColumns</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>88</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumnsString = $insertColumns -join ", "</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>90</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction $SyncActionLabels.ADD.value</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>92</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$query = @"
-INSERT INTO sync_result ($insertColumnsString)
-SELECT 
-    $selectClause
-FROM provided_data pd
-LEFT JOIN current_data cd ON $joinCondition
-WHERE cd.$currentDataKey IS NULL;
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>101</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>104</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "新規レコード追加処理が完了しました" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>118</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$joinCondition = New-JoinCondition -LeftTableName "provided_data" -RightTableName "current_data" -LeftAlias "pd" -RightAlias "cd"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>120</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "更新レコードを特定中..." -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>123</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumns = Get-SyncResultInsertColumns</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>124</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumnsString = $insertColumns -join ", "</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>126</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $SyncActionLabels.UPDATE.value</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>129</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "different" -Table1Name "provided_data" -Table2Name "current_data"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>131</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$query = @"
-INSERT INTO sync_result ($insertColumnsString)
-SELECT 
-    $selectClause
-FROM provided_data pd
-INNER JOIN current_data cd ON $joinCondition
-WHERE 
-    $whereClause;
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>141</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>144</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "更新レコード追加処理が完了しました" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>158</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$joinCondition = New-JoinCondition -LeftTableName "current_data" -RightTableName "provided_data" -LeftAlias "cd" -RightAlias "pd"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>159</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$providedDataKeys = Get-TableKeyColumns -TableName "provided_data"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>161</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$providedDataKey = ($providedDataKeys | Select-Object -First 1)</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>161</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$providedDataKeys</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>161</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Select-Object -First 1</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>163</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "削除対象レコードを特定中..." -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>166</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumns = Get-SyncResultInsertColumns</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>167</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumnsString = $insertColumns -join ", "</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>169</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$selectClause = New-SyncResultSelectClause -SourceTableName "current_data" -SourceTableAlias "cd" -SyncAction $SyncActionLabels.DELETE.value</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>171</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$query = @"
-INSERT INTO sync_result ($insertColumnsString)
-SELECT 
-    $selectClause
-FROM current_data cd
-LEFT JOIN provided_data pd ON $joinCondition
-WHERE pd.$providedDataKey IS NULL;
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>180</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>183</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "削除レコード追加処理が完了しました" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>197</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$joinCondition = New-JoinCondition -LeftTableName "provided_data" -RightTableName "current_data" -LeftAlias "pd" -RightAlias "cd"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>198</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultKeys = Get-TableKeyColumns -TableName "sync_result"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>201</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$providedDataMappedKeys = @()</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>202</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultKeys</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>203</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$providedDataField = Get-PriorityBasedSourceField -SyncResultField $syncResultKey -SourceTableName "provided_data"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>204</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$providedDataMappedKeys += "pd.$providedDataField"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>206</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$providedDataGroupBy = $providedDataMappedKeys -join ", "</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>209</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultGroupBy = New-GroupByClause -TableName "sync_result"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>211</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "変更なしレコードを特定中..." -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>214</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumns = Get-SyncResultInsertColumns</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>215</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumnsString = $insertColumns -join ", "</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>217</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $SyncActionLabels.KEEP.value</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>220</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$whereClause = New-ComparisonWhereClause -Table1Alias "pd" -Table2Alias "cd" -ComparisonType "same" -Table1Name "provided_data" -Table2Name "current_data"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>222</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$query = @"
-INSERT INTO sync_result ($insertColumnsString)
-SELECT 
-    $selectClause
-FROM provided_data pd
-INNER JOIN current_data cd ON $joinCondition
-WHERE 
-    $whereClause
-    AND ($providedDataGroupBy) NOT IN (SELECT $syncResultGroupBy FROM sync_result);
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>233</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>236</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "変更なしレコード追加処理が完了しました" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>249</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$excludedTableName = "current_data_excluded"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>252</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$checkTableQuery = @"
-SELECT name FROM sqlite_master 
-WHERE type='table' AND name='$excludedTableName';
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>257</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$result = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $checkTableQuery</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>259</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if (-not $result -or $result.Count -eq 0) {
-        Write-SystemLog "除外データテーブルが存在しないため、スキップします: $excludedTableName" -Level "Info"
-        return
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>260</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "除外データテーブルが存在しないため、スキップします: $excludedTableName" -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>264</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "フィルタ除外されたcurrent_dataをKEEPアクションとして追加中..." -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>267</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumns = Get-CsvColumns -TableName "sync_result"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>268</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumnsString = $insertColumns -join ", "</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>271</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$selectClauses = @()</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>272</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$insertColumns</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>273</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($syncResultColumn -eq "sync_action") {
-            $selectClauses += "'$($SyncActionLabels.KEEP.value)'"
-        }
-        elseif ($syncResultColumn -eq "syokuin_no") {
-            # current_dataのuser_idをsyokuin_noにマッピング
-            $selectClauses += "ced.user_id"
-        }
-        else {
-            # その他のカラムは同名でマッピング
-            $selectClauses += "ced.$syncResultColumn"
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>274</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$selectClauses += "'$($SyncActionLabels.KEEP.value)'"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>274</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$SyncActionLabels.KEEP.value</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>276</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($syncResultColumn -eq "sync_action") {
-            $selectClauses += "'$($SyncActionLabels.KEEP.value)'"
-        }
-        elseif ($syncResultColumn -eq "syokuin_no") {
-            # current_dataのuser_idをsyokuin_noにマッピング
-            $selectClauses += "ced.user_id"
-        }
-        else {
-            # その他のカラムは同名でマッピング
-            $selectClauses += "ced.$syncResultColumn"
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>278</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$selectClauses += "ced.user_id"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>282</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$selectClauses += "ced.$syncResultColumn"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>285</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$selectClause = $selectClauses -join ", "</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>287</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$query = @"
-INSERT OR IGNORE INTO sync_result ($insertColumnsString)
-SELECT 
-    $selectClause
-FROM $excludedTableName ced;
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>294</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $query</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>297</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$countQuery = "SELECT COUNT(*) as count FROM $excludedTableName;"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>298</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$countResult = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $countQuery</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>299</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($countResult -and $countResult[0]) { $countResult[0].count } else { 0 }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>299</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$countResult[0].count</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>299</td>
-                <td style="font-family: monospace; font-size: 0.9em;">0</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>301</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "フィルタ除外データをKEEPアクションとして追加しました ($addedCount 件)" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Invoke-DataSync.psm1</td>
-                <td>304</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Export-ModuleMember -Function 'Invoke-DataSync'</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>26</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-WithErrorHandling  -Operation "同期レポート生成" -Category External -SuppressThrow:$true -ScriptBlock {
-        Write-SystemLog "=== 同期処理完了レポート ===" -Level "Info" -ConsoleColor "Magenta" 
-        
-        # 1. 実行情報セクション
-        Write-SystemLog "--- 実行情報 ---" -Level "Info" -ConsoleColor "Magenta" 
-        Write-SystemLog "データベースファイル: $DatabasePath" -Level "Info" -ConsoleColor "Magenta" 
-        Write-SystemLog "提供データファイル: $ProvidedDataFilePath" -Level "Info" -ConsoleColor "Magenta" 
-        Write-SystemLog "現在データファイル: $CurrentDataFilePath" -Level "Info" -ConsoleColor "Magenta" 
-        
-        $config = Get-DataSyncConfig
-        Write-SystemLog "設定バージョン: $($config.version)" -Level "Info" -ConsoleColor "Magenta" 
-        $japanTime = [DateTime]::UtcNow.AddHours(9).ToString('yyyy-MM-dd HH:mm:ss')  
-        Write-SystemLog "実行時刻: $japanTime" -Level "Info" -ConsoleColor "Magenta" 
-        
-        # sync_action_labels設定を取得
-        $syncActionLabels = $config.sync_rules.sync_action_labels.mappings
-        
-        # 2. データ統計セクション
-        Write-SystemLog "--- データ統計 ---" -Level "Info" -ConsoleColor "Magenta" 
-        
-        # 全テーブル件数を一括取得
-        $allTablesQuery = @"
-SELECT 'provided_data' as table_name, COUNT(*) as count FROM provided_data
-UNION ALL
-SELECT 'current_data' as table_name, COUNT(*) as count FROM current_data
-UNION ALL
-SELECT 'sync_result' as table_name, COUNT(*) as count FROM sync_result;
-"@
-        
-        $tableResults = Invoke-SqliteCsvQuery -DatabasePath $DatabasePath -Query $allTablesQuery
-        
-        foreach ($tableResult in $tableResults) {
-            Write-SystemLog "$($tableResult.table_name): $($tableResult.count) 件" -Level "Info" -ConsoleColor "Magenta" 
-        }
-        
-        # 3. 同期結果セクション
-        Write-SystemLog "--- 同期結果 ---" -Level "Info" -ConsoleColor "Magenta" 
-        
-        # 設定から動的にORDER BY句を生成
-        $syncActionLabels = $config.sync_rules.sync_action_labels.mappings
-        
-        $orderByCases = @()
-        $displayOrder = 1
-        
-        foreach ($actionKey in $syncActionLabels.PSObject.Properties.Name) {
-            $actionConfig = $syncActionLabels.$actionKey
-            $actionName = $actionConfig.value
-            $orderByCases += "        WHEN '$actionName' THEN $displayOrder"
-            $displayOrder++
-        }
-        
-        $orderByClause = $orderByCases -join "`n"
-        
-        $syncResultQuery = @"
-SELECT 
-    sync_action,
-    COUNT(*) as count
-FROM sync_result
-GROUP BY sync_action
-ORDER BY 
-    CASE sync_action 
-$orderByClause
-        ELSE 999
-    END;
-"@
-        
-        $syncResults = Invoke-SqliteCsvQuery -DatabasePath $DatabasePath -Query $syncResultQuery
-        
-        $totalSyncRecords = 0
-        foreach ($syncResult in $syncResults) {
-            $action = $syncResult.sync_action
-            $count = [int]$syncResult.count
-            $totalSyncRecords += $count
-            
-            # 設定ファイルから動的に取得（ハードコーディング排除）
-            $cleanAction = $action.ToString().Trim()
-            
-            # sync_action_labelsから設定を取得
-            $actionConfig = $null
-            
-            # データベースには数値（1, 2等）が格納されているので、
-            # 設定ファイルのvalueと一致するものを検索
-            foreach ($key in $syncActionLabels.PSObject.Properties.Name) {
-                if ($syncActionLabels.$key.value -eq $cleanAction) {
-                    $actionConfig = $syncActionLabels.$key
-                    break
-                }
-            }
-            
-            if ($actionConfig) {
-                $displayLabel = $actionConfig.value
-                $actionDescription = $actionConfig.description
-            }
-            else {
-                # フォールバック: 設定にない場合は元の値をそのまま使用
-                $displayLabel = $cleanAction
-                $actionDescription = $cleanAction
-            }
-
-            Write-SystemLog "$actionDescription ($displayLabel): $count 件" -Level "Info" -ConsoleColor "Magenta" 
-        }
-
-        if ($totalSyncRecords -gt 0) {
-            Write-SystemLog "同期処理総件数: $totalSyncRecords 件" -Level "Info" -ConsoleColor "Magenta" 
-        }
-    }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>27</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "=== 同期処理完了レポート ===" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>30</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "--- 実行情報 ---" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>31</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データベースファイル: $DatabasePath" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>32</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "提供データファイル: $ProvidedDataFilePath" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>33</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "現在データファイル: $CurrentDataFilePath" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>35</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$config = Get-DataSyncConfig</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>36</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "設定バージョン: $($config.version)" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>36</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$config.version</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>37</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$japanTime = [DateTime]::UtcNow.AddHours(9).ToString('yyyy-MM-dd HH:mm:ss')</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>38</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "実行時刻: $japanTime" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>41</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncActionLabels = $config.sync_rules.sync_action_labels.mappings</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>44</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "--- データ統計 ---" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>47</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$allTablesQuery = @"
-SELECT 'provided_data' as table_name, COUNT(*) as count FROM provided_data
-UNION ALL
-SELECT 'current_data' as table_name, COUNT(*) as count FROM current_data
-UNION ALL
-SELECT 'sync_result' as table_name, COUNT(*) as count FROM sync_result;
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>55</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tableResults = Invoke-SqliteCsvQuery -DatabasePath $DatabasePath -Query $allTablesQuery</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>57</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tableResults</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>58</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "$($tableResult.table_name): $($tableResult.count) 件" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>58</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tableResult.table_name</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>58</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$tableResult.count</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>62</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "--- 同期結果 ---" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>65</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncActionLabels = $config.sync_rules.sync_action_labels.mappings</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>67</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$orderByCases = @()</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>68</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$displayOrder = 1</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>70</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncActionLabels.PSObject.Properties.Name</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>71</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$actionConfig = $syncActionLabels.$actionKey</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>72</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$actionName = $actionConfig.value</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>73</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$orderByCases += "        WHEN '$actionName' THEN $displayOrder"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>74</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$displayOrder++</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>77</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$orderByClause = $orderByCases -join "`n"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>79</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultQuery = @"
-SELECT 
-    sync_action,
-    COUNT(*) as count
-FROM sync_result
-GROUP BY sync_action
-ORDER BY 
-    CASE sync_action 
-$orderByClause
-        ELSE 999
-    END;
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>92</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResults = Invoke-SqliteCsvQuery -DatabasePath $DatabasePath -Query $syncResultQuery</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>94</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$totalSyncRecords = 0</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>95</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResults</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>96</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$action = $syncResult.sync_action</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>97</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$count = [int]$syncResult.count</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>98</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$totalSyncRecords += $count</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>101</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$cleanAction = $action.ToString().Trim()</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>104</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$actionConfig = $null</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>108</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncActionLabels.PSObject.Properties.Name</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>109</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($syncActionLabels.$key.value -eq $cleanAction) {
-                    $actionConfig = $syncActionLabels.$key
-                    break
-                }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>110</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$actionConfig = $syncActionLabels.$key</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>115</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($actionConfig) {
-                $displayLabel = $actionConfig.value
-                $actionDescription = $actionConfig.description
-            }
-            else {
-                # フォールバック: 設定にない場合は元の値をそのまま使用
-                $displayLabel = $cleanAction
-                $actionDescription = $cleanAction
-            }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>116</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$displayLabel = $actionConfig.value</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>117</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$actionDescription = $actionConfig.description</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>121</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$displayLabel = $cleanAction</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>122</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$actionDescription = $cleanAction</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>125</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "$actionDescription ($displayLabel): $count 件" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>128</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($totalSyncRecords -gt 0) {
-            Write-SystemLog "同期処理総件数: $totalSyncRecords 件" -Level "Info" -ConsoleColor "Magenta" 
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>129</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "同期処理総件数: $totalSyncRecords 件" -Level "Info" -ConsoleColor "Magenta"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Show-SyncResult.psm1</td>
-                <td>134</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Export-ModuleMember -Function 'Show-SyncResult'</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>17</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Invoke-WithErrorHandling -ScriptBlock {
-        # 複合キー対応のGROUP BY句生成
-        $groupByClause = New-GroupByClause -TableName "sync_result"
-        $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
-        
-        Write-SystemLog "データ整合性をチェック中..." -Level "Info"
-        
-        # 重複チェック
-        $duplicateQuery = @"
-SELECT $groupByClause, COUNT(*) as count
-FROM sync_result
-GROUP BY $groupByClause
-HAVING COUNT(*) > 1;
-"@
-        
-        $duplicates = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $duplicateQuery
-        
-        if ($duplicates -and $duplicates.Count -gt 0) {
-            Write-Warning "重複したキー（$($syncResultKeys -join ', ')）が見つかりました:"
-            foreach ($dup in $duplicates) {
-                $keyValues = @()
-                foreach ($key in $syncResultKeys) {
-                    $keyValues += $dup.$key
-                }
-                $keyString = $keyValues -join ', '
-                Write-Warning "  ($keyString): $($dup.count)件"
-            }
-            throw "重複したキー（$($syncResultKeys -join ', ')）が見つかりました:"
-        }
-        
-        Write-SystemLog "データ整合性チェック完了: 問題なし" -Level "Success"
-        
-    } -Operation "データ整合性チェック" -Category External -SuppressThrow:$true</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>19</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$groupByClause = New-GroupByClause -TableName "sync_result"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>20</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultKeys = Get-TableKeyColumns -TableName "sync_result"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>22</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データ整合性をチェック中..." -Level "Info"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>25</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$duplicateQuery = @"
-SELECT $groupByClause, COUNT(*) as count
-FROM sync_result
-GROUP BY $groupByClause
-HAVING COUNT(*) > 1;
-"@</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>32</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$duplicates = Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $duplicateQuery</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>34</td>
-                <td style="font-family: monospace; font-size: 0.9em;">if ($duplicates -and $duplicates.Count -gt 0) {
-            Write-Warning "重複したキー（$($syncResultKeys -join ', ')）が見つかりました:"
-            foreach ($dup in $duplicates) {
-                $keyValues = @()
-                foreach ($key in $syncResultKeys) {
-                    $keyValues += $dup.$key
-                }
-                $keyString = $keyValues -join ', '
-                Write-Warning "  ($keyString): $($dup.count)件"
-            }
-            throw "重複したキー（$($syncResultKeys -join ', ')）が見つかりました:"
-        }</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>35</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-Warning "重複したキー（$($syncResultKeys -join ', ')）が見つかりました:"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>35</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultKeys -join ', '</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>36</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$duplicates</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>37</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$keyValues = @()</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>38</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultKeys</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>39</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$keyValues += $dup.$key</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>41</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$keyString = $keyValues -join ', '</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>42</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-Warning "  ($keyString): $($dup.count)件"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>42</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$dup.count</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>44</td>
-                <td style="font-family: monospace; font-size: 0.9em;">throw "重複したキー（$($syncResultKeys -join ', ')）が見つかりました:"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>44</td>
-                <td style="font-family: monospace; font-size: 0.9em;">$syncResultKeys -join ', '</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>47</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Write-SystemLog "データ整合性チェック完了: 問題なし" -Level "Success"</td>
-            </tr>            <tr>
-                <td>scripts/modules/Process/Test-DataConsistency.psm1</td>
-                <td>52</td>
-                <td style="font-family: monospace; font-size: 0.9em;">Export-ModuleMember -Function 'Test-DataConsistency'</td>
+                <td>Invoke-CsvExport</td>
+                <td>[-] 出力フィルタリング機能</td>
+                <td>全ての同期アクションが有効な場合、フィルタリングなしで出力される</td>
+                <td class="failed">Failed</td>
+                <td>00:03.469</td>
+                <td>SQLite3 CSV出力の実行に失敗しました: sqlite3 CSV出力エラー (終了コード: 1): Error: in prepare, no such table: sync_result</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] 出力フィルタリング機能</td>
+                <td>ADDアクションのみ有効な場合、新規作成のみ出力される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.085</td>
+                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] 出力フィルタリング機能</td>
+                <td>KEEPアクションのみ無効な場合、変更なし以外が出力される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.099</td>
+                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] 出力フィルタリング機能</td>
+                <td>全ての同期アクションが無効な場合、空の結果が出力される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.082</td>
+                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] 出力フィルタリング機能</td>
+                <td>enabled設定がない場合、全レコードが出力される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.097</td>
+                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] 履歴保存機能</td>
+                <td>履歴ディレクトリが存在しない場合、作成される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.096</td>
+                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] 履歴保存機能</td>
+                <td>出力ファイルが履歴ディレクトリにコピーされる</td>
+                <td class="failed">Failed</td>
+                <td>00:00.107</td>
+                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] エラーハンドリング</td>
+                <td>出力ファイルパスが指定されていない場合、例外がスローされる</td>
+                <td class="failed">Failed</td>
+                <td>00:00.103</td>
+                <td>Expected an exception with message like '*出力ファイルパスが指定されていません*' to be thrown, but the message was '設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。'. from /workspaces/ps-sqlite/scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1:21 char:9
+    +         throw "設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。"
+    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</td>
             </tr>        </table>
     </div></body>
 </html>

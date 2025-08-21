@@ -118,7 +118,6 @@ Describe "ConfigurationUtils モジュール" {
         
         It "テスト環境で設定パスが未指定の場合、デフォルト設定を使用する" {
             # Arrange
-            $env:PESTER_TEST = "1"
             New-MockCommand -CommandName "Get-Command" -ReturnValue @{ Name = "Describe" }
             
             # Act

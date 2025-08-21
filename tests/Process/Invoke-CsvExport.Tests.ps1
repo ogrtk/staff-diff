@@ -14,10 +14,16 @@ using module "../../scripts/modules/Process/Invoke-CsvExport.psm1"
 
 BeforeAll {
     # テストヘルパーの読み込み
-    
+    # 設定初期化
+    $configPath = Join-Path (Get-Location) "config" "data-sync-config.json"
+    Get-DataSyncConfig -ConfigPath $configPath | Out-Null
+}
+
+Describe "Invoke-CsvExport モジュール" {
     BeforeEach {
         # テスト用の一時ディレクトリとファイルパス
-        $script:testDirectory = New-TemporaryDirectory
+        $script:testDirectory = Join-Path ([System.IO.Path]::GetTempPath()) "InvokeCsvExportTest_$(Get-Random)"
+        New-Item -Path $script:testDirectory -ItemType Directory -Force | Out-Null
         $script:testDbPath = Join-Path $testDirectory "test.db"
         $script:outputPath = Join-Path $testDirectory "output.csv"
         $script:historyPath = Join-Path $testDirectory "history"
@@ -34,14 +40,13 @@ BeforeAll {
         Mock New-HistoryFileName { return "test_output_20240101_120000.csv" }
         Mock Copy-Item {}
     }
-    
+
     AfterEach {
-        if (Test-Path $script:testDirectory) {
+        if ($script:testDirectory -and (Test-Path $script:testDirectory)) {
             Remove-Item -Path $script:testDirectory -Recurse -Force
         }
         Reset-DataSyncConfig
     }
-    
     Context "出力フィルタリング機能" {
         
         BeforeEach {

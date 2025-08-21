@@ -804,19 +804,9 @@ function Invoke-TestExecution {
         Write-Host "失敗: $($result.FailedCount)" -ForegroundColor Red
         Write-Host "スキップ: $($result.SkippedCount)" -ForegroundColor Yellow
         
-        if ($result.FailedCount -gt 0) {
-            Write-Host ""
-            Write-Host "テストが失敗しました。詳細を確認してください。" -ForegroundColor Red
-            exit 1
-        }
-        else {
-            Write-Host ""
-            Write-Host "すべてのテストが成功しました！" -ForegroundColor Green
-            exit 0
-        }
-
         # HTML レポートの生成
         if ($OutputFormat -eq "HTML") {
+            Write-Host "pass"
             if ([string]::IsNullOrEmpty($OutputPath)) {
                 $OutputPath = Join-Path $TestsRoot "TestResults.html"
             }
@@ -863,6 +853,17 @@ function Invoke-TestExecution {
                     Write-Host "  ... 他 $($missedCommands.Count - 10) 行" -ForegroundColor Yellow
                 }
             }
+        }
+
+        if ($result.FailedCount -gt 0) {
+            Write-Host ""
+            Write-Host "テストが失敗しました。詳細を確認してください。" -ForegroundColor Red
+            exit 1
+        }
+        else {
+            Write-Host ""
+            Write-Host "すべてのテストが成功しました！" -ForegroundColor Green
+            exit 0
         }
 
     }
