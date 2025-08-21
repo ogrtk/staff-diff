@@ -1,11 +1,2 @@
 ﻿syokuin_no,card_number,name,position,email,phone,hire_date,sync_action
-E001,C00001,"田中太郎","主任",tanaka@company.com,999-9999-9999,2020-04-01,2
-E002,C00002,"佐藤花子","係長",sato@company.com,999-9999-9999,2019-07-15,9
-E003,C00003,"鈴木一郎","エンジニア",suzuki@company.com,999-9999-9999,2021-10-01,9
-E004,C00004,"山田次郎","課長",yamada@company.com,999-9999-9999,2018-01-10,1
-E005,C00005,"高橋三郎","主任",takahashi@company.com,999-9999-9999,2020-12-01,1
-E006,C00006,"渡辺四郎","営業",watanabe@company.com,999-9999-9999,2022-03-15,1
-E007,C00007,"伊藤五郎","シニアエンジニア",ito@company.com,999-9999-9999,2017-09-01,1
-E008,C00008,"中村六郎","部長",nakamura@company.com,999-9999-9999,2015-04-01,3
-E009,C00009,"小林七子","事務",kobayashi@company.com,999-9999-9999,2021-08-01,3
-employee_id,card_number,name,position,email,999-9999-9999,hire_date,1
+Z000001,C000001,"既存ユーザー1","役職1",existing1@company.com,03-0001-0001,2019-01-01,9

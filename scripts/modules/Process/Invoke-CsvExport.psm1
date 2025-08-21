@@ -34,7 +34,44 @@ function Invoke-CsvExport {
         # クエリ準備
         $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
         $firstKey = if ($syncResultKeys -is [array]) { $syncResultKeys[0] } else { $syncResultKeys }
-        $query = New-SelectSql -TableName "sync_result" -OrderBy $firstKey
+        
+        # フィルタリング条件を生成
+        $whereClause = ""
+        $config = Get-DataSyncConfig
+        $syncActionLabels = $config.sync_rules.sync_action_labels.mappings
+        
+        $enabledActions = @()
+        $disabledActions = @()
+        
+        foreach ($action in @('ADD', 'UPDATE', 'DELETE', 'KEEP')) {
+            $actionSetting = $syncActionLabels.$action
+            $isEnabled = $true  # デフォルトは有効
+            
+            if ($actionSetting -and $null -ne $actionSetting.enabled) {
+                $isEnabled = $actionSetting.enabled
+            }
+            
+            if ($isEnabled) {
+                $enabledActions += "'$($actionSetting.value)'"
+            }
+            else {
+                $disabledActions += "$action (設定元: sync_action_labels)"
+            }
+        }
+        
+        if ($enabledActions.Count -gt 0) {
+            $whereClause = "sync_action IN ($($enabledActions -join ', '))"
+            Write-SystemLog "出力フィルタリング適用: $whereClause" -Level "Info"
+            if ($disabledActions.Count -gt 0) {
+                Write-SystemLog "除外されたアクション: $($disabledActions -join ', ')" -Level "Info"
+            }
+        }
+        else {
+            $whereClause = "1=0"  # 全て除外
+            Write-SystemLog "全ての同期アクションが無効化されています: $($disabledActions -join ', ')" -Level "Warning"
+        }
+        
+        $query = New-SelectSql -TableName "sync_result" -WhereClause $whereClause -OrderBy $firstKey
 
         # クエリ実行
         $recordCount = Invoke-SqliteCsvExport -DatabasePath $DatabasePath -Query $query -OutputPath $OutputFilePath

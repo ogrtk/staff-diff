@@ -10,8 +10,7 @@ param(
     [string]$OutputPath = "",
     [switch]$ShowCoverage,
     [switch]$Detailed,
-    [switch]$SkipSlowTests,
-    [int]$TimeoutMinutes = 30
+    [switch]$SkipSlowTests
 )
 
 # スクリプトの場所を基準にプロジェクトルートを設定
@@ -396,7 +395,6 @@ function Initialize-PesterConfiguration {
         [string]$OutputPath,
         [bool]$ShowCoverage,
         [bool]$SkipSlowTests,
-        [int]$TimeoutMinutes,
         [string]$ProjectRoot,
         [bool]$Detailed
     )
@@ -418,10 +416,7 @@ function Initialize-PesterConfiguration {
     
     # 出力設定
     $config.Output.Verbosity = if ($Detailed) { "Detailed" } else { "Normal" }
-    
-    # タイムアウト設定
-    # $config.Run.Timeout = [TimeSpan]::FromMinutes($TimeoutMinutes)
-    
+        
     # 並列実行の設定
     $config.Run.PassThru = $true
     
@@ -697,7 +692,8 @@ function New-HtmlReport {
             $totalCommands = $stats.Executed + $stats.Missed
             $fileCoveragePercent = if ($totalCommands -gt 0) { 
                 [math]::Round(($stats.Executed / $totalCommands) * 100, 2) 
-            } else { 
+            }
+            else { 
                 0 
             }
             
@@ -775,8 +771,7 @@ function Invoke-TestExecution {
         [string]$OutputPath = $OutputPath,
         [switch]$ShowCoverage = $ShowCoverage,
         [switch]$Detailed = $Detailed,
-        [switch]$SkipSlowTests = $SkipSlowTests,
-        [int]$TimeoutMinutes = $TimeoutMinutes
+        [switch]$SkipSlowTests = $SkipSlowTests
     )
     Write-Host "=== PowerShell & SQLite データ同期システム テスト実行 ===" -ForegroundColor Cyan
     Write-Host "プロジェクトルート: $ProjectRoot" -ForegroundColor Gray
@@ -789,7 +784,7 @@ function Invoke-TestExecution {
         Install-RequiredModules
 
         # Pester設定の初期化
-        $config = Initialize-PesterConfiguration -TestPath $TestPath -TestType $TestType -OutputFormat $OutputFormat -OutputPath $OutputPath -ShowCoverage $ShowCoverage -SkipSlowTests $SkipSlowTests -TimeoutMinutes $TimeoutMinutes -ProjectRoot $ProjectRoot -Detailed $Detailed
+        $config = Initialize-PesterConfiguration -TestPath $TestPath -TestType $TestType -OutputFormat $OutputFormat -OutputPath $OutputPath -ShowCoverage $ShowCoverage -SkipSlowTests $SkipSlowTests -ProjectRoot $ProjectRoot -Detailed $Detailed
     
         Write-Host "テストを開始します..." -ForegroundColor Green
         $startTime = Get-Date
@@ -799,7 +794,27 @@ function Invoke-TestExecution {
         
         $endTime = Get-Date
         $totalDuration = $endTime - $startTime
-                
+
+        # コンソールへの結果表示
+        Write-Host ""
+        Write-Host "=== テスト実行完了 ===" -ForegroundColor Cyan
+        Write-Host "総実行時間: $($totalDuration.TotalSeconds) 秒" -ForegroundColor Gray
+        Write-Host "総テスト数: $($result.TotalCount)" -ForegroundColor White
+        Write-Host "成功: $($result.PassedCount)" -ForegroundColor Green
+        Write-Host "失敗: $($result.FailedCount)" -ForegroundColor Red
+        Write-Host "スキップ: $($result.SkippedCount)" -ForegroundColor Yellow
+        
+        if ($result.FailedCount -gt 0) {
+            Write-Host ""
+            Write-Host "テストが失敗しました。詳細を確認してください。" -ForegroundColor Red
+            exit 1
+        }
+        else {
+            Write-Host ""
+            Write-Host "すべてのテストが成功しました！" -ForegroundColor Green
+            exit 0
+        }
+
         # HTML レポートの生成
         if ($OutputFormat -eq "HTML") {
             if ([string]::IsNullOrEmpty($OutputPath)) {
@@ -812,8 +827,7 @@ function Invoke-TestExecution {
         if ($ShowCoverage) {
             Write-Host ""
             Write-Host "=== コードカバレッジ ===" -ForegroundColor Cyan
-            
-            
+
             if ($null -ne $result.CodeCoverage) {
                 # Pester 5.x のプロパティ名を使用
                 $coveragePercent = $result.CodeCoverage.CoveragePercent
@@ -851,26 +865,6 @@ function Invoke-TestExecution {
             }
         }
 
-        # 結果の表示
-        Write-Host ""
-        Write-Host "=== テスト実行完了 ===" -ForegroundColor Cyan
-        Write-Host "総実行時間: $($totalDuration.TotalSeconds) 秒" -ForegroundColor Gray
-        Write-Host "総テスト数: $($result.TotalCount)" -ForegroundColor White
-        Write-Host "成功: $($result.PassedCount)" -ForegroundColor Green
-        Write-Host "失敗: $($result.FailedCount)" -ForegroundColor Red
-        Write-Host "スキップ: $($result.SkippedCount)" -ForegroundColor Yellow
-        
-        # 終了コードの設定
-        if ($result.FailedCount -gt 0) {
-            Write-Host ""
-            Write-Host "テストが失敗しました。詳細を確認してください。" -ForegroundColor Red
-            exit 1
-        }
-        else {
-            Write-Host ""
-            Write-Host "すべてのテストが成功しました！" -ForegroundColor Green
-            exit 0
-        }
     }
     catch {
         Write-Error "テスト実行中にエラーが発生しました: $($_.Exception.Message)"
@@ -895,7 +889,6 @@ PowerShell & SQLite データ同期システム テスト実行スクリプト
   -ShowCoverage            コードカバレッジを表示
   -Detailed               詳細な出力を表示
   -SkipSlowTests          時間のかかるテストをスキップ
-  -TimeoutMinutes <分>     テストのタイムアウト時間（デフォルト: 30分）
 
 使用例:
   # すべてのテストを実行
@@ -925,4 +918,4 @@ if ($args -contains "-h" -or $args -contains "-help" -or $args -contains "--help
 }
 
 # メイン処理の実行
-Invoke-TestExecution -TestPath $TestPath -TestType $TestType -OutputFormat $OutputFormat -OutputPath $OutputPath -ShowCoverage:$ShowCoverage -Detailed:$Detailed -SkipSlowTests:$SkipSlowTests -TimeoutMinutes $TimeoutMinutes
+Invoke-TestExecution -TestPath $TestPath -TestType $TestType -OutputFormat $OutputFormat -OutputPath $OutputPath -ShowCoverage:$ShowCoverage -Detailed:$Detailed -SkipSlowTests:$SkipSlowTests

@@ -516,10 +516,12 @@
       "mappings": {
         "ADD": {
           "value": "1",
+          "enabled": false,
           "description": "新規追加"
         },
         "UPDATE": {
           "value": "2",
+          "enabled": false,
           "description": "更新"
         },
         "DELETE": {

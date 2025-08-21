@@ -422,6 +422,7 @@ function Test-LoggingConfig {
     }
 }
 
+
 # 設定のリセット（テスト用）
 function Reset-DataSyncConfig {
     $script:DataSyncConfig = $null

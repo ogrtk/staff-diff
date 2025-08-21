@@ -92,6 +92,7 @@ $orderByClause
         $syncResults = Invoke-SqliteCsvQuery -DatabasePath $DatabasePath -Query $syncResultQuery
         
         $totalSyncRecords = 0
+        $totalOutputRecords = 0
         foreach ($syncResult in $syncResults) {
             $action = $syncResult.sync_action
             $count = [int]$syncResult.count
@@ -102,12 +103,14 @@ $orderByClause
             
             # sync_action_labelsから設定を取得
             $actionConfig = $null
+            $actionKey = $null
             
             # データベースには数値（1, 2等）が格納されているので、
             # 設定ファイルのvalueと一致するものを検索
             foreach ($key in $syncActionLabels.PSObject.Properties.Name) {
                 if ($syncActionLabels.$key.value -eq $cleanAction) {
                     $actionConfig = $syncActionLabels.$key
+                    $actionKey = $key
                     break
                 }
             }
@@ -122,11 +125,28 @@ $orderByClause
                 $actionDescription = $cleanAction
             }
 
-            Write-SystemLog "$actionDescription ($displayLabel): $count 件" -Level "Info" -ConsoleColor "Magenta" 
+            # 出力フィルタリング状態を確認
+            $isOutputEnabled = $true
+            $exclusionNote = ""
+            if ($actionKey -and $actionConfig -and $actionConfig.enabled -ne $null) {
+                $isOutputEnabled = $actionConfig.enabled
+                if (-not $isOutputEnabled) {
+                    $exclusionNote = " (出力除外)"
+                } else {
+                    $totalOutputRecords += $count
+                }
+            } else {
+                $totalOutputRecords += $count
+            }
+
+            Write-SystemLog "$actionDescription ($displayLabel): $count 件$exclusionNote" -Level "Info" -ConsoleColor "Magenta" 
         }
 
         if ($totalSyncRecords -gt 0) {
             Write-SystemLog "同期処理総件数: $totalSyncRecords 件" -Level "Info" -ConsoleColor "Magenta" 
+            if ($totalOutputRecords -lt $totalSyncRecords) {
+                Write-SystemLog "実際の出力件数: $totalOutputRecords 件 (フィルタリング適用済み)" -Level "Info" -ConsoleColor "Magenta"
+            }
         }
     }
 }
