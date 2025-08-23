@@ -4,6 +4,641 @@
 using module "../../scripts/modules/Utils/Foundation/CoreUtils.psm1"
 using module "../../scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1"
 
+# TestEnvironmentクラス - テスト用リソースの統合管理
+class TestEnvironment {
+    # プロパティ
+    [string]$TempDirectory
+    [string]$TestInstanceId
+    [hashtable]$Config
+    [string]$DatabasePath
+    [string]$ConfigPath
+    [System.Collections.Generic.List[string]]$CreatedFiles
+    [System.Collections.Generic.List[string]]$CreatedDirectories
+    [bool]$IsDisposed
+    
+    # コンストラクタ - テスト環境の初期化
+    TestEnvironment([string]$TestName = "default") {
+        $this.TestInstanceId = "${TestName}_$(Get-Date -Format 'yyyyMMdd_HHmmss')_$(Get-Random -Minimum 1000 -Maximum 9999)"
+        $this.CreatedFiles = [System.Collections.Generic.List[string]]::new()
+        $this.CreatedDirectories = [System.Collections.Generic.List[string]]::new()
+        $this.IsDisposed = $false
+        
+        # 一時ディレクトリの作成
+        $this.TempDirectory = $this.CreateTempDirectory()
+        
+        # 環境初期化
+        $this.InitializeEnvironment()
+        
+        Write-Host "✓ テスト環境を初期化しました: $($this.TestInstanceId)" -ForegroundColor Green
+    }
+    
+    # 一時ディレクトリの作成
+    hidden [string] CreateTempDirectory() {
+        $projectRoot = Find-ProjectRoot
+        $baseTestDataPath = Join-Path $projectRoot "tests" "data"
+        $instanceTempPath = Join-Path $baseTestDataPath $this.TestInstanceId
+        
+        try {
+            # ディレクトリ作成
+            if (-not (Test-Path $instanceTempPath)) {
+                $null = New-Item -Path $instanceTempPath -ItemType Directory -Force
+            }
+            
+            # 作成したディレクトリを記録
+            $this.CreatedDirectories.Add($instanceTempPath)
+            
+            Write-Verbose "一時ディレクトリを作成しました: $instanceTempPath"
+            return $instanceTempPath
+        }
+        catch {
+            $errorMsg = "一時ディレクトリの作成に失敗しました: $($_.Exception.Message)"
+            Write-Error $errorMsg
+            throw $errorMsg
+        }
+    }
+    
+    # 環境初期化
+    hidden [void] InitializeEnvironment() {
+        try {
+            # サブディレクトリの作成
+            $this.CreateSubDirectories()
+            
+            Write-Verbose "テスト環境の初期化が完了しました"
+        }
+        catch {
+            $errorMsg = "テスト環境の初期化に失敗しました: $($_.Exception.Message)"
+            Write-Error $errorMsg
+            throw $errorMsg
+        }
+    }
+    
+    # サブディレクトリの作成
+    hidden [void] CreateSubDirectories() {
+        $subDirs = @(
+            "databases",
+            "csv-data", 
+            "config",
+            "logs",
+            "provided-data-history",
+            "current-data-history",
+            "output-history"
+        )
+        
+        foreach ($subDir in $subDirs) {
+            $fullPath = Join-Path $this.TempDirectory $subDir
+            if (-not (Test-Path $fullPath)) {
+                $null = New-Item -Path $fullPath -ItemType Directory -Force
+                $this.CreatedDirectories.Add($fullPath)
+                Write-Verbose "サブディレクトリを作成: $subDir"
+            }
+        }
+    }
+    
+    # テスト用データベースの作成
+    [string] CreateDatabase([string]$DatabaseName = "test_database") {
+        $this.ValidateNotDisposed()
+        
+        $dbFileName = "${DatabaseName}.db"
+        $dbPath = Join-Path $this.TempDirectory "databases" $dbFileName
+        
+        try {
+            # 既存ファイルがある場合は削除
+            if (Test-Path $dbPath) {
+                Remove-Item $dbPath -Force
+            }
+            
+            # 空のデータベースファイルを作成
+            $null = New-Item -Path $dbPath -ItemType File -Force
+            
+            # 作成したファイルを記録
+            $this.CreatedFiles.Add($dbPath)
+            $this.DatabasePath = $dbPath
+            
+            Write-Host "✓ テスト用データベースを作成しました: $dbFileName" -ForegroundColor Green
+            return $dbPath
+        }
+        catch {
+            $errorMsg = "テスト用データベースの作成に失敗しました: $($_.Exception.Message)"
+            Write-Error $errorMsg
+            throw $errorMsg
+        }
+    }
+    
+    # テスト用CSVファイルの作成
+    [string] CreateCsvFile([string]$DataType, [int]$RecordCount = 10, [hashtable]$Options = @{}) {
+        $this.ValidateNotDisposed()
+        
+        # デフォルトオプション
+        $defaultOptions = @{
+            IncludeHeader   = $true
+            IncludeJapanese = $false
+            ExcludeIds      = @()
+            CustomFileName  = ""
+        }
+        
+        # オプションのマージ
+        foreach ($key in $Options.Keys) {
+            $defaultOptions[$key] = $Options[$key]
+        }
+        
+        # ファイル名の決定
+        $fileName = if (-not [string]::IsNullOrEmpty($defaultOptions.CustomFileName)) {
+            $defaultOptions.CustomFileName
+        }
+        else {
+            "${DataType}_${RecordCount}records.csv"
+        }
+        
+        $csvPath = Join-Path $this.TempDirectory "csv-data" $fileName
+        
+        try {
+            # CSVデータの生成（既存の実装を再利用）
+            $data = $this.GenerateTestData($DataType, $RecordCount, $defaultOptions)
+            
+            # CSVファイルとして出力
+            if ($defaultOptions.IncludeHeader) {
+                $data | Export-Csv -Path $csvPath -NoTypeInformation -Encoding UTF8
+            }
+            else {
+                # ヘッダーなしで出力
+                $data | ConvertTo-Csv -NoTypeInformation | Select-Object -Skip 1 | Out-File -FilePath $csvPath -Encoding UTF8
+            }
+            
+            # 作成したファイルを記録
+            $this.CreatedFiles.Add($csvPath)
+            
+            Write-Host "✓ テスト用CSVファイルを作成しました: $fileName ($RecordCount 件)" -ForegroundColor Green
+            return $csvPath
+        }
+        catch {
+            $errorMsg = "テスト用CSVファイルの作成に失敗しました: $($_.Exception.Message)"
+            Write-Error $errorMsg
+            throw $errorMsg
+        }
+    }
+    
+    # テストデータの生成（既存の実装を統合）
+    hidden [System.Collections.Generic.List[PSCustomObject]] GenerateTestData([string]$DataType, [int]$RecordCount, [hashtable]$Options) {
+        $result = [System.Collections.Generic.List[PSCustomObject]]::new()
+        
+        switch ($DataType.ToLower()) {
+            "provided_data" {
+                $result = $this.GenerateProvidedDataRecords($RecordCount, $Options)
+            }
+            "current_data" {
+                $result = $this.GenerateCurrentDataRecords($RecordCount, $Options)
+            }
+            "mixed" {
+                $providedCount = [Math]::Ceiling($RecordCount / 2)
+                $currentCount = $RecordCount - $providedCount
+                $result.AddRange($this.GenerateProvidedDataRecords($providedCount, $Options))
+                $result.AddRange($this.GenerateCurrentDataRecords($currentCount, $Options))
+            }
+            default {
+                throw "無効なDataType: $DataType. 有効な値: provided_data, current_data, mixed"
+            }
+        }
+        
+        return $result
+    }
+    
+    # 提供データレコードの生成
+    hidden [System.Collections.Generic.List[PSCustomObject]] GenerateProvidedDataRecords([int]$Count, [hashtable]$Options) {
+        $records = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $usedIds = [System.Collections.Generic.HashSet[string]]::new()
+        
+        # 名前サンプル
+        $names = if ($Options.IncludeJapanese) {
+            @("田中太郎", "佐藤花子", "鈴木一郎", "高橋美咲", "渡辺健太", "伊藤由美", "山田悟", "中村理恵", "小林大輔", "加藤真由美")
+        }
+        else {
+            @("John Smith", "Mary Johnson", "Robert Brown", "Patricia Davis", "Michael Wilson", "Linda Moore", "William Taylor", "Elizabeth Anderson", "David Thomas", "Jennifer Jackson")
+        }
+        
+        $departments = @("営業部", "開発部", "総務部", "人事部", "経理部", "企画部")
+        $positions = @("部長", "課長", "主任", "係長", "一般", "マネージャー")
+        
+        for ($i = 1; $i -le $Count; $i++) {
+            $employeeId = $null
+            do {
+                $employeeId = "E{0:D4}" -f (Get-Random -Minimum 1000 -Maximum 9999)
+            } while ($usedIds.Contains($employeeId) -or $employeeId -in $Options.ExcludeIds)
+            
+            $null = $usedIds.Add($employeeId)
+            
+            $record = [PSCustomObject]@{
+                employee_id = $employeeId
+                card_number = "C{0:D6}" -f (Get-Random -Minimum 100000 -Maximum 999999)
+                name        = $names | Get-Random
+                department  = $departments | Get-Random
+                position    = $positions | Get-Random
+                email       = "user$(Get-Random -Max 9999)@company.com"
+                phone       = "0{0}-{1}-{2}" -f (Get-Random -Minimum 10 -Maximum 99), (Get-Random -Minimum 1000 -Maximum 9999), (Get-Random -Minimum 1000 -Maximum 9999)
+                hire_date   = (Get-Date).AddDays( - (Get-Random -Minimum 30 -Maximum 3650)).ToString("yyyy-MM-dd")
+            }
+            
+            $records.Add($record)
+        }
+        
+        return $records
+    }
+    
+    # 現在データレコードの生成
+    hidden [System.Collections.Generic.List[PSCustomObject]] GenerateCurrentDataRecords([int]$Count, [hashtable]$Options) {
+        $records = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $usedIds = [System.Collections.Generic.HashSet[string]]::new()
+        
+        # 名前サンプル
+        $names = if ($Options.IncludeJapanese) {
+            @("池田次郎", "松本愛子", "青木正夫", "福田美穂", "岡田和也", "石川恵子", "上田龍也", "森本彩香", "原田誠", "村田優子")
+        }
+        else {
+            @("Christopher Lee", "Sarah White", "Daniel Harris", "Michelle Martin", "Anthony Thompson", "Deborah Garcia", "Mark Martinez", "Lisa Robinson", "Paul Clark", "Nancy Lewis")
+        }
+        
+        $departments = @("製造部", "品質管理部", "研究開発部", "マーケティング部", "法務部", "IT部")
+        $positions = @("主査", "主事", "主任", "リーダー", "エキスパート", "スペシャリスト")
+        
+        for ($i = 1; $i -le $Count; $i++) {
+            $userId = $null
+            do {
+                $userId = "U{0:D4}" -f (Get-Random -Minimum 2000 -Maximum 9999)
+            } while ($usedIds.Contains($userId) -or $userId -in $Options.ExcludeIds)
+            
+            $null = $usedIds.Add($userId)
+            
+            $record = [PSCustomObject]@{
+                user_id     = $userId
+                card_number = "C{0:D6}" -f (Get-Random -Minimum 200000 -Maximum 899999)
+                name        = $names | Get-Random
+                department  = $departments | Get-Random
+                position    = $positions | Get-Random
+                email       = "user$(Get-Random -Max 9999)@company.com"
+                phone       = "0{0}-{1}-{2}" -f (Get-Random -Minimum 10 -Maximum 99), (Get-Random -Minimum 1000 -Maximum 9999), (Get-Random -Minimum 1000 -Maximum 9999)
+                hire_date   = (Get-Date).AddDays( - (Get-Random -Minimum 60 -Maximum 3000)).ToString("yyyy-MM-dd")
+            }
+            
+            $records.Add($record)
+        }
+        
+        return $records
+    }
+    
+    # sync_resultテーブル用テストデータの生成
+    [System.Collections.Generic.List[PSCustomObject]] CreateSyncResultData([hashtable]$ActionCounts = @{}, [hashtable]$Options = @{}) {
+        $this.ValidateNotDisposed()
+        
+        # デフォルトのアクション件数
+        $defaultCounts = @{
+            ADD = 3
+            UPDATE = 2  
+            DELETE = 1
+            KEEP = 4
+        }
+        
+        # アクション件数のマージ
+        foreach ($action in $defaultCounts.Keys) {
+            if (-not $ActionCounts.ContainsKey($action)) {
+                $ActionCounts[$action] = $defaultCounts[$action]
+            }
+        }
+        
+        # デフォルトオプション
+        $defaultOptions = @{
+            IncludeJapanese = $false
+            StartId = 1000
+        }
+        
+        # オプションのマージ
+        foreach ($key in $Options.Keys) {
+            $defaultOptions[$key] = $Options[$key]
+        }
+        
+        $records = [System.Collections.Generic.List[PSCustomObject]]::new()
+        $actionValues = @{
+            ADD = "1"
+            UPDATE = "2"  
+            DELETE = "3"
+            KEEP = "9"
+        }
+        
+        $currentId = $defaultOptions.StartId
+        
+        # 各アクションのレコードを生成
+        foreach ($action in @('ADD', 'UPDATE', 'DELETE', 'KEEP')) {
+            $count = $ActionCounts[$action]
+            if ($count -gt 0) {
+                for ($i = 1; $i -le $count; $i++) {
+                    $record = $this.GenerateSyncResultRecord($action, $actionValues[$action], $currentId, $defaultOptions)
+                    $records.Add($record)
+                    $currentId++
+                }
+            }
+        }
+        
+        return $records
+    }
+    
+    # 単一sync_resultレコードの生成
+    hidden [PSCustomObject] GenerateSyncResultRecord([string]$Action, [string]$ActionValue, [int]$IdBase, [hashtable]$Options) {
+        $names = if ($Options.IncludeJapanese) {
+            @("山田太郎", "佐藤花子", "田中一郎", "鈴木美咲", "高橋健太", "伊藤由美", "渡辺悟", "中村理恵", "小林大輔", "加藤真由美")
+        } else {
+            @("John Doe", "Jane Smith", "Mike Johnson", "Lisa Brown", "Tom Wilson", "Sarah Davis", "Robert Miller", "Emily Jones", "David Garcia", "Jennifer Martin")
+        }
+        
+        $departments = @("営業部", "開発部", "総務部", "人事部", "経理部", "企画部")
+        $positions = @("部長", "課長", "主任", "一般", "マネージャー", "リーダー")
+        
+        return [PSCustomObject]@{
+            syokuin_no = "S{0:D4}" -f $IdBase
+            card_number = "C{0:D6}" -f ($IdBase + 100000)
+            name = $names[($IdBase - 1000) % $names.Length]
+            department = $departments[($IdBase - 1000) % $departments.Length]
+            position = $positions[($IdBase - 1000) % $positions.Length]
+            email = "user$IdBase@company.com"
+            phone = "999-9999-9999"  # 固定値（設定による）
+            hire_date = (Get-Date).AddDays(-($IdBase % 365)).ToString("yyyy-MM-dd")
+            sync_action = $ActionValue
+        }
+    }
+    
+    # sync_resultテーブルの作成とデータ挿入
+    [void] PopulateSyncResultTable([string]$DatabasePath, [hashtable]$ActionCounts = @{}, [hashtable]$Options = @{}) {
+        $this.ValidateNotDisposed()
+        
+        try {
+            # sync_resultテーブル用データ生成
+            $syncData = $this.CreateSyncResultData($ActionCounts, $Options)
+            
+            # データベースにテーブル作成とデータ挿入
+            # CoreUtilsのInvoke-SqliteCommand関数を使用
+            $createTableSql = @"
+CREATE TABLE IF NOT EXISTS sync_result (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    syokuin_no TEXT NOT NULL UNIQUE,
+    card_number TEXT,
+    name TEXT NOT NULL,
+    department TEXT,
+    position TEXT,
+    email TEXT,
+    phone TEXT,
+    hire_date DATE,
+    sync_action TEXT NOT NULL
+);
+"@
+            
+            Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $createTableSql
+            
+            # データ挿入
+            foreach ($record in $syncData) {
+                $insertSql = @"
+INSERT OR REPLACE INTO sync_result 
+(syokuin_no, card_number, name, department, position, email, phone, hire_date, sync_action)
+VALUES ('$($record.syokuin_no)', '$($record.card_number)', '$($record.name)', '$($record.department)', '$($record.position)', '$($record.email)', '$($record.phone)', '$($record.hire_date)', '$($record.sync_action)');
+"@
+                
+                Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $insertSql
+            }
+            
+            Write-Host "✓ sync_resultテーブルに $($syncData.Count) 件のテストデータを挿入しました" -ForegroundColor Green
+        }
+        catch {
+            $errorMsg = "sync_resultテーブルの作成・データ挿入に失敗しました: $($_.Exception.Message)"
+            Write-Error $errorMsg
+            throw $errorMsg
+        }
+    }
+    
+    # テスト用設定ファイルの作成
+    [string] CreateConfigFile([hashtable]$CustomSettings = @{}, [string]$ConfigName = "test-config") {
+        $this.ValidateNotDisposed()
+        
+        $configFileName = "${ConfigName}.json"
+        $tmpConfigPath = Join-Path $this.TempDirectory "config" $configFileName
+        
+        try {
+            # デフォルト設定の生成（既存実装を再利用）
+            $defaultConfig = $this.GenerateDefaultTestConfig()
+            
+            # カスタム設定のマージ
+            $mergedConfig = $this.MergeHashtables($defaultConfig, $CustomSettings)
+            
+            # パスの調整（一時ディレクトリベースに変更）
+            $this.AdjustConfigPaths($mergedConfig)
+            
+            # JSONファイルとして出力
+            $mergedConfig | ConvertTo-Json -Depth 10 | Out-File -FilePath $tmpConfigPath -Encoding UTF8
+            
+            # 作成したファイルを記録
+            $this.CreatedFiles.Add($tmpConfigPath)
+            $this.ConfigPath = $tmpConfigPath
+            $this.Config = $mergedConfig
+            
+            Write-Host "✓ テスト用設定ファイルを作成しました: $configFileName" -ForegroundColor Green
+            return $tmpConfigPath
+        }
+        catch {
+            $errorMsg = "テスト用設定ファイルの作成に失敗しました: $($_.Exception.Message)"
+            Write-Error $errorMsg
+            throw $errorMsg
+        }
+    }
+    
+    # デフォルトテスト設定の生成
+    hidden [hashtable] GenerateDefaultTestConfig() {
+        return @{
+            version     = "1.0.0"
+            description = "TestEnvironmentクラス用自動生成設定"
+            file_paths  = @{
+                provided_data_file_path         = Join-Path $this.TempDirectory "csv-data" "provided_data.csv"
+                current_data_file_path          = Join-Path $this.TempDirectory "csv-data" "current_data.csv"
+                output_file_path                = Join-Path $this.TempDirectory "csv-data" "output.csv"
+                provided_data_history_directory = Join-Path $this.TempDirectory "provided-data-history"
+                current_data_history_directory  = Join-Path $this.TempDirectory "current-data-history"
+                output_history_directory        = Join-Path $this.TempDirectory "output-history"
+                timezone                        = "Asia/Tokyo"
+            }
+            csv_format  = @{
+                provided_data = @{
+                    encoding         = "UTF-8"
+                    delimiter        = ","
+                    newline          = "LF"
+                    has_header       = $false
+                    null_values      = @("", "NULL", "null")
+                    allow_empty_file = $true
+                }
+                current_data  = @{
+                    encoding         = "UTF-8"
+                    delimiter        = ","
+                    newline          = "LF"
+                    has_header       = $true
+                    null_values      = @("", "NULL", "null")
+                    allow_empty_file = $true
+                }
+                output        = @{
+                    encoding       = "UTF-8"
+                    delimiter      = ","
+                    newline        = "CRLF"
+                    include_header = $true
+                }
+            }
+            logging     = @{
+                enabled          = $true
+                log_directory    = Join-Path $this.TempDirectory "logs"
+                log_file_name    = "test-system.log"
+                max_file_size_mb = 5
+                max_files        = 3
+                levels           = @("Info", "Warning", "Error", "Success")
+            }
+        }
+    }
+    
+    # 設定パスの調整
+    hidden [void] AdjustConfigPaths([hashtable]$Config) {
+        if ($Config.ContainsKey("file_paths")) {
+            $Config.file_paths.provided_data_file_path = Join-Path $this.TempDirectory "csv-data" "provided_data.csv"
+            $Config.file_paths.current_data_file_path = Join-Path $this.TempDirectory "csv-data" "current_data.csv"
+            $Config.file_paths.output_file_path = Join-Path $this.TempDirectory "csv-data" "output.csv"
+            $Config.file_paths.provided_data_history_directory = Join-Path $this.TempDirectory "provided-data-history"
+            $Config.file_paths.current_data_history_directory = Join-Path $this.TempDirectory "current-data-history"
+            $Config.file_paths.output_history_directory = Join-Path $this.TempDirectory "output-history"
+        }
+        
+        if ($Config.ContainsKey("logging")) {
+            $Config.logging.log_directory = Join-Path $this.TempDirectory "logs"
+        }
+    }
+    
+    # ハッシュテーブルのマージ（既存実装を再利用）
+    hidden [hashtable] MergeHashtables([hashtable]$Target, [hashtable]$Source) {
+        $result = $Target.Clone()
+        
+        foreach ($key in $Source.Keys) {
+            if ($result.ContainsKey($key)) {
+                if ($result[$key] -is [hashtable] -and $Source[$key] -is [hashtable]) {
+                    $result[$key] = $this.MergeHashtables($result[$key], $Source[$key])
+                }
+                else {
+                    $result[$key] = $Source[$key]
+                }
+            }
+            else {
+                $result[$key] = $Source[$key]
+            }
+        }
+        
+        return $result
+    }
+    
+    # 一時ファイルの作成
+    [string] CreateTempFile([string]$Content = "", [string]$Extension = ".txt", [string]$Prefix = "temp_") {
+        $this.ValidateNotDisposed()
+        
+        $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+        $randomId = Get-Random -Minimum 1000 -Maximum 9999
+        $fileName = "$Prefix$timestamp$randomId$Extension"
+        $filePath = Join-Path $this.TempDirectory $fileName
+        
+        try {
+            if (-not [string]::IsNullOrEmpty($Content)) {
+                $Content | Out-File -FilePath $filePath -Encoding UTF8
+            }
+            else {
+                $null = New-Item -Path $filePath -ItemType File -Force
+            }
+            
+            $this.CreatedFiles.Add($filePath)
+            return $filePath
+        }
+        catch {
+            $errorMsg = "一時ファイルの作成に失敗しました: $($_.Exception.Message)"
+            Write-Error $errorMsg
+            throw $errorMsg
+        }
+    }
+    
+    # パス取得メソッド群
+    [string] GetDatabasePath() { return $this.DatabasePath }
+    [string] GetConfigPath() { return $this.ConfigPath }
+    [string] GetTempDirectory() { return $this.TempDirectory }
+    [string] GetTestInstanceId() { return $this.TestInstanceId }
+    [hashtable] GetConfig() { return $this.Config }
+    
+    # バリデーション
+    hidden [void] ValidateNotDisposed() {
+        if ($this.IsDisposed) {
+            throw "TestEnvironmentオブジェクトは既に破棄されています。"
+        }
+    }
+    
+    # リソースのクリーンアップ（Disposeパターン）
+    [void] Dispose() {
+        if ($this.IsDisposed) {
+            return
+        }
+        
+        try {
+            Write-Verbose "TestEnvironment[$($this.TestInstanceId)]のクリーンアップを開始します..."
+            
+            # 作成したファイルを削除（逆順で安全に削除）
+            for ($i = $this.CreatedFiles.Count - 1; $i -ge 0; $i--) {
+                $filePath = $this.CreatedFiles[$i]
+                if (Test-Path $filePath) {
+                    try {
+                        Remove-Item $filePath -Force -ErrorAction SilentlyContinue
+                        Write-Verbose "ファイルを削除: $filePath"
+                    }
+                    catch {
+                        Write-Warning "ファイルの削除に失敗: $filePath - $($_.Exception.Message)"
+                    }
+                }
+            }
+            
+            # 作成したディレクトリを削除（逆順で安全に削除）
+            for ($i = $this.CreatedDirectories.Count - 1; $i -ge 0; $i--) {
+                $dirPath = $this.CreatedDirectories[$i]
+                if (Test-Path $dirPath) {
+                    try {
+                        Remove-Item $dirPath -Recurse -Force -ErrorAction SilentlyContinue
+                        Write-Verbose "ディレクトリを削除: $dirPath"
+                    }
+                    catch {
+                        Write-Warning "ディレクトリの削除に失敗: $dirPath - $($_.Exception.Message)"
+                    }
+                }
+            }
+            
+            # メインの一時ディレクトリを削除
+            if ($this.TempDirectory -and (Test-Path $this.TempDirectory)) {
+                try {
+                    Remove-Item $this.TempDirectory -Recurse -Force
+                    Write-Verbose "メイン一時ディレクトリを削除: $($this.TempDirectory)"
+                }
+                catch {
+                    Write-Warning "メイン一時ディレクトリの削除に失敗: $($this.TempDirectory) - $($_.Exception.Message)"
+                }
+            }
+            
+            # プロパティをクリア
+            $this.CreatedFiles.Clear()
+            $this.CreatedDirectories.Clear()
+            $this.Config = @{}
+            
+            $this.IsDisposed = $true
+            Write-Host "✓ TestEnvironment[$($this.TestInstanceId)]のクリーンアップが完了しました" -ForegroundColor Green
+        }
+        catch {
+            Write-Warning "TestEnvironmentのクリーンアップ中にエラーが発生しました: $($_.Exception.Message)"
+        }
+    }
+    
+    # オブジェクト破棄時の自動クリーンアップ（フィナライザーパターン）
+    [void] Finalize() {
+        $this.Dispose()
+    }
+}
+
 # 共通パス管理
 function Get-TestDataPath {
     param(
@@ -846,6 +1481,105 @@ function New-TempTestFile {
     return $filePath
 }
 
+# 既存関数の互換性ラッパー（TestEnvironmentクラス使用に移行するまでの間）
+
+# 簡易初期化関数（レガシー互換）
+function Initialize-TestEnvironment {
+    param(
+        [string]$TestConfigPath = "",
+        [switch]$CreateTempDatabase,
+        [switch]$CleanupBefore
+    )
+    
+    Write-Warning "Initialize-TestEnvironment関数は非推奨です。TestEnvironmentクラスの使用を推奨します。"
+    
+    # プロジェクトルートを取得
+    $ProjectRoot = Find-ProjectRoot
+    
+    # 旧来の方式でクリーンアップ
+    if ($CleanupBefore) {
+        Clear-TestEnvironment -ProjectRoot $ProjectRoot
+    }
+    
+    # テスト用データベースの作成（旧来の方式）
+    $testDatabasePath = $null
+    if ($CreateTempDatabase) {
+        $testDatabasePath = New-TestDatabase -ProjectRoot $ProjectRoot
+    }
+    
+    return @{
+        ProjectRoot      = $ProjectRoot
+        TestConfigPath   = $TestConfigPath
+        TestDatabasePath = $testDatabasePath
+    }
+}
+
+# TestEnvironmentクラス用の新しい初期化関数
+function New-TestEnvironment {
+    param(
+        [string]$TestName = "default"
+    )
+    
+    return [TestEnvironment]::new($TestName)
+}
+
+# レガシー互換のCSVデータ生成
+function New-TestCsvData {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$DataType,
+        [int]$RecordCount = 10,
+        [string]$OutputPath = "",
+        [switch]$IncludeHeader,
+        [string[]]$ExcludeIds = @(),
+        [switch]$IncludeJapanese
+    )
+    
+    Write-Warning "New-TestCsvData関数は非推奨です。TestEnvironmentクラスのCreateCsvFileメソッドの使用を推奨します。"
+    
+    # 既存の実装を維持（後方互換性のため）
+    $data = @()
+    
+    switch ($DataType.ToLower()) {
+        "provided_data" {
+            $data = New-ProvidedDataRecords -Count $RecordCount -ExcludeIds $ExcludeIds -IncludeJapanese:$IncludeJapanese
+        }
+        "current_data" {
+            $data = New-CurrentDataRecords -Count $RecordCount -ExcludeIds $ExcludeIds -IncludeJapanese:$IncludeJapanese
+        }
+        "mixed" {
+            $providedCount = [Math]::Ceiling($RecordCount / 2)
+            $currentCount = $RecordCount - $providedCount
+            $data += New-ProvidedDataRecords -Count $providedCount -ExcludeIds $ExcludeIds -IncludeJapanese:$IncludeJapanese
+            $data += New-CurrentDataRecords -Count $currentCount -ExcludeIds $ExcludeIds -IncludeJapanese:$IncludeJapanese
+        }
+        default {
+            throw "無効なDataType: $DataType. 有効な値: provided_data, current_data, mixed"
+        }
+    }
+    
+    if (-not [string]::IsNullOrEmpty($OutputPath)) {
+        # ディレクトリの作成
+        $directory = Split-Path $OutputPath -Parent
+        if (-not [string]::IsNullOrEmpty($directory) -and -not (Test-Path $directory)) {
+            New-Item -Path $directory -ItemType Directory -Force | Out-Null
+        }
+        
+        # CSVファイルとして出力
+        if ($IncludeHeader) {
+            $data | Export-Csv -Path $OutputPath -NoTypeInformation -Encoding UTF8
+        }
+        else {
+            # ヘッダーなしで出力
+            $data | ConvertTo-Csv -NoTypeInformation | Select-Object -Skip 1 | Out-File -FilePath $OutputPath -Encoding UTF8
+        }
+        
+        Write-Verbose "テストCSVデータを生成しました: $OutputPath ($RecordCount 件)"
+    }
+    
+    return $data
+}
+
 Export-ModuleMember -Function @(
     'Get-TestDataPath',
     'New-TestTempPath',
@@ -857,5 +1591,6 @@ Export-ModuleMember -Function @(
     'New-CurrentDataRecords',
     'New-SyncResultRecords',
     'New-TestConfig',
-    'New-TempTestFile'
+    'New-TempTestFile',
+    'New-TestEnvironment'
 )
