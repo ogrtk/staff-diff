@@ -18,7 +18,6 @@ function Invoke-CsvExport {
         
         [string]$OutputFilePath
     )
-
     $filePathConfig = Get-FilePathConfig
 
     # 出力ファイルパスの解決
@@ -72,6 +71,7 @@ function Invoke-CsvExport {
         }
         
         $query = New-SelectSql -TableName "sync_result" -WhereClause $whereClause -OrderBy $firstKey
+        Write-Host $query
 
         # クエリ実行
         $recordCount = Invoke-SqliteCsvExport -DatabasePath $DatabasePath -Query $query -OutputPath $OutputFilePath

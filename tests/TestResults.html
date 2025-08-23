@@ -24,18 +24,18 @@
     <div class="header">
         <h1>PowerShell & SQLite データ同期システム</h1>
         <h2>テスト実行結果</h2>
-        <p>実行日時: 2025年08月21日 10:39:41</p>
+        <p>実行日時: 2025年08月23日 07:27:39</p>
     </div>
     
     <div class="summary">
         <h3>実行サマリー</h3>
         <table>
             <tr><th>項目</th><th>件数</th></tr>
-            <tr><td>総テスト数</td><td>31</td></tr>
+            <tr><td>総テスト数</td><td>36</td></tr>
             <tr><td class="passed">成功</td><td>23</td></tr>
-            <tr><td class="failed">失敗</td><td>8</td></tr>
+            <tr><td class="failed">失敗</td><td>13</td></tr>
             <tr><td class="skipped">スキップ</td><td>0</td></tr>
-            <tr><td>実行時間</td><td>00:10.574</td></tr>
+            <tr><td>実行時間</td><td>00:29.494</td></tr>
         </table>
     </div>
     
@@ -48,71 +48,106 @@
                 <td class="passed">23</td>
                 <td class="failed">0</td>
                 <td class="skipped">0</td>
-                <td>00:05.065</td>
+                <td>00:05.561</td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
-                <td>8</td>
+                <td>13</td>
                 <td class="passed">0</td>
-                <td class="failed">8</td>
+                <td class="failed">13</td>
                 <td class="skipped">0</td>
-                <td>00:04.142</td>
+                <td>00:22.356</td>
             </tr>        </table>
     </div>    <div class="test-details">
         <h3>失敗したテスト</h3>        <div class="test-container">
             <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - 全ての同期アクションが有効な場合、フィルタリングなしで出力される</div>
-            <div class="test-time">実行時間: 00:03.469</div>
+            <div class="test-time">実行時間: 00:03.516</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
                 SQLite3 CSV出力の実行に失敗しました: sqlite3 CSV出力エラー (終了コード: 1): Error: in prepare, no such table: sync_result
             </div>
         </div>        <div class="test-container">
             <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - ADDアクションのみ有効な場合、新規作成のみ出力される</div>
-            <div class="test-time">実行時間: 00:00.085</div>
-            <div class="error-message">
-                <strong>エラーメッセージ:</strong><br>
-                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
-            </div>
-        </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - KEEPアクションのみ無効な場合、変更なし以外が出力される</div>
             <div class="test-time">実行時間: 00:00.099</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
                 設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
             </div>
         </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - KEEPアクションのみ無効な場合、変更なし以外が出力される</div>
+            <div class="test-time">実行時間: 00:00.080</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+            </div>
+        </div>        <div class="test-container">
             <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - 全ての同期アクションが無効な場合、空の結果が出力される</div>
-            <div class="test-time">実行時間: 00:00.082</div>
+            <div class="test-time">実行時間: 00:00.087</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
                 設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
             </div>
         </div>        <div class="test-container">
             <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - enabled設定がない場合、全レコードが出力される</div>
-            <div class="test-time">実行時間: 00:00.097</div>
+            <div class="test-time">実行時間: 00:00.079</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
                 設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
             </div>
         </div>        <div class="test-container">
             <div class="test-name">[Invoke-CsvExport] [-] 履歴保存機能 - 履歴ディレクトリが存在しない場合、作成される</div>
-            <div class="test-time">実行時間: 00:00.096</div>
+            <div class="test-time">実行時間: 00:00.068</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
                 設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
             </div>
         </div>        <div class="test-container">
             <div class="test-name">[Invoke-CsvExport] [-] 履歴保存機能 - 出力ファイルが履歴ディレクトリにコピーされる</div>
-            <div class="test-time">実行時間: 00:00.107</div>
+            <div class="test-time">実行時間: 00:00.075</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
                 設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
             </div>
         </div>        <div class="test-container">
             <div class="test-name">[Invoke-CsvExport] [-] エラーハンドリング - 出力ファイルパスが指定されていない場合、例外がスローされる</div>
-            <div class="test-time">実行時間: 00:00.103</div>
+            <div class="test-time">実行時間: 00:00.101</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
                 Expected an exception with message like '*出力ファイルパスが指定されていません*' to be thrown, but the message was '設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。'. from /workspaces/ps-sqlite/scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1:21 char:9<br>    +         throw "設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。"<br>    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] TestEnvironment統合テスト - 実際のsync_resultデータで全アクション出力テスト</div>
+            <div class="test-time">実行時間: 00:03.611</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] TestEnvironment統合テスト - ADDアクションのみフィルタリングテスト</div>
+            <div class="test-time">実行時間: 00:03.911</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] TestEnvironment統合テスト - KEEPアクション除外フィルタリングテスト</div>
+            <div class="test-time">実行時間: 00:03.642</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] TestEnvironment統合テスト - 全アクション無効時の空出力テスト</div>
+            <div class="test-time">実行時間: 00:03.627</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。
+            </div>
+        </div>        <div class="test-container">
+            <div class="test-name">[Invoke-CsvExport] [-] TestEnvironment統合テスト - 履歴保存機能の実テスト</div>
+            <div class="test-time">実行時間: 00:03.454</div>
+            <div class="error-message">
+                <strong>エラーメッセージ:</strong><br>
+                テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。
             </div>
         </div></div>    <div class="test-details">
         <h3>すべてのテスト結果</h3>
@@ -129,42 +164,42 @@
                 <td>[+] Invoke-ConfigValidation 関数 - 基本動作</td>
                 <td>有効なパラメータで正常に処理を完了する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.826</td>
+                <td>00:00.847</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 基本動作</td>
                 <td>DatabasePathが未指定の場合、デフォルトパスを設定する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.230</td>
+                <td>00:00.257</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 基本動作</td>
                 <td>設定ファイル読み込みが正常に実行される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.322</td>
+                <td>00:00.339</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 外部依存関係検証</td>
                 <td>SQLite3コマンドが利用可能な場合、成功メッセージをログ出力する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.269</td>
+                <td>00:00.244</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 外部依存関係検証</td>
                 <td>SQLite3コマンドが見つからない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.185</td>
+                <td>00:00.220</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイルパス解決</td>
                 <td>実ファイルを使ったパス解決テスト</td>
                 <td class="passed">Passed</td>
-                <td>00:00.286</td>
+                <td>00:00.356</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
@@ -178,63 +213,63 @@
                 <td>[+] Invoke-ConfigValidation 関数 - ファイルパス解決</td>
                 <td>パラメータが未指定の場合、設定ファイルから解決される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.219</td>
+                <td>00:00.247</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイル存在チェック</td>
                 <td>解決されたパスでファイル存在チェックが実行される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.222</td>
+                <td>00:00.279</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイル存在チェック</td>
                 <td>ファイル存在チェックでエラーが発生した場合、例外をスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.218</td>
+                <td>00:00.242</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ログ出力</td>
                 <td>処理パラメータが適切にログ出力される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.230</td>
+                <td>00:00.279</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ログ出力</td>
                 <td>各処理段階で適切な進捗ログが出力される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.286</td>
+                <td>00:00.295</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>すべてのファイルが存在する場合、正常に完了する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.275</td>
+                <td>00:00.342</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>提供データファイルが存在しない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.163</td>
+                <td>00:00.172</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>現在データファイルが存在しない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.129</td>
+                <td>00:00.145</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>出力ディレクトリが存在しない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.149</td>
+                <td>00:00.169</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
@@ -248,101 +283,136 @@
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>空のProjectRootパラメータでエラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.084</td>
+                <td>00:00.091</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>無効なProjectRootパスでエラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.076</td>
+                <td>00:00.083</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>設定検証でエラーが発生した場合、適切にエラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.094</td>
+                <td>00:00.111</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>日本語データを含むファイルパスの処理</td>
                 <td class="passed">Passed</td>
-                <td>00:00.187</td>
+                <td>00:00.220</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>複数のパラメータが同時に指定された場合の優先順位</td>
                 <td class="passed">Passed</td>
-                <td>00:00.154</td>
+                <td>00:00.165</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>非常に長いファイルパスでも正常に処理される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.147</td>
+                <td>00:00.148</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
                 <td>[-] 出力フィルタリング機能</td>
                 <td>全ての同期アクションが有効な場合、フィルタリングなしで出力される</td>
                 <td class="failed">Failed</td>
-                <td>00:03.469</td>
+                <td>00:03.516</td>
                 <td>SQLite3 CSV出力の実行に失敗しました: sqlite3 CSV出力エラー (終了コード: 1): Error: in prepare, no such table: sync_result</td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
                 <td>[-] 出力フィルタリング機能</td>
                 <td>ADDアクションのみ有効な場合、新規作成のみ出力される</td>
                 <td class="failed">Failed</td>
-                <td>00:00.085</td>
+                <td>00:00.099</td>
                 <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
                 <td>[-] 出力フィルタリング機能</td>
                 <td>KEEPアクションのみ無効な場合、変更なし以外が出力される</td>
                 <td class="failed">Failed</td>
-                <td>00:00.099</td>
+                <td>00:00.080</td>
                 <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
                 <td>[-] 出力フィルタリング機能</td>
                 <td>全ての同期アクションが無効な場合、空の結果が出力される</td>
                 <td class="failed">Failed</td>
-                <td>00:00.082</td>
+                <td>00:00.087</td>
                 <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
                 <td>[-] 出力フィルタリング機能</td>
                 <td>enabled設定がない場合、全レコードが出力される</td>
                 <td class="failed">Failed</td>
-                <td>00:00.097</td>
+                <td>00:00.079</td>
                 <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
                 <td>[-] 履歴保存機能</td>
                 <td>履歴ディレクトリが存在しない場合、作成される</td>
                 <td class="failed">Failed</td>
-                <td>00:00.096</td>
+                <td>00:00.068</td>
                 <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
                 <td>[-] 履歴保存機能</td>
                 <td>出力ファイルが履歴ディレクトリにコピーされる</td>
                 <td class="failed">Failed</td>
-                <td>00:00.107</td>
+                <td>00:00.075</td>
                 <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
                 <td>[-] エラーハンドリング</td>
                 <td>出力ファイルパスが指定されていない場合、例外がスローされる</td>
                 <td class="failed">Failed</td>
-                <td>00:00.103</td>
+                <td>00:00.101</td>
                 <td>Expected an exception with message like '*出力ファイルパスが指定されていません*' to be thrown, but the message was '設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。'. from /workspaces/ps-sqlite/scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1:21 char:9
     +         throw "設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。"
     +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] TestEnvironment統合テスト</td>
+                <td>実際のsync_resultデータで全アクション出力テスト</td>
+                <td class="failed">Failed</td>
+                <td>00:03.611</td>
+                <td>テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] TestEnvironment統合テスト</td>
+                <td>ADDアクションのみフィルタリングテスト</td>
+                <td class="failed">Failed</td>
+                <td>00:03.911</td>
+                <td>テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] TestEnvironment統合テスト</td>
+                <td>KEEPアクション除外フィルタリングテスト</td>
+                <td class="failed">Failed</td>
+                <td>00:03.642</td>
+                <td>テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] TestEnvironment統合テスト</td>
+                <td>全アクション無効時の空出力テスト</td>
+                <td class="failed">Failed</td>
+                <td>00:03.627</td>
+                <td>テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。</td>
+            </tr>            <tr>
+                <td>Invoke-CsvExport</td>
+                <td>[-] TestEnvironment統合テスト</td>
+                <td>履歴保存機能の実テスト</td>
+                <td class="failed">Failed</td>
+                <td>00:03.454</td>
+                <td>テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。</td>
             </tr>        </table>
     </div></body>
 </html>

@@ -483,6 +483,118 @@ VALUES ('$($record.syokuin_no)', '$($record.card_number)', '$($record.name)', '$
                     include_header = $true
                 }
             }
+            tables      = @{
+                provided_data = @{
+                    description = "提供データテーブル"
+                    table_constraints = @(
+                        @{
+                            name = "uk_provided_employee_id"
+                            type = "UNIQUE"
+                            columns = @("employee_id")
+                            description = "職員IDの一意制約"
+                        }
+                    )
+                    columns = @(
+                        @{ name = "id"; type = "INTEGER"; constraints = "PRIMARY KEY AUTOINCREMENT"; csv_include = $false; description = "内部ID" }
+                        @{ name = "employee_id"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "職員ID" }
+                        @{ name = "card_number"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "カード番号" }
+                        @{ name = "name"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "氏名" }
+                        @{ name = "department"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "部署" }
+                        @{ name = "position"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "役職" }
+                        @{ name = "email"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "メールアドレス" }
+                        @{ name = "phone"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "電話番号" }
+                        @{ name = "hire_date"; type = "DATE"; constraints = ""; csv_include = $true; required = $false; description = "入社日" }
+                    )
+                    indexes = @(
+                        @{
+                            name = "idx_provided_employee_id"
+                            columns = @("employee_id")
+                            description = "職員ID検索用インデックス"
+                        }
+                    )
+                }
+                current_data = @{
+                    description = "現在データテーブル"
+                    table_constraints = @(
+                        @{
+                            name = "uk_current_user_id"
+                            type = "UNIQUE"
+                            columns = @("user_id")
+                            description = "利用者IDの一意制約"
+                        }
+                    )
+                    columns = @(
+                        @{ name = "id"; type = "INTEGER"; constraints = "PRIMARY KEY AUTOINCREMENT"; csv_include = $false; description = "内部ID" }
+                        @{ name = "user_id"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "利用者ID" }
+                        @{ name = "card_number"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "カード番号" }
+                        @{ name = "name"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "氏名" }
+                        @{ name = "department"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "部署" }
+                        @{ name = "position"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "役職" }
+                        @{ name = "email"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "メールアドレス" }
+                        @{ name = "phone"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "電話番号" }
+                        @{ name = "hire_date"; type = "DATE"; constraints = ""; csv_include = $true; required = $false; description = "入社日" }
+                    )
+                    indexes = @(
+                        @{
+                            name = "idx_current_user_id"
+                            columns = @("user_id")
+                            description = "利用者ID検索用インデックス"
+                        }
+                    )
+                }
+                sync_result = @{
+                    description = "同期結果テーブル"
+                    table_constraints = @(
+                        @{
+                            name = "uk_sync_result_syokuin_no"
+                            type = "UNIQUE"
+                            columns = @("syokuin_no")
+                            description = "職員番号の一意制約"
+                        }
+                    )
+                    columns = @(
+                        @{ name = "id"; type = "INTEGER"; constraints = "PRIMARY KEY AUTOINCREMENT"; csv_include = $false; description = "内部ID" }
+                        @{ name = "syokuin_no"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "職員ID" }
+                        @{ name = "card_number"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "カード番号" }
+                        @{ name = "name"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "氏名" }
+                        @{ name = "department"; type = "TEXT"; constraints = ""; csv_include = $false; required = $false; description = "部署" }
+                        @{ name = "position"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "役職" }
+                        @{ name = "email"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "メールアドレス" }
+                        @{ name = "phone"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "電話番号" }
+                        @{ name = "hire_date"; type = "DATE"; constraints = ""; csv_include = $true; required = $false; description = "入社日" }
+                        @{ name = "sync_action"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "同期アクション" }
+                    )
+                    indexes = @()
+                }
+            }
+            sync_rules  = @{
+                key_columns = @{
+                    provided_data = @("employee_id")
+                    current_data  = @("user_id")
+                    sync_result   = @("syokuin_no")
+                }
+                column_mappings = @{
+                    description = "テーブル間の比較項目対応付け"
+                    mappings    = @{
+                        employee_id = "user_id"
+                        card_number = "card_number"
+                        name        = "name"
+                        department  = "department"
+                        position    = "position"
+                        email       = "email"
+                        phone       = "phone"
+                        hire_date   = "hire_date"
+                    }
+                }
+                sync_action_labels = @{
+                    mappings = @{
+                        ADD    = @{ value = "1"; enabled = $true; description = "新規追加" }
+                        UPDATE = @{ value = "2"; enabled = $true; description = "更新" }
+                        DELETE = @{ value = "3"; enabled = $true; description = "削除" }
+                        KEEP   = @{ value = "9"; enabled = $true; description = "変更なし" }
+                    }
+                }
+            }
             logging     = @{
                 enabled          = $true
                 log_directory    = Join-Path $this.TempDirectory "logs"

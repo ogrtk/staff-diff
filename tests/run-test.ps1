@@ -806,7 +806,6 @@ function Invoke-TestExecution {
         
         # HTML レポートの生成
         if ($OutputFormat -eq "HTML") {
-            Write-Host "pass"
             if ([string]::IsNullOrEmpty($OutputPath)) {
                 $OutputPath = Join-Path $TestsRoot "TestResults.html"
             }

@@ -23,7 +23,6 @@ function Invoke-CsvImport {
         [ValidateSet("provided_data", "current_data")]
         [string]$DataType
     )
-    
     $filePathConfig = Get-FilePathConfig
     
     # データタイプに応じた設定を取得

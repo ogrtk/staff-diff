@@ -15,8 +15,8 @@ using module "../../scripts/modules/Process/Invoke-CsvExport.psm1"
 BeforeAll {
     # テストヘルパーの読み込み
     # 設定初期化
-    $configPath = Join-Path (Get-Location) "config" "data-sync-config.json"
-    Get-DataSyncConfig -ConfigPath $configPath | Out-Null
+    # $configPath = Join-Path (Get-Location) "config" "data-sync-config.json"
+    # Get-DataSyncConfig -ConfigPath $configPath | Out-Null
 }
 
 Describe "Invoke-CsvExport モジュール" {
@@ -27,6 +27,23 @@ Describe "Invoke-CsvExport モジュール" {
         $script:testDbPath = Join-Path $testDirectory "test.db"
         $script:outputPath = Join-Path $testDirectory "output.csv"
         $script:historyPath = Join-Path $testDirectory "history"
+        
+        # sync_resultテーブルの作成
+        $createTableSql = @"
+CREATE TABLE IF NOT EXISTS sync_result (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    syokuin_no TEXT NOT NULL UNIQUE,
+    card_number TEXT,
+    name TEXT NOT NULL,
+    department TEXT,
+    position TEXT,
+    email TEXT,
+    phone TEXT,
+    hire_date DATE,
+    sync_action TEXT NOT NULL
+);
+"@
+        Invoke-SqliteCommand -DatabasePath $script:testDbPath -Query $createTableSql
         
         # モック設定
         Mock Write-SystemLog {}
@@ -39,13 +56,14 @@ Describe "Invoke-CsvExport モジュール" {
         Mock Get-CsvColumns { return @("syokuin_no", "name", "sync_action") }
         Mock New-HistoryFileName { return "test_output_20240101_120000.csv" }
         Mock Copy-Item {}
+
     }
 
     AfterEach {
         if ($script:testDirectory -and (Test-Path $script:testDirectory)) {
             Remove-Item -Path $script:testDirectory -Recurse -Force
         }
-        Reset-DataSyncConfig
+        # Reset-DataSyncConfig
     }
     Context "出力フィルタリング機能" {
         
@@ -208,10 +226,10 @@ Describe "Invoke-CsvExport モジュール" {
                     sync_rules = @{
                         sync_action_labels = @{
                             mappings = @{
-                                ADD = @{ value = "1" }
+                                ADD    = @{ value = "1" }
                                 UPDATE = @{ value = "2" }
                                 DELETE = @{ value = "3" }
-                                KEEP = @{ value = "9" }
+                                KEEP   = @{ value = "9" }
                             }
                         }
                     }
@@ -236,10 +254,10 @@ Describe "Invoke-CsvExport モジュール" {
                     sync_rules = @{
                         sync_action_labels = @{
                             mappings = @{
-                                ADD = @{ value = "1" }
+                                ADD    = @{ value = "1" }
                                 UPDATE = @{ value = "2" }
                                 DELETE = @{ value = "3" }
-                                KEEP = @{ value = "9" }
+                                KEEP   = @{ value = "9" }
                             }
                         }
                     }
@@ -294,17 +312,17 @@ Describe "Invoke-CsvExport モジュール" {
             
             # テスト用設定ファイル作成（フィルタリング設定含む）
             $script:testConfigPath = $testEnv.CreateConfigFile(@{
-                sync_rules = @{
-                    sync_action_labels = @{
-                        mappings = @{
-                            ADD    = @{ value = "1"; enabled = $true }
-                            UPDATE = @{ value = "2"; enabled = $true }
-                            DELETE = @{ value = "3"; enabled = $true }
-                            KEEP   = @{ value = "9"; enabled = $true }
+                    sync_rules = @{
+                        sync_action_labels = @{
+                            mappings = @{
+                                ADD    = @{ value = "1"; enabled = $true }
+                                UPDATE = @{ value = "2"; enabled = $true }
+                                DELETE = @{ value = "3"; enabled = $true }
+                                KEEP   = @{ value = "9"; enabled = $true }
+                            }
                         }
                     }
-                }
-            }, "integration-config")
+                }, "integration-config")
             
             # 設定を読み込み
             Get-DataSyncConfig -ConfigPath $script:testConfigPath | Out-Null
@@ -323,10 +341,10 @@ Describe "Invoke-CsvExport モジュール" {
         It "実際のsync_resultデータで全アクション出力テスト" {
             # Arrange - sync_resultテーブルにテストデータを挿入
             $actionCounts = @{
-                ADD = 5
+                ADD    = 5
                 UPDATE = 3
                 DELETE = 2
-                KEEP = 4
+                KEEP   = 4
             }
             $testEnv.PopulateSyncResultTable($script:integrationDbPath, $actionCounts, @{})
             
@@ -350,26 +368,26 @@ Describe "Invoke-CsvExport モジュール" {
         It "ADDアクションのみフィルタリングテスト" {
             # Arrange - フィルタリング設定でADDのみ有効
             $filterConfigPath = $testEnv.CreateConfigFile(@{
-                sync_rules = @{
-                    sync_action_labels = @{
-                        mappings = @{
-                            ADD    = @{ value = "1"; enabled = $true }
-                            UPDATE = @{ value = "2"; enabled = $false }
-                            DELETE = @{ value = "3"; enabled = $false }
-                            KEEP   = @{ value = "9"; enabled = $false }
+                    sync_rules = @{
+                        sync_action_labels = @{
+                            mappings = @{
+                                ADD    = @{ value = "1"; enabled = $true }
+                                UPDATE = @{ value = "2"; enabled = $false }
+                                DELETE = @{ value = "3"; enabled = $false }
+                                KEEP   = @{ value = "9"; enabled = $false }
+                            }
                         }
                     }
-                }
-            }, "add-only-config")
+                }, "add-only-config")
             
             Get-DataSyncConfig -ConfigPath $filterConfigPath | Out-Null
             
             # sync_resultテーブルにテストデータを挿入
             $actionCounts = @{
-                ADD = 3
+                ADD    = 3
                 UPDATE = 5
                 DELETE = 2
-                KEEP = 8
+                KEEP   = 8
             }
             $testEnv.PopulateSyncResultTable($script:integrationDbPath, $actionCounts, @{})
             
@@ -388,26 +406,26 @@ Describe "Invoke-CsvExport モジュール" {
         It "KEEPアクション除外フィルタリングテスト" {
             # Arrange - KEEP以外を有効
             $filterConfigPath = $testEnv.CreateConfigFile(@{
-                sync_rules = @{
-                    sync_action_labels = @{
-                        mappings = @{
-                            ADD    = @{ value = "1"; enabled = $true }
-                            UPDATE = @{ value = "2"; enabled = $true }
-                            DELETE = @{ value = "3"; enabled = $true }
-                            KEEP   = @{ value = "9"; enabled = $false }
+                    sync_rules = @{
+                        sync_action_labels = @{
+                            mappings = @{
+                                ADD    = @{ value = "1"; enabled = $true }
+                                UPDATE = @{ value = "2"; enabled = $true }
+                                DELETE = @{ value = "3"; enabled = $true }
+                                KEEP   = @{ value = "9"; enabled = $false }
+                            }
                         }
                     }
-                }
-            }, "no-keep-config")
+                }, "no-keep-config")
             
             Get-DataSyncConfig -ConfigPath $filterConfigPath | Out-Null
             
             # sync_resultテーブルにテストデータを挿入
             $actionCounts = @{
-                ADD = 2
+                ADD    = 2
                 UPDATE = 3
                 DELETE = 1
-                KEEP = 10  # KEEPは多めにして除外されることを確認
+                KEEP   = 10  # KEEPは多めにして除外されることを確認
             }
             $testEnv.PopulateSyncResultTable($script:integrationDbPath, $actionCounts, @{})
             
@@ -428,17 +446,17 @@ Describe "Invoke-CsvExport モジュール" {
         It "全アクション無効時の空出力テスト" {
             # Arrange - すべてのアクションを無効
             $emptyFilterConfigPath = $testEnv.CreateConfigFile(@{
-                sync_rules = @{
-                    sync_action_labels = @{
-                        mappings = @{
-                            ADD    = @{ value = "1"; enabled = $false }
-                            UPDATE = @{ value = "2"; enabled = $false }
-                            DELETE = @{ value = "3"; enabled = $false }
-                            KEEP   = @{ value = "9"; enabled = $false }
+                    sync_rules = @{
+                        sync_action_labels = @{
+                            mappings = @{
+                                ADD    = @{ value = "1"; enabled = $false }
+                                UPDATE = @{ value = "2"; enabled = $false }
+                                DELETE = @{ value = "3"; enabled = $false }
+                                KEEP   = @{ value = "9"; enabled = $false }
+                            }
                         }
                     }
-                }
-            }, "all-disabled-config")
+                }, "all-disabled-config")
             
             Get-DataSyncConfig -ConfigPath $emptyFilterConfigPath | Out-Null
             
@@ -459,19 +477,19 @@ Describe "Invoke-CsvExport モジュール" {
         It "履歴保存機能の実テスト" {
             # Arrange
             $actionCounts = @{
-                ADD = 2
+                ADD    = 2
                 UPDATE = 1
                 DELETE = 1
-                KEEP = 2
+                KEEP   = 2
             }
             $testEnv.PopulateSyncResultTable($script:integrationDbPath, $actionCounts, @{})
             
             # 履歴ディレクトリパスを設定に追加
             $historyConfigPath = $testEnv.CreateConfigFile(@{
-                file_paths = @{
-                    output_history_directory = Join-Path $testEnv.GetTempDirectory() "output-history"
-                }
-            }, "history-config")
+                    file_paths = @{
+                        output_history_directory = Join-Path $testEnv.GetTempDirectory() "output-history"
+                    }
+                }, "history-config")
             
             Get-DataSyncConfig -ConfigPath $historyConfigPath | Out-Null
             
