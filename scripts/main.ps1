@@ -26,22 +26,13 @@ param(
     [string]$ConfigFilePath = ""
 )
 
-# スクリプトの場所を基準にプロジェクトルートを設定
-$ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.FullName
-
 # 堅牢なエラーハンドリング
 $ErrorActionPreference = "Stop"
 
 try {
     # --- 初期設定: 設定ファイルの読み込み ---
     # 全ての処理に先立ち、設定ファイルを読み込んでキャッシュする
-    if ([string]::IsNullOrEmpty($ConfigFilePath)) {
-        $configPath = Join-Path $ProjectRoot "config" "data-sync-config.json"
-    }
-    else {
-        $configPath = $ConfigFilePath
-    }
-    Get-DataSyncConfig -ConfigPath $configPath | Out-Null
+    Get-DataSyncConfig -ConfigPath $ConfigFilePath | Out-Null
 
     # --- 処理開始 ---
     Write-SystemLog "======================================" -Level "Info"

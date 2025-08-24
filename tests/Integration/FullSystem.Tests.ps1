@@ -31,6 +31,169 @@ Describe "フルシステム統合テスト" {
                 current_data_history_directory  = Join-Path $script:TestDataDir "history" "current-data"
                 output_history_directory        = Join-Path $script:TestDataDir "history" "output"
             }
+            sync_rules     = @{
+                key_columns         = @{
+                    provided_data = @("employee_id")
+                    current_data  = @("user_id")
+                    sync_result   = @("syokuin_no")
+                }
+                column_mappings     = @{
+                    description = "テーブル間の比較項目対応付け（provided_dataの項目:current_dataの項目）"
+                    mappings    = @{
+                        employee_id = "user_id"
+                        card_number = "card_number"
+                        name        = "name"
+                        department  = "department"
+                        position    = "position"
+                        email       = "email"
+                        phone       = "phone"
+                        hire_date   = "hire_date"
+                    }
+                }
+                sync_result_mapping = @{
+                    description = "sync_resultテーブルへの格納項目対応付け"
+                    mappings    = @{
+                        syokuin_no  = @{
+                            description = "職員番号"
+                            sources     = @(
+                                @{
+                                    type        = "provided_data"
+                                    field       = "employee_id"
+                                    priority    = 1
+                                    description = "提供データの職員ID（最優先）"
+                                }
+                                @{
+                                    type        = "current_data"
+                                    field       = "user_id"
+                                    priority    = 2
+                                    description = "現在データの利用者ID（フォールバック）"
+                                }
+                            )
+                        }
+                        card_number = @{
+                            description = "カード番号"
+                            sources     = @(
+                                @{
+                                    type        = "provided_data"
+                                    field       = "card_number"
+                                    priority    = 1
+                                    description = "提供データのカード番号（最優先）"
+                                }
+                                @{
+                                    type        = "current_data"
+                                    field       = "card_number"
+                                    priority    = 2
+                                    description = "現在データのカード番号（フォールバック）"
+                                }
+                            )
+                        }
+                        name        = @{
+                            description = "氏名"
+                            sources     = @(
+                                @{
+                                    type        = "provided_data"
+                                    field       = "name"
+                                    priority    = 1
+                                    description = "提供データの氏名（最優先）"
+                                }
+                                @{
+                                    type        = "current_data"
+                                    field       = "name"
+                                    priority    = 2
+                                    description = "現在データの氏名（フォールバック）"
+                                }
+                            )
+                        }
+                        department  = @{
+                            description = "部署"
+                            sources     = @(
+                                @{
+                                    type        = "provided_data"
+                                    field       = "department"
+                                    priority    = 1
+                                    description = "提供データの部署（最優先）"
+                                }
+                                @{
+                                    type        = "current_data"
+                                    field       = "department"
+                                    priority    = 2
+                                    description = "現在データの部署（フォールバック）"
+                                }
+                            )
+                        }
+                        position    = @{
+                            description = "役職"
+                            sources     = @(
+                                @{
+                                    type        = "provided_data"
+                                    field       = "position"
+                                    priority    = 1
+                                    description = "提供データの役職（最優先）"
+                                }
+                                @{
+                                    type        = "current_data"
+                                    field       = "position"
+                                    priority    = 2
+                                    description = "現在データの役職（フォールバック）"
+                                }
+                            )
+                        }
+                        email       = @{
+                            description = "メールアドレス"
+                            sources     = @(
+                                @{
+                                    type        = "provided_data"
+                                    field       = "email"
+                                    priority    = 1
+                                    description = "提供データのメールアドレス（最優先）"
+                                }
+                                @{
+                                    type        = "current_data"
+                                    field       = "email"
+                                    priority    = 2
+                                    description = "現在データのメールアドレス（フォールバック）"
+                                }
+                            )
+                        }
+                        phone       = @{
+                            description = "電話番号"
+                            sources     = @(
+                                @{
+                                    type        = "fixed_value"
+                                    value       = "999-9999-9999"
+                                    priority    = 1
+                                    description = "固定値"
+                                }
+                            )
+                        }
+                        hire_date   = @{
+                            description = "入社日"
+                            sources     = @(
+                                @{
+                                    type        = "provided_data"
+                                    field       = "hire_date"
+                                    priority    = 1
+                                    description = "提供データの入社日（最優先）"
+                                }
+                                @{
+                                    type        = "current_data"
+                                    field       = "hire_date"
+                                    priority    = 2
+                                    description = "現在データの入社日（フォールバック）"
+                                }
+                            )
+                        }
+                    }
+                }
+                sync_action_labels  = @{
+                    mappings = @{
+                        ADD    = @{ value = "1"; enabled = $true; description = "新規追加" }
+                        UPDATE = @{ value = "2"; enabled = $true; description = "更新" }
+                        DELETE = @{ value = "3"; enabled = $true; description = "削除" }
+                        KEEP   = @{ value = "9"; enabled = $true; description = "変更なし" }
+                    }
+                }
+            }
             data_filters   = @{
                 provided_data = @{
                     enabled = $true
@@ -60,10 +223,9 @@ Describe "フルシステム統合テスト" {
                 }
             }
         }
-        
         $script:TestConfigPath = Join-Path $script:TestDataDir "test-config.json"
         $script:TestConfig | ConvertTo-Json -Depth 15 | Out-File -FilePath $script:TestConfigPath -Encoding UTF8
-        
+                
         # テスト用データベースパス
         $script:TestDatabasePath = Join-Path $script:TestDataDir "integration-test.db"
     }
@@ -162,11 +324,31 @@ Describe "フルシステム統合テスト" {
             $outputData = Import-Csv $outputCsvPath -Encoding UTF8
             $outputData | Should -Not -BeNullOrEmpty
             
+            # # デバッグ：出力データの詳細確認
+            # Write-Host "=== 出力データデバッグ ===" -ForegroundColor Cyan
+            # Write-Host "出力レコード数: $($outputData.Count)" -ForegroundColor White
+            # if ($outputData.Count -gt 0) {
+            #     Write-Host "出力データサンプル:" -ForegroundColor White
+            #     $outputData | Select-Object -First 5 | ForEach-Object {
+            #         Write-Host "  syokuin_no: $($_.syokuin_no), sync_action: $($_.sync_action), name: $($_.name)" -ForegroundColor Gray
+            #     }
+            #     Write-Host "sync_action分布:" -ForegroundColor White
+            #     $outputData | Group-Object sync_action | ForEach-Object {
+            #         Write-Host "  Action $($_.Name): $($_.Count) 件" -ForegroundColor Gray
+            #     }
+            # }
+            # else {
+            #     Write-Host "出力データが空です！" -ForegroundColor Red
+            # }
+            # Write-Host "=========================" -ForegroundColor Cyan
+            
             # 同期アクションの確認
             $addActions = $outputData | Where-Object { $_.sync_action -eq "1" }  # ADD
             $updateActions = $outputData | Where-Object { $_.sync_action -eq "2" }  # UPDATE
             $deleteActions = $outputData | Where-Object { $_.sync_action -eq "3" }  # DELETE
             $keepActions = $outputData | Where-Object { $_.sync_action -eq "9" }  # KEEP
+            
+            # Write-Host "ADD Actions: $($addActions.Count), UPDATE Actions: $($updateActions.Count), DELETE Actions: $($deleteActions.Count), KEEP Actions: $($keepActions.Count)" -ForegroundColor Magenta
             
             # 新規追加（E001, E003）
             $addActions.Count | Should -BeGreaterOrEqual 2
@@ -195,7 +377,8 @@ Describe "フルシステム統合テスト" {
             
             # 空のCSVファイル（ヘッダーのみ）
             "user_id,card_number,name,department,position,email,phone,hire_date" | Out-File -FilePath $currentCsvPath -Encoding UTF8
-            "" | Out-File -FilePath $providedCsvPath -Encoding UTF8
+            # 提供データは空ファイル（ヘッダーなし設定のため）
+            New-Item -Path $providedCsvPath -ItemType File -Force | Out-Null
             
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
                 New-MockSqliteCommand -ReturnValue "" -ExitCode 0
@@ -356,6 +539,16 @@ E003,C003
             $noFilterConfig = $script:TestConfig.Clone()
             $noFilterConfig.data_filters.provided_data.enabled = $false
             $noFilterConfig.data_filters.current_data.enabled = $false
+            # sync_action_labelsが存在することを確認し、すべてのアクションを有効化
+            # sync_rulesを確実に初期化してから設定
+            $noFilterConfig.sync_rules.sync_action_labels = @{
+                mappings = @{
+                    ADD    = @{ value = "1"; enabled = $true; description = "新規追加" }
+                    UPDATE = @{ value = "2"; enabled = $true; description = "更新" }
+                    DELETE = @{ value = "3"; enabled = $true; description = "削除" }
+                    KEEP   = @{ value = "9"; enabled = $true; description = "変更なし" }
+                }
+            }
             
             $noFilterConfigPath = Join-Path $script:TestDataDir "no-filter-config.json"
             $noFilterConfig | ConvertTo-Json -Depth 15 | Out-File -FilePath $noFilterConfigPath -Encoding UTF8

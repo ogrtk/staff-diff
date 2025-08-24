@@ -1464,12 +1464,12 @@ function New-TestConfig {
                     }
                 }
             }
-            sync_action_labels  = @{
+            sync_action_labels = @{
                 mappings = @{
-                    ADD    = @{ value = "1"; description = "新規追加" }
-                    UPDATE = @{ value = "2"; description = "更新" }
-                    DELETE = @{ value = "3"; description = "削除" }
-                    KEEP   = @{ value = "9"; description = "変更なし" }
+                    ADD    = @{ value = "1"; enabled = $true; description = "新規追加" }
+                    UPDATE = @{ value = "2"; enabled = $true; description = "更新" }
+                    DELETE = @{ value = "3"; enabled = $true; description = "削除" }
+                    KEEP   = @{ value = "9"; enabled = $true; description = "変更なし" }
                 }
             }
         }

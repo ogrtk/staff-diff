@@ -17,15 +17,15 @@ function Get-DataSyncConfig {
         return $script:DataSyncConfig
     }
 
-    if ([string]::IsNullOrEmpty($ConfigPath)) {
-        throw "設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。"
-    }
-
     try {
-        if (-not (Test-Path $ConfigPath)) {
-            throw "設定ファイルが見つかりません: $ConfigPath"
+        $projectRoot = Find-ProjectRoot
+        if ([string]::IsNullOrEmpty($ConfigPath)) {
+            $configPath = Join-Path $projectRoot "config" "data-sync-config.json"
         }
-        
+        else {
+            $configPath = $ConfigPath
+        }
+            
         $encoding = Get-CrossPlatformEncoding
         $configContent = Get-Content -Path $ConfigPath -Raw -Encoding $encoding
         $script:DataSyncConfig = $configContent | ConvertFrom-Json
