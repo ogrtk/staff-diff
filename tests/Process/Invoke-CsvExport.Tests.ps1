@@ -71,23 +71,14 @@ CREATE TABLE IF NOT EXISTS sync_result (
             # テスト用設定のモック
             Mock Get-DataSyncConfig {
                 return @{
-                    sync_rules       = @{
+                    sync_rules = @{
                         sync_action_labels = @{
                             mappings = @{
-                                ADD    = @{ value = "1" }
-                                UPDATE = @{ value = "2" }
-                                DELETE = @{ value = "3" }
-                                KEEP   = @{ value = "9" }
+                                ADD    = @{ value = "1"; enabled = $true; description = "新規追加" }
+                                UPDATE = @{ value = "2"; enabled = $true; description = "更新" }
+                                DELETE = @{ value = "3"; enabled = $true; description = "削除" }
+                                KEEP   = @{ value = "9"; enabled = $true; description = "変更なし" }
                             }
-                        }
-                    }
-                    output_filtering = @{
-                        enabled      = $true
-                        sync_actions = @{
-                            ADD    = @{ enabled = $true }
-                            UPDATE = @{ enabled = $true }
-                            DELETE = @{ enabled = $true }
-                            KEEP   = @{ enabled = $true }
                         }
                     }
                 }

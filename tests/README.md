@@ -31,11 +31,11 @@
   # 特定のテストタイプを実行
   pwsh ./tests/run-test.ps1 -TestType Unit
   pwsh ./tests/run-test.ps1 -TestType Integration
+  pwsh ./tests/run-test.ps1 -TestType Process
   pwsh ./tests/run-test.ps1 -TestType Foundation
 
   # 特定のテストファイルを実行
-  pwsh ./tests/run-test.ps1 -TestPath
-  "Utils\Foundation\CoreUtils.Tests.ps1"
+  pwsh ./tests/run-test.ps1 -TestPath "Utils\Foundation\CoreUtils.Tests.ps1"
 
   パラメータ詳細
 
