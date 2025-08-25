@@ -145,16 +145,70 @@ function New-MockLoggingSystem {
 # エラーハンドリングのモック化
 function New-MockErrorHandling {
     param(
+        [hashtable]$ErrorConfig = @{},
         [switch]$BypassErrorHandling
     )
     
-    if ($BypassErrorHandling -and (Get-Command "Mock" -ErrorAction SilentlyContinue)) {
-        Mock Invoke-WithErrorHandling {
-            param($ScriptBlock, $Category, $Operation, $Context, $CleanupScript)
-            
-            # エラーハンドリングをバイパスして直接実行
-            & $ScriptBlock
+    if (Get-Command "Mock" -ErrorAction SilentlyContinue) {
+        if ($BypassErrorHandling) {
+            Mock Invoke-WithErrorHandling {
+                param($ScriptBlock, $Category, $Operation, $Context, $CleanupScript)
+                
+                # エラーハンドリングをバイパスして直接実行
+                & $ScriptBlock
+            }
+            return
         }
+        
+        # Get-ErrorHandlingConfigのモック - 最初に実行される
+        Mock Get-ErrorHandlingConfig { return $ErrorConfig } -ModuleName ErrorHandlingUtils
+        
+        # Get-ErrorLevelのモック
+        Mock Get-ErrorLevel {
+            param($Category, $ErrorConfig)
+            
+            if ($ErrorConfig.ContainsKey("error_levels") -and $ErrorConfig.error_levels.ContainsKey($Category)) {
+                return $ErrorConfig.error_levels[$Category]
+            }
+            
+            # デフォルト値
+            switch ($Category) {
+                "System" { return "Error" }
+                "Data" { return "Warning" }
+                "External" { return "Error" }
+                default { return "Error" }
+            }
+        } -ModuleName ErrorHandlingUtils
+        
+        # Get-ShouldContinueOnErrorのモック
+        Mock Get-ShouldContinueOnError {
+            param($Category, $ErrorConfig)
+            
+            if ($ErrorConfig.ContainsKey("continue_on_error") -and $ErrorConfig.continue_on_error.ContainsKey($Category)) {
+                return $ErrorConfig.continue_on_error[$Category]
+            }
+            
+            # デフォルト値
+            switch ($Category) {
+                "Data" { return $true }
+                default { return $false }
+            }
+        } -ModuleName ErrorHandlingUtils
+        
+        # Write-ErrorDetailsのモック
+        Mock Write-ErrorDetails {
+            param($Exception, $Category, $Operation, $Context, $ErrorConfig)
+            # ログメッセージをキャプチャ
+            if ($null -ne $script:CapturedLogMessages) {
+                $script:CapturedLogMessages += @{
+                    Message   = $Exception.Message
+                    Level     = "Error"
+                    Category  = $Category
+                    Operation = $Operation
+                    Timestamp = Get-Date
+                }
+            }
+        } -ModuleName ErrorHandlingUtils
     }
 }
 
@@ -184,5 +238,6 @@ Export-ModuleMember -Function @(
     'New-MockFileSystemOperations',
     'New-MockLoggingSystem',
     'New-MockErrorHandling',
+    'Mock-ConfigurationSystem',
     'Get-CapturedLogMessages'
-)
+)   'Get-CapturedLogMessages'

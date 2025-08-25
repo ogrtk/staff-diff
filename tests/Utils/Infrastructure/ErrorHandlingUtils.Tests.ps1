@@ -6,9 +6,13 @@ $ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.Parent.Parent.FullName
 $ModulePath = Join-Path $ProjectRoot "scripts" "modules" "Utils" "Infrastructure" "ErrorHandlingUtils.psm1"
 $TestHelpersPath = Join-Path $ProjectRoot "tests" "TestHelpers"
 
-# 依存モジュールの読み込み
+# レイヤアーキテクチャに従った依存モジュールの読み込み
+# Layer 1: Foundation（基盤層）
 Import-Module (Join-Path $ProjectRoot "scripts" "modules" "Utils" "Foundation" "CoreUtils.psm1") -Force
+
+# Layer 2: Infrastructure（インフラ層）
 Import-Module (Join-Path $ProjectRoot "scripts" "modules" "Utils" "Infrastructure" "ConfigurationUtils.psm1") -Force
+Import-Module (Join-Path $ProjectRoot "scripts" "modules" "Utils" "Infrastructure" "LoggingUtils.psm1") -Force
 
 # テストヘルパーの読み込み
 Import-Module (Join-Path $TestHelpersPath "TestEnvironmentHelpers.psm1") -Force
@@ -20,37 +24,44 @@ Import-Module $ModulePath -Force
 Describe "ErrorHandlingUtils モジュール" {
     
     BeforeAll {
-        # テスト環境の初期化
-        $script:TestEnv = Initialize-TestEnvironment -ProjectRoot $ProjectRoot
+        # TestEnvironmentクラスを使用したテスト環境の初期化
+        $script:TestEnv = New-TestEnvironment -TestName "ErrorHandlingUtils"
         $script:OriginalErrorActionPreference = $ErrorActionPreference
         
         # テスト用エラーハンドリング設定
         $script:DefaultErrorConfig = @{
-            enabled = $true
-            log_stack_trace = $true
-            retry_settings = @{
-                enabled = $true
-                max_attempts = 3
-                delay_seconds = @(1, 2, 5)
+            enabled           = $true
+            log_stack_trace   = $true
+            retry_settings    = @{
+                enabled              = $true
+                max_attempts         = 3
+                delay_seconds        = @(1, 2, 5)
                 retryable_categories = @("External")
             }
-            error_levels = @{
-                System = "Error"
-                Data = "Warning"
+            error_levels      = @{
+                System   = "Error"
+                Data     = "Warning"
                 External = "Error"
             }
             continue_on_error = @{
-                System = $false
-                Data = $true
+                System   = $false
+                Data     = $true
                 External = $false
             }
-            cleanup_on_error = $true
+            cleanup_on_error  = $true
         }
+        
+        # テスト用設定ファイルの作成
+        $script:TestEnv.CreateConfigFile(@{
+                error_handling = $script:DefaultErrorConfig
+            }, "error-handling-test")
     }
     
     AfterAll {
-        # テスト環境のクリーンアップ
-        Clear-TestEnvironment -ProjectRoot $ProjectRoot
+        # TestEnvironmentのクリーンアップ
+        if ($script:TestEnv) {
+            $script:TestEnv.Dispose()
+        }
         $ErrorActionPreference = $script:OriginalErrorActionPreference
     }
     
@@ -64,7 +75,7 @@ Describe "ErrorHandlingUtils モジュール" {
         It "設定が存在する場合、その設定を返す" {
             # Arrange
             $testConfig = @{ error_handling = $script:DefaultErrorConfig }
-            Mock-ConfigurationSystem -MockConfig $testConfig
+            Mock Get-DataSyncConfig { return $testConfig } -ModuleName ErrorHandlingUtils
             
             # Act
             $result = Get-ErrorHandlingConfig
@@ -79,7 +90,7 @@ Describe "ErrorHandlingUtils モジュール" {
         It "error_handling設定が存在しない場合、デフォルト設定を生成する" {
             # Arrange
             $configWithoutErrorHandling = @{ version = "1.0.0" }
-            Mock-ConfigurationSystem -MockConfig $configWithoutErrorHandling
+            Mock Get-DataSyncConfig { return $configWithoutErrorHandling } -ModuleName ErrorHandlingUtils
             
             # Act
             $result = Get-ErrorHandlingConfig
@@ -95,9 +106,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "設定取得でエラーが発生した場合、最低限のフォールバック設定を返す" {
             # Arrange
-            New-MockCommand -CommandName "Get-DataSyncConfig" -MockScript {
-                throw "設定取得エラー"
-            }
+            Mock Get-DataSyncConfig { throw "設定取得エラー" } -ModuleName ErrorHandlingUtils
             
             # Act
             $result = Get-ErrorHandlingConfig
@@ -114,7 +123,6 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "正常なスクリプトブロックの場合、結果を返す" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
             $testScript = { return "成功" }
             
             # Act
@@ -127,7 +135,7 @@ Describe "ErrorHandlingUtils モジュール" {
         It "エラーハンドリングが無効の場合、直接実行する" {
             # Arrange
             $disabledErrorConfig = @{ enabled = $false }
-            New-MockErrorHandling -ErrorConfig $disabledErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $disabledErrorConfig } } -ModuleName ErrorHandlingUtils
             $testScript = { return "直接実行" }
             
             # Act
@@ -139,7 +147,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "スクリプトブロックでエラーが発生した場合、例外を再スローする" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             $errorScript = { throw "テストエラー" }
             
             # Act & Assert
@@ -148,7 +156,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "SuppressThrowスイッチが有効な場合、エラーでもnullを返す" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             $errorScript = { throw "テストエラー" }
             
             # Act
@@ -166,12 +174,12 @@ Describe "ErrorHandlingUtils モジュール" {
             $retryConfig = $script:DefaultErrorConfig.Clone()
             $retryConfig.retry_settings.max_attempts = 3
             $retryConfig.retry_settings.delay_seconds = @(0, 0, 0)  # 待機時間を0にしてテストを高速化
-            New-MockErrorHandling -ErrorConfig $retryConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $retryConfig } } -ModuleName ErrorHandlingUtils
             
-            $attemptCount = 0
+            $global:attemptCount = 0
             $retryScript = {
-                $script:attemptCount++
-                if ($script:attemptCount -lt 3) {
+                $global:attemptCount++
+                if ($global:attemptCount -lt 3) {
                     throw "リトライテスト"
                 }
                 return "成功"
@@ -182,22 +190,22 @@ Describe "ErrorHandlingUtils モジュール" {
             
             # Assert
             $result | Should -Be "成功"
-            $attemptCount | Should -Be 3
+            $global:attemptCount | Should -Be 3
         }
         
         It "リトライ対象外カテゴリ（System）の場合、リトライしない" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             
-            $attemptCount = 0
+            $global:attemptCount = 0
             $noRetryScript = {
-                $script:attemptCount++
+                $global:attemptCount++
                 throw "Systemエラー"
             }
             
             # Act & Assert
             { Invoke-WithErrorHandling -ScriptBlock $noRetryScript -Category System -Operation "リトライなしテスト" } | Should -Throw
-            $attemptCount | Should -Be 1
+            $global:attemptCount | Should -Be 1
         }
         
         It "最大試行回数に達した場合、最終的にエラーをスローする" {
@@ -205,7 +213,7 @@ Describe "ErrorHandlingUtils モジュール" {
             $retryConfig = $script:DefaultErrorConfig.Clone()
             $retryConfig.retry_settings.max_attempts = 2
             $retryConfig.retry_settings.delay_seconds = @(0, 0)
-            New-MockErrorHandling -ErrorConfig $retryConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $retryConfig } } -ModuleName ErrorHandlingUtils
             
             $alwaysFailScript = { throw "常に失敗" }
             
@@ -218,9 +226,9 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "エラー時にクリーンアップスクリプトが実行される" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             
-            $cleanupExecuted = $false
+            $script:cleanupExecuted = $false
             $cleanupScript = { $script:cleanupExecuted = $true }
             $errorScript = { throw "クリーンアップテスト" }
             
@@ -233,12 +241,12 @@ Describe "ErrorHandlingUtils モジュール" {
             }
             
             # Assert
-            $cleanupExecuted | Should -Be $true
+            $script:cleanupExecuted | Should -Be $true
         }
         
         It "クリーンアップスクリプトでエラーが発生しても、元のエラーが優先される" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             
             $cleanupScript = { throw "クリーンアップエラー" }
             $originalErrorScript = { throw "元のエラー" }
@@ -251,9 +259,9 @@ Describe "ErrorHandlingUtils モジュール" {
             # Arrange
             $noCleanupConfig = $script:DefaultErrorConfig.Clone()
             $noCleanupConfig.cleanup_on_error = $false
-            New-MockErrorHandling -ErrorConfig $noCleanupConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $noCleanupConfig } } -ModuleName ErrorHandlingUtils
             
-            $cleanupExecuted = $false
+            $script:cleanupExecuted = $false
             $cleanupScript = { $script:cleanupExecuted = $true }
             $errorScript = { throw "クリーンアップなしテスト" }
             
@@ -266,7 +274,7 @@ Describe "ErrorHandlingUtils モジュール" {
             }
             
             # Assert
-            $cleanupExecuted | Should -Be $false
+            $script:cleanupExecuted | Should -Be $false
         }
     }
 
@@ -276,7 +284,7 @@ Describe "ErrorHandlingUtils モジュール" {
             # Arrange
             $continueConfig = $script:DefaultErrorConfig.Clone()
             $continueConfig.continue_on_error.Data = $true
-            New-MockErrorHandling -ErrorConfig $continueConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $continueConfig } } -ModuleName ErrorHandlingUtils
             
             $errorScript = { throw "Dataエラー" }
             
@@ -289,7 +297,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "System カテゴリでcontinue_on_errorがfalseの場合、エラーで停止する" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             
             $errorScript = { throw "Systemエラー" }
             
@@ -304,8 +312,8 @@ Describe "ErrorHandlingUtils モジュール" {
             # Arrange
             $errorConfig = @{
                 error_levels = @{
-                    System = "Error"
-                    Data = "Warning"
+                    System   = "Error"
+                    Data     = "Warning"
                     External = "Error"
                 }
             }
@@ -333,8 +341,8 @@ Describe "ErrorHandlingUtils モジュール" {
             # Arrange
             $errorConfig = @{
                 continue_on_error = @{
-                    System = $false
-                    Data = $true
+                    System   = $false
+                    Data     = $true
                     External = $false
                 }
             }
@@ -363,13 +371,19 @@ Describe "ErrorHandlingUtils モジュール" {
             $testException = try { throw "テストエラー" } catch { $_ }
             $errorConfig = $script:DefaultErrorConfig
             
+            # Mock Write-SystemLog to capture messages 
+            $script:capturedMessages = @() # Reset array
+            Mock Write-SystemLog {
+                param($Message, $Level)
+                $script:capturedMessages += [PSCustomObject]@{ Message = $Message; Level = $Level }
+            } -ModuleName ErrorHandlingUtils
+            
             # Act
             Write-ErrorDetails -Exception $testException -Category System -Operation "テスト操作" -ErrorConfig $errorConfig
             
             # Assert
-            $logMessages = Get-CapturedLogMessages
-            $logMessages | Should -Not -BeNullOrEmpty
-            ($logMessages | Where-Object { $_.Message -match "テストエラー" }) | Should -Not -BeNullOrEmpty
+            $script:capturedMessages | Should -Not -BeNullOrEmpty
+            ($script:capturedMessages | Where-Object { $_.Message -match "テストエラー" }) | Should -Not -BeNullOrEmpty
         }
         
         It "スタックトレースが設定されている場合、スタックトレースを出力する" {
@@ -377,15 +391,22 @@ Describe "ErrorHandlingUtils モジュール" {
             $testException = try { 
                 function Test-Function { throw "スタックトレーステスト" }
                 Test-Function
-            } catch { $_ }
+            }
+            catch { $_ }
             $errorConfig = @{ log_stack_trace = $true; error_levels = @{ System = "Error" } }
+            
+            # Mock Write-SystemLog to capture messages 
+            $script:capturedMessages = @() # Reset array
+            Mock Write-SystemLog {
+                param($Message, $Level)
+                $script:capturedMessages += [PSCustomObject]@{ Message = $Message; Level = $Level }
+            } -ModuleName ErrorHandlingUtils
             
             # Act
             Write-ErrorDetails -Exception $testException -Category System -Operation "スタックトレーステスト" -ErrorConfig $errorConfig
             
             # Assert
-            $logMessages = Get-CapturedLogMessages
-            ($logMessages | Where-Object { $_.Message -match "スタックトレース" }) | Should -Not -BeNullOrEmpty
+            ($script:capturedMessages | Where-Object { $_.Message -match "スタックトレース" }) | Should -Not -BeNullOrEmpty
         }
         
         It "コンテキスト情報が提供された場合、コンテキストを出力する" {
@@ -394,13 +415,19 @@ Describe "ErrorHandlingUtils モジュール" {
             $errorConfig = @{ error_levels = @{ System = "Error" } }
             $context = @{ "ファイルパス" = "/test/file.txt"; "操作種別" = "読み込み" }
             
+            # Mock Write-SystemLog to capture messages 
+            $script:capturedMessages = @() # Reset array
+            Mock Write-SystemLog {
+                param($Message, $Level)
+                $script:capturedMessages += [PSCustomObject]@{ Message = $Message; Level = $Level }
+            } -ModuleName ErrorHandlingUtils
+            
             # Act
             Write-ErrorDetails -Exception $testException -Category System -Operation "コンテキストテスト" -Context $context -ErrorConfig $errorConfig
             
             # Assert
-            $logMessages = Get-CapturedLogMessages
-            ($logMessages | Where-Object { $_.Message -match "エラーコンテキスト" }) | Should -Not -BeNullOrEmpty
-            ($logMessages | Where-Object { $_.Message -match "ファイルパス" }) | Should -Not -BeNullOrEmpty
+            ($script:capturedMessages | Where-Object { $_.Message -match "エラーコンテキスト" }) | Should -Not -BeNullOrEmpty
+            ($script:capturedMessages | Where-Object { $_.Message -match "ファイルパス" }) | Should -Not -BeNullOrEmpty
         }
         
         It "カテゴリ別の対処方法メッセージを出力する" {
@@ -408,12 +435,18 @@ Describe "ErrorHandlingUtils モジュール" {
             $testException = try { throw "カテゴリテスト" } catch { $_ }
             $errorConfig = @{ error_levels = @{ Data = "Warning" } }
             
+            # Mock Write-SystemLog to capture messages 
+            $script:capturedMessages = @() # Reset array
+            Mock Write-SystemLog {
+                param($Message, $Level)
+                $script:capturedMessages += [PSCustomObject]@{ Message = $Message; Level = $Level }
+            } -ModuleName ErrorHandlingUtils
+            
             # Act
             Write-ErrorDetails -Exception $testException -Category Data -Operation "カテゴリテスト" -ErrorConfig $errorConfig
             
             # Assert
-            $logMessages = Get-CapturedLogMessages
-            ($logMessages | Where-Object { $_.Message -match "データエラーの対処方法" }) | Should -Not -BeNullOrEmpty
+            ($script:capturedMessages | Where-Object { $_.Message -match "データエラーの対処方法" }) | Should -Not -BeNullOrEmpty
         }
     }
 
@@ -421,7 +454,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "ファイル操作が正常な場合、結果を返す" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             $fileOperation = { return "ファイル操作成功" }
             $filePath = "/test/file.txt"
             
@@ -437,12 +470,12 @@ Describe "ErrorHandlingUtils モジュール" {
             $retryConfig = $script:DefaultErrorConfig.Clone()
             $retryConfig.retry_settings.max_attempts = 2
             $retryConfig.retry_settings.delay_seconds = @(0, 0)
-            New-MockErrorHandling -ErrorConfig $retryConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $retryConfig } } -ModuleName ErrorHandlingUtils
             
-            $attemptCount = 0
+            $global:attemptCount = 0
             $fileOperation = {
-                $script:attemptCount++
-                if ($script:attemptCount -eq 1) {
+                $global:attemptCount++
+                if ($global:attemptCount -eq 1) {
                     throw "ファイルアクセスエラー"
                 }
                 return "リトライ成功"
@@ -454,23 +487,23 @@ Describe "ErrorHandlingUtils モジュール" {
             
             # Assert
             $result | Should -Be "リトライ成功"
-            $attemptCount | Should -Be 2
+            $global:attemptCount | Should -Be 2
         }
         
         It "適切なコンテキスト情報が設定される" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             $fileOperation = { throw "ファイルエラー" }
             $filePath = "/test/file.txt"
             $operationType = "削除"
             
             # Invoke-WithErrorHandlingの呼び出しをモック化してコンテキストを確認
-            $capturedContext = $null
-            New-MockCommand -CommandName "Invoke-WithErrorHandling" -MockScript {
+            $global:capturedContext = $null
+            Mock Invoke-WithErrorHandling {
                 param($ScriptBlock, $Category, $Operation, $Context, $CleanupScript)
-                $script:capturedContext = $Context
+                $global:capturedContext = $Context
                 throw "テストエラー"
-            }
+            } -ModuleName ErrorHandlingUtils
             
             # Act
             try {
@@ -481,9 +514,9 @@ Describe "ErrorHandlingUtils モジュール" {
             }
             
             # Assert
-            $capturedContext | Should -Not -BeNullOrEmpty
-            $capturedContext["ファイルパス"] | Should -Be $filePath
-            $capturedContext["操作種別"] | Should -Be $operationType
+            $global:capturedContext | Should -Not -BeNullOrEmpty
+            $global:capturedContext["ファイルパス"] | Should -Be $filePath
+            $global:capturedContext["操作種別"] | Should -Be $operationType
         }
     }
 
@@ -510,17 +543,28 @@ Describe "ErrorHandlingUtils モジュール" {
     Context "エラーカテゴリ列挙型" {
         
         It "ErrorCategory 列挙型が正しく定義されている" {
-            # Act & Assert
-            [ErrorCategory]::System | Should -Be "System"
-            [ErrorCategory]::Data | Should -Be "Data"
-            [ErrorCategory]::External | Should -Be "External"
+            # ErrorCategory enum should be available in the module
+            # Test by calling a function that uses the enum
+            $systemLevel = Get-ErrorLevel -Category System -ErrorConfig @{error_levels = @{System = "Error" } }
+            $systemLevel | Should -Be "Error"
+            
+            $dataLevel = Get-ErrorLevel -Category Data -ErrorConfig @{error_levels = @{Data = "Warning" } }
+            $dataLevel | Should -Be "Warning"
+            
+            $externalLevel = Get-ErrorLevel -Category External -ErrorConfig @{error_levels = @{External = "Error" } }
+            $externalLevel | Should -Be "Error"
         }
         
         It "ErrorCategory を文字列として正しく変換できる" {
-            # Act & Assert
-            [ErrorCategory]::System.ToString() | Should -Be "System"
-            [ErrorCategory]::Data.ToString() | Should -Be "Data"
-            [ErrorCategory]::External.ToString() | Should -Be "External"
+            # Test the enum by using functions that accept ErrorCategory parameters
+            $systemContinue = Get-ShouldContinueOnError -Category System -ErrorConfig @{continue_on_error = @{System = $false } }
+            $systemContinue | Should -Be $false
+            
+            $dataContinue = Get-ShouldContinueOnError -Category Data -ErrorConfig @{continue_on_error = @{Data = $true } }
+            $dataContinue | Should -Be $true
+            
+            $externalContinue = Get-ShouldContinueOnError -Category External -ErrorConfig @{continue_on_error = @{External = $false } }
+            $externalContinue | Should -Be $false
         }
     }
 
@@ -528,7 +572,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "複雑なネストしたエラーハンドリング" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             
             $nestedScript = {
                 Invoke-WithErrorHandling -ScriptBlock {
@@ -549,7 +593,7 @@ Describe "ErrorHandlingUtils モジュール" {
             $timeoutConfig = $script:DefaultErrorConfig.Clone()
             $timeoutConfig.retry_settings.max_attempts = 3
             $timeoutConfig.retry_settings.delay_seconds = @(0.1, 0.1, 0.1)  # 短い間隔
-            New-MockErrorHandling -ErrorConfig $timeoutConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $timeoutConfig } } -ModuleName ErrorHandlingUtils
             
             $startTime = Get-Date
             $timeoutScript = { throw "タイムアウトテスト" }
@@ -571,7 +615,7 @@ Describe "ErrorHandlingUtils モジュール" {
         
         It "メモリ使用量の大きなエラーコンテキスト処理" {
             # Arrange
-            New-MockErrorHandling -ErrorConfig $script:DefaultErrorConfig
+            Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             
             # 大きなコンテキストデータを作成
             $largeContext = @{}

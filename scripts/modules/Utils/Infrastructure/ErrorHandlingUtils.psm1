@@ -277,6 +277,10 @@ function Invoke-FileOperationWithErrorHandling {
 }
 
 Export-ModuleMember -Function @(
+    'Get-ErrorHandlingConfig',
+    'Get-ErrorLevel', 
+    'Get-ShouldContinueOnError',
+    'Write-ErrorDetails',
     'Invoke-WithErrorHandling',
     'Invoke-FileOperationWithErrorHandling'
-)
+) -Variable @() -Cmdlet @() -Alias @()
