@@ -12,24 +12,22 @@ Describe "フルシステム統合テスト" {
         $script:ProjectRoot = Find-ProjectRoot
         $script:MainScriptPath = Join-Path $script:ProjectRoot "scripts" "main.ps1"        
 
-        # テスト環境の初期化
-        $script:TestEnv = Initialize-TestEnvironment -CreateTempDatabase
+        # TestEnvironmentクラスを使用したテスト環境の初期化
+        $script:TestEnv = New-TestEnvironment -TestName "FullSystemIntegration"
         
-        # テスト用データディレクトリの作成
-        $script:TestDataDir = Join-Path $script:ProjectRoot "test-data" "integration"
-        if (-not (Test-Path $script:TestDataDir)) {
-            New-Item -Path $script:TestDataDir -ItemType Directory -Force | Out-Null
-        }
+        # TestEnvironmentから必要なパスを取得
+        $script:TestDataDir = $script:TestEnv.GetTempDirectory()
+        $script:TestDatabasePath = $script:TestEnv.CreateDatabase("integration-test")
         
-        # テスト用設定ファイルの作成
-        $script:TestConfig = New-TestConfig -CustomSettings @{
+        # TestEnvironmentクラスを使用したテスト用設定ファイルの作成
+        $customSettings = @{
             file_paths     = @{
-                provided_data_file_path         = Join-Path $script:TestDataDir "provided.csv"
-                current_data_file_path          = Join-Path $script:TestDataDir "current.csv"
-                output_file_path                = Join-Path $script:TestDataDir "output.csv"
-                provided_data_history_directory = Join-Path $script:TestDataDir "history" "provided-data"
-                current_data_history_directory  = Join-Path $script:TestDataDir "history" "current-data"
-                output_history_directory        = Join-Path $script:TestDataDir "history" "output"
+                provided_data_file_path         = Join-Path $script:TestDataDir "csv-data" "provided.csv"
+                current_data_file_path          = Join-Path $script:TestDataDir "csv-data" "current.csv"
+                output_file_path                = Join-Path $script:TestDataDir "csv-data" "output.csv"
+                provided_data_history_directory = Join-Path $script:TestDataDir "provided-data-history"
+                current_data_history_directory  = Join-Path $script:TestDataDir "current-data-history"
+                output_history_directory        = Join-Path $script:TestDataDir "output-history"
             }
             sync_rules     = @{
                 key_columns         = @{
@@ -223,37 +221,33 @@ Describe "フルシステム統合テスト" {
                 }
             }
         }
-        $script:TestConfigPath = Join-Path $script:TestDataDir "test-config.json"
-        $script:TestConfig | ConvertTo-Json -Depth 15 | Out-File -FilePath $script:TestConfigPath -Encoding UTF8
-                
-        # テスト用データベースパス
-        $script:TestDatabasePath = Join-Path $script:TestDataDir "integration-test.db"
+        
+        # TestEnvironmentクラスを使用して設定ファイルを作成
+        $script:TestConfigPath = $script:TestEnv.CreateConfigFile($customSettings, "integration-test-config")
+        $script:TestConfig = $script:TestEnv.GetConfig()
     }
     
     AfterAll {
-        # テスト環境のクリーンアップ
-        Clear-TestEnvironment
-        
-        # テストデータディレクトリのクリーンアップ
-        if (Test-Path $script:TestDataDir) {
-            Remove-Item $script:TestDataDir -Recurse -Force -ErrorAction SilentlyContinue
+        # TestEnvironmentクラスを使用したテスト環境のクリーンアップ
+        if ($script:TestEnv) {
+            $script:TestEnv.Dispose()
         }
     }
     
     BeforeEach {
-        # 各テスト前にテストデータをクリーンアップ
-        if (Test-Path $script:TestDatabasePath) {
-            Remove-Item $script:TestDatabasePath -Force -ErrorAction SilentlyContinue
-        }
+        # TestEnvironmentクラスを使用して各テスト前のクリーンアップを実行
+        # データベースの再作成
+        $script:TestDatabasePath = $script:TestEnv.CreateDatabase("integration-test")
         
-        # CSVファイルのクリーンアップ
+        # CSVファイルのパスを取得（TestEnvironmentの構造に合わせる）
+        $csvDataDir = Join-Path $script:TestDataDir "csv-data"
         $csvFiles = @(
-            (Join-Path $script:TestDataDir "provided.csv"),
-            (Join-Path $script:TestDataDir "current.csv"),
-            (Join-Path $script:TestDataDir "output.csv"),
-            (Join-Path $script:TestDataDir "param-provided.csv"),
-            (Join-Path $script:TestDataDir "param-current.csv"),
-            (Join-Path $script:TestDataDir "param-output.csv")
+            (Join-Path $csvDataDir "provided.csv"),
+            (Join-Path $csvDataDir "current.csv"),
+            (Join-Path $csvDataDir "output.csv"),
+            (Join-Path $csvDataDir "param-provided.csv"),
+            (Join-Path $csvDataDir "param-current.csv"),
+            (Join-Path $csvDataDir "param-output.csv")
         )
         foreach ($csvFile in $csvFiles) {
             if (Test-Path $csvFile) {
@@ -261,13 +255,11 @@ Describe "フルシステム統合テスト" {
             }
         }
         
-        $joinedPath1 = Join-Path $script:TestDataDir "history" "provided-data"
-        $joinedPath2 = Join-Path $script:TestDataDir "history" "current-data"
-        $joinedPath3 = Join-Path $script:TestDataDir "history" "output"
-
-        # 履歴ディレクトリをクリーンアップ
+        # 履歴ディレクトリのクリーンアップ（TestEnvironmentの構造に合わせる）
         $historyDirs = @(
-            $joinedPath1, $joinedPath2, $joinedPath3
+            (Join-Path $script:TestDataDir "provided-data-history"),
+            (Join-Path $script:TestDataDir "current-data-history"),
+            (Join-Path $script:TestDataDir "output-history")
         )
         foreach ($dir in $historyDirs) {
             if (Test-Path $dir) {
@@ -296,10 +288,11 @@ Describe "フルシステム統合テスト" {
                 [PSCustomObject]@{ user_id = "Z888"; card_number = "C888"; name = "除外KEEP対象"; department = "テスト部"; position = "テスト"; email = "keep@company.com"; phone = "03-8888-8888"; hire_date = "2023-02-01" }
             )
             
-            # CSVファイルの作成
-            $providedCsvPath = Join-Path $script:TestDataDir "provided.csv"
-            $currentCsvPath = Join-Path $script:TestDataDir "current.csv"
-            $outputCsvPath = Join-Path $script:TestDataDir "output.csv"
+            # TestEnvironmentを使用してCSVファイルを作成
+            $csvDataDir = Join-Path $script:TestDataDir "csv-data"
+            $providedCsvPath = Join-Path $csvDataDir "provided.csv"
+            $currentCsvPath = Join-Path $csvDataDir "current.csv"
+            $outputCsvPath = Join-Path $csvDataDir "output.csv"
             
             # 提供データ（ヘッダーなし）
             $providedData | ConvertTo-Csv -NoTypeInformation | Select-Object -Skip 1 | Out-File -FilePath $providedCsvPath -Encoding UTF8
@@ -324,31 +317,11 @@ Describe "フルシステム統合テスト" {
             $outputData = Import-Csv $outputCsvPath -Encoding UTF8
             $outputData | Should -Not -BeNullOrEmpty
             
-            # # デバッグ：出力データの詳細確認
-            # Write-Host "=== 出力データデバッグ ===" -ForegroundColor Cyan
-            # Write-Host "出力レコード数: $($outputData.Count)" -ForegroundColor White
-            # if ($outputData.Count -gt 0) {
-            #     Write-Host "出力データサンプル:" -ForegroundColor White
-            #     $outputData | Select-Object -First 5 | ForEach-Object {
-            #         Write-Host "  syokuin_no: $($_.syokuin_no), sync_action: $($_.sync_action), name: $($_.name)" -ForegroundColor Gray
-            #     }
-            #     Write-Host "sync_action分布:" -ForegroundColor White
-            #     $outputData | Group-Object sync_action | ForEach-Object {
-            #         Write-Host "  Action $($_.Name): $($_.Count) 件" -ForegroundColor Gray
-            #     }
-            # }
-            # else {
-            #     Write-Host "出力データが空です！" -ForegroundColor Red
-            # }
-            # Write-Host "=========================" -ForegroundColor Cyan
-            
             # 同期アクションの確認
             $addActions = $outputData | Where-Object { $_.sync_action -eq "1" }  # ADD
             $updateActions = $outputData | Where-Object { $_.sync_action -eq "2" }  # UPDATE
             $deleteActions = $outputData | Where-Object { $_.sync_action -eq "3" }  # DELETE
             $keepActions = $outputData | Where-Object { $_.sync_action -eq "9" }  # KEEP
-            
-            # Write-Host "ADD Actions: $($addActions.Count), UPDATE Actions: $($updateActions.Count), DELETE Actions: $($deleteActions.Count), KEEP Actions: $($keepActions.Count)" -ForegroundColor Magenta
             
             # 新規追加（E001, E003）
             $addActions.Count | Should -BeGreaterOrEqual 2
@@ -371,9 +344,10 @@ Describe "フルシステム統合テスト" {
         
         It "空のデータファイルでも正常に処理される" {
             # Arrange
-            $providedCsvPath = Join-Path $script:TestDataDir "empty-provided.csv"
-            $currentCsvPath = Join-Path $script:TestDataDir "empty-current.csv"
-            $outputCsvPath = Join-Path $script:TestDataDir "empty-output.csv"
+            $csvDataDir = Join-Path $script:TestDataDir "csv-data"
+            $providedCsvPath = Join-Path $csvDataDir "empty-provided.csv"
+            $currentCsvPath = Join-Path $csvDataDir "empty-current.csv"
+            $outputCsvPath = Join-Path $csvDataDir "empty-output.csv"
             
             # 空のCSVファイル（ヘッダーのみ）
             "user_id,card_number,name,department,position,email,phone,hire_date" | Out-File -FilePath $currentCsvPath -Encoding UTF8
@@ -405,9 +379,10 @@ Describe "フルシステム統合テスト" {
                 [PSCustomObject]@{ user_id = "E002"; card_number = "C002"; name = "現在データ"; department = "テスト部"; position = "テスト"; email = "current@company.com"; phone = "03-1234-5679"; hire_date = "2023-01-02" }
             )
             
-            $providedCsvPath = Join-Path $script:TestDataDir "history-provided.csv"
-            $currentCsvPath = Join-Path $script:TestDataDir "history-current.csv"
-            $outputCsvPath = Join-Path $script:TestDataDir "history-output.csv"
+            $csvDataDir = Join-Path $script:TestDataDir "csv-data"
+            $providedCsvPath = Join-Path $csvDataDir "history-provided.csv"
+            $currentCsvPath = Join-Path $csvDataDir "history-current.csv"
+            $outputCsvPath = Join-Path $csvDataDir "history-output.csv"
             
             $providedData | ConvertTo-Csv -NoTypeInformation | Select-Object -Skip 1 | Out-File -FilePath $providedCsvPath -Encoding UTF8
             $currentData | Export-Csv -Path $currentCsvPath -NoTypeInformation -Encoding UTF8
@@ -420,10 +395,10 @@ Describe "フルシステム統合テスト" {
             & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
 
             # Assert
-            # 履歴ディレクトリが作成されていることを確認
-            $providedHistoryDir = Join-Path $script:TestDataDir "history" "provided-data"
-            $currentHistoryDir = Join-Path $script:TestDataDir "history" "current-data"
-            $outputHistoryDir = Join-Path $script:TestDataDir "history" "output"
+            # 履歴ディレクトリが作成されていることを確認（TestEnvironmentの構造に合わせる）
+            $providedHistoryDir = Join-Path $script:TestDataDir "provided-data-history"
+            $currentHistoryDir = Join-Path $script:TestDataDir "current-data-history"
+            $outputHistoryDir = Join-Path $script:TestDataDir "output-history"
             
             Test-Path $providedHistoryDir | Should -Be $true
             Test-Path $currentHistoryDir | Should -Be $true
@@ -461,9 +436,10 @@ Describe "フルシステム統合テスト" {
                 [PSCustomObject]@{ user_id = "Z003"; card_number = "C903"; name = "除外KEEP対象"; department = "テスト部"; position = "テスト"; email = "keep@company.com"; phone = "03-9999-0003"; hire_date = "2023-02-01" }
             )
             
-            $providedCsvPath = Join-Path $script:TestDataDir "filter-provided.csv"
-            $currentCsvPath = Join-Path $script:TestDataDir "filter-current.csv"
-            $outputCsvPath = Join-Path $script:TestDataDir "filter-output.csv"
+            $csvDataDir = Join-Path $script:TestDataDir "csv-data"
+            $providedCsvPath = Join-Path $csvDataDir "filter-provided.csv"
+            $currentCsvPath = Join-Path $csvDataDir "filter-current.csv"
+            $outputCsvPath = Join-Path $csvDataDir "filter-output.csv"
             
             $providedData | ConvertTo-Csv -NoTypeInformation | Select-Object -Skip 1 | Out-File -FilePath $providedCsvPath -Encoding UTF8
             $currentData | Export-Csv -Path $currentCsvPath -NoTypeInformation -Encoding UTF8
@@ -495,9 +471,10 @@ Describe "フルシステム統合テスト" {
         
         It "不正なCSVファイルでもエラーハンドリングされて処理が継続される" {
             # Arrange
-            $invalidProvidedCsvPath = Join-Path $script:TestDataDir "invalid-provided.csv"
-            $validCurrentCsvPath = Join-Path $script:TestDataDir "valid-current.csv"
-            $outputCsvPath = Join-Path $script:TestDataDir "error-output.csv"
+            $csvDataDir = Join-Path $script:TestDataDir "csv-data"
+            $invalidProvidedCsvPath = Join-Path $csvDataDir "invalid-provided.csv"
+            $validCurrentCsvPath = Join-Path $csvDataDir "valid-current.csv"
+            $outputCsvPath = Join-Path $csvDataDir "error-output.csv"
             
             # 不正なCSVファイル（カラム数不一致）
             @"
@@ -550,7 +527,8 @@ E003,C003
                 }
             }
             
-            $noFilterConfigPath = Join-Path $script:TestDataDir "no-filter-config.json"
+            $configDir = Join-Path $script:TestDataDir "config"
+            $noFilterConfigPath = Join-Path $configDir "no-filter-config.json"
             $noFilterConfig | ConvertTo-Json -Depth 15 | Out-File -FilePath $noFilterConfigPath -Encoding UTF8
             
             $providedData = @(
@@ -562,9 +540,10 @@ E003,C003
                 [PSCustomObject]@{ user_id = "E002"; card_number = "C002"; name = "現在データ"; department = "開発部"; position = "主任"; email = "current@company.com"; phone = "03-1234-5679"; hire_date = "2021-03-20" }
             )
             
-            $providedCsvPath = Join-Path $script:TestDataDir "no-filter-provided.csv"
-            $currentCsvPath = Join-Path $script:TestDataDir "no-filter-current.csv"
-            $outputCsvPath = Join-Path $script:TestDataDir "no-filter-output.csv"
+            $csvDataDir = Join-Path $script:TestDataDir "csv-data"
+            $providedCsvPath = Join-Path $csvDataDir "no-filter-provided.csv"
+            $currentCsvPath = Join-Path $csvDataDir "no-filter-current.csv"
+            $outputCsvPath = Join-Path $csvDataDir "no-filter-output.csv"
             
             $providedData | ConvertTo-Csv -NoTypeInformation | Select-Object -Skip 1 | Out-File -FilePath $providedCsvPath -Encoding UTF8
             $currentData | Export-Csv -Path $currentCsvPath -NoTypeInformation -Encoding UTF8
@@ -588,15 +567,11 @@ E003,C003
         
         It "中程度のデータ量（100件）で正常に処理される" {
             # Arrange
-            $providedData = New-ProvidedDataRecords -Count 50 -IncludeJapanese
-            $currentData = New-CurrentDataRecords -Count 50 -IncludeJapanese
-            
-            $providedCsvPath = Join-Path $script:TestDataDir "large-provided.csv"
-            $currentCsvPath = Join-Path $script:TestDataDir "large-current.csv"
-            $outputCsvPath = Join-Path $script:TestDataDir "large-output.csv"
-            
-            $providedData | ConvertTo-Csv -NoTypeInformation | Select-Object -Skip 1 | Out-File -FilePath $providedCsvPath -Encoding UTF8
-            $currentData | Export-Csv -Path $currentCsvPath -NoTypeInformation -Encoding UTF8
+            # TestEnvironmentのCSV作成機能を使用
+            $csvDataDir = Join-Path $script:TestDataDir "csv-data"
+            $providedCsvPath = $script:TestEnv.CreateCsvFile("provided_data", 50, @{ IncludeJapanese = $true; CustomFileName = "large-provided.csv"; IncludeHeader = $false })
+            $currentCsvPath = $script:TestEnv.CreateCsvFile("current_data", 50, @{ IncludeJapanese = $true; CustomFileName = "large-current.csv"; IncludeHeader = $true })
+            $outputCsvPath = Join-Path $csvDataDir "large-output.csv"
             
             if (-not (Get-Command sqlite3 -ErrorAction SilentlyContinue)) {
                 New-MockSqliteCommand -ReturnValue "" -ExitCode 0
@@ -636,9 +611,10 @@ E003,C003
                 [PSCustomObject]@{ employee_id = "E001"; card_number = "C001"; name = "ログテスト"; department = "テスト部"; position = "テスト"; email = "log@company.com"; phone = "03-1234-5678"; hire_date = "2023-01-01" }
             )
             
-            $providedCsvPath = Join-Path $script:TestDataDir "log-provided.csv"
-            $currentCsvPath = Join-Path $script:TestDataDir "log-current.csv"
-            $outputCsvPath = Join-Path $script:TestDataDir "log-output.csv"
+            $csvDataDir = Join-Path $script:TestDataDir "csv-data"
+            $providedCsvPath = Join-Path $csvDataDir "log-provided.csv"
+            $currentCsvPath = Join-Path $csvDataDir "log-current.csv"
+            $outputCsvPath = Join-Path $csvDataDir "log-output.csv"
             
             $providedData | ConvertTo-Csv -NoTypeInformation | Select-Object -Skip 1 | Out-File -FilePath $providedCsvPath -Encoding UTF8
             "user_id,card_number,name,department,position,email,phone,hire_date" | Out-File -FilePath $currentCsvPath -Encoding UTF8
@@ -651,8 +627,8 @@ E003,C003
             & pwsh $script:MainScriptPath -ProvidedDataFilePath $providedCsvPath -CurrentDataFilePath $currentCsvPath -OutputFilePath $outputCsvPath -DatabasePath $script:TestDatabasePath -ConfigFilePath $script:TestConfigPath 2>&1
             
             # Assert
-            # ログディレクトリが作成されていることを確認
-            $logDir = Join-Path $script:TestDataDir "temp" "logs"
+            # ログディレクトリが作成されていることを確認（TestEnvironmentの構造に合わせる）
+            $logDir = Join-Path $script:TestDataDir "logs"
             if (Test-Path $logDir) {
                 $logFiles = Get-ChildItem $logDir -Filter "*.log"
                 $logFiles.Count | Should -BeGreaterOrEqual 1
@@ -676,9 +652,10 @@ E003,C003
             )
             
             # 設定ファイルとは異なるパスをパラメータで指定
-            $paramProvidedCsvPath = Join-Path $script:TestDataDir "param-provided.csv"
-            $paramCurrentCsvPath = Join-Path $script:TestDataDir "param-current.csv"
-            $paramOutputCsvPath = Join-Path $script:TestDataDir "param-output.csv"
+            $csvDataDir = Join-Path $script:TestDataDir "csv-data"
+            $paramProvidedCsvPath = Join-Path $csvDataDir "param-provided.csv"
+            $paramCurrentCsvPath = Join-Path $csvDataDir "param-current.csv"
+            $paramOutputCsvPath = Join-Path $csvDataDir "param-output.csv"
             
             $providedData | ConvertTo-Csv -NoTypeInformation | Select-Object -Skip 1 | Out-File -FilePath $paramProvidedCsvPath -Encoding UTF8
             "user_id,card_number,name,department,position,email,phone,hire_date" | Out-File -FilePath $paramCurrentCsvPath -Encoding UTF8
