@@ -240,4 +240,4 @@ Export-ModuleMember -Function @(
     'New-MockErrorHandling',
     'Mock-ConfigurationSystem',
     'Get-CapturedLogMessages'
-)   'Get-CapturedLogMessages'
+) 
