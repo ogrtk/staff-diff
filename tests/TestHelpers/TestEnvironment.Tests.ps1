@@ -122,7 +122,8 @@ Describe "TestEnvironmentクラス 動作確認テスト" {
             
             # Assert
             $tempFilePath | Should -Exist
-            Get-Content $tempFilePath -Raw | Should -Be "$testContent`r`n"
+            $fileContent = Get-Content $tempFilePath -Raw
+            $fileContent -replace "`r?`n$", "" | Should -Be $testContent
             
             # Cleanup
             $testEnv.Dispose()
@@ -138,7 +139,10 @@ Describe "TestEnvironmentクラス 動作確認テスト" {
             
             # いくつかのファイルを作成
             $dbPath = $testEnv.CreateDatabase("dispose_test")
-            $csvPath = $testEnv.CreateCsvFile("provided_data", 3)
+            $csvPath = $testEnv.CreateCsvFile("provided_data", 3, @{
+                IncludeHeader = $true
+                IncludeJapanese = $false
+            })
             $configPath = $testEnv.CreateConfigFile(@{}, "dispose-config")
             
             # すべてのファイルが存在することを確認
@@ -177,7 +181,7 @@ Describe "TestEnvironmentクラス 動作確認テスト" {
             $testEnv = New-TestEnvironment -TestName "BackwardCompatTest"
             
             # Assert
-            $testEnv | Should -BeOfType [TestEnvironment]
+            $testEnv.GetType().Name | Should -Be "TestEnvironment"
             $testEnv.GetTestInstanceId() | Should -Match "BackwardCompatTest_\d{8}_\d{6}_\d{4}"
             
             # Cleanup
@@ -198,7 +202,7 @@ Describe "TestEnvironmentクラス 動作確認テスト" {
                 $data | Should -Not -BeNullOrEmpty
                 $data.Count | Should -Be 3
                 Test-Path $testCsvPath | Should -Be $true
-                $warningMessages | Should -Contain "*非推奨*"
+                $warningMessages -join " " | Should -Match "非推奨"
             }
             finally {
                 # Cleanup

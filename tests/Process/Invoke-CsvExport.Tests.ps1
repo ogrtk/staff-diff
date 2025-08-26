@@ -95,7 +95,20 @@ CREATE TABLE IF NOT EXISTS sync_result (
     }
         
     Context "TestEnvironment統合テスト" {
+    BeforeAll {
+        # 全テストの開始前に設定をリセット
+        Reset-DataSyncConfig
+        
+        # 他のテストによるInvoke-SqliteCommandのモック化をクリア
+        # Pesterは自動的にテスト間でモックをクリアするはずだが、念のため
+    }
+    
     BeforeEach {
+        # 既存の設定をリセット
+        Reset-DataSyncConfig
+        
+        # 実際のSQLiteコマンドを呼び出すことを確実にする
+        
         # TestEnvironmentインスタンス作成
         $script:testEnv = [TestEnvironment]::new("CsvExportIntegration")
             
@@ -109,14 +122,14 @@ CREATE TABLE IF NOT EXISTS sync_result (
                         mappings = @{
                             ADD    = @{ value = "1"; enabled = $false }  # デフォルト設定に合わせる
                             UPDATE = @{ value = "2"; enabled = $false } # デフォルト設定に合わせる
-                            DELETE = @{ value = "3" }  # enabled未指定=true（デフォルト）
-                            KEEP   = @{ value = "9" }  # enabled未指定=true（デフォルト）
+                            DELETE = @{ value = "3"; enabled = $true }  # 明示的にtrue
+                            KEEP   = @{ value = "9"; enabled = $true }  # 明示的にtrue
                         }
                     }
                 }
             }, "integration-config")
             
-        # 設定を読み込み
+        # テスト用設定を読み込みキャッシュ
         Get-DataSyncConfig -ConfigPath $script:testConfigPath | Out-Null
             
         # テスト用出力パス
@@ -127,6 +140,12 @@ CREATE TABLE IF NOT EXISTS sync_result (
         if ($script:testEnv) {
             $script:testEnv.Dispose()
         }
+        # テスト後に設定をリセット
+        Reset-DataSyncConfig
+    }
+    
+    AfterAll {
+        # 全テスト終了後に設定をリセット
         Reset-DataSyncConfig
     }
         
@@ -164,6 +183,19 @@ CREATE TABLE IF NOT EXISTS sync_result (
             KEEP   = 8
         }
         $testEnv.PopulateSyncResultTable($script:integrationDbPath, $actionCounts, @{})
+        
+        # デバッグ: データベースの実際の内容を確認
+        try {
+            # CoreUtilsモジュールから直接呼び出し
+            Import-Module "../../scripts/modules/Utils/Foundation/CoreUtils.psm1" -Force
+            $allData = CoreUtils\Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT sync_action, COUNT(*) as count FROM sync_result GROUP BY sync_action;" -ErrorAction Stop
+            Write-Host "デバッグ: データベース内容 - $($allData | ForEach-Object { "$($_.sync_action)|$($_.count)" } | Join-String ',')"
+            
+            $enabledData = CoreUtils\Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT sync_action, COUNT(*) as count FROM sync_result WHERE sync_action IN ('3', '9') GROUP BY sync_action;" -ErrorAction Stop
+            Write-Host "デバッグ: 有効なアクション - $($enabledData | ForEach-Object { "$($_.sync_action)|$($_.count)" } | Join-String ',')"
+        } catch {
+            Write-Host "デバッグ: クエリエラー - $($_.Exception.Message)"
+        }
             
         # Act - デフォルト設定で実行
         Invoke-CsvExport -DatabasePath $script:integrationDbPath -OutputFilePath $script:integrationOutputPath
@@ -185,6 +217,15 @@ CREATE TABLE IF NOT EXISTS sync_result (
             KEEP   = 10
         }
         $testEnv.PopulateSyncResultTable($script:integrationDbPath, $actionCounts, @{})
+        
+        # デバッグ: データベースの実際の内容を確認
+        try {
+            Import-Module "../../scripts/modules/Utils/Foundation/CoreUtils.psm1" -Force
+            $allData = CoreUtils\Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT sync_action, COUNT(*) as count FROM sync_result GROUP BY sync_action;" -ErrorAction Stop
+            Write-Host "デバッグ（大量データ）: データベース内容 - $($allData | ForEach-Object { "$($_.sync_action)|$($_.count)" } | Join-String ',')"
+        } catch {
+            Write-Host "デバッグ（大量データ）: クエリエラー - $($_.Exception.Message)"
+        }
             
         # Act - デフォルト設定で実行
         Invoke-CsvExport -DatabasePath $script:integrationDbPath -OutputFilePath $script:integrationOutputPath
@@ -200,6 +241,15 @@ CREATE TABLE IF NOT EXISTS sync_result (
     It "デフォルト設定でのヘッダーチェック" {
         # Arrange - テストデータを挿入
         $testEnv.PopulateSyncResultTable($script:integrationDbPath, @{ ADD = 5; UPDATE = 3; DELETE = 2; KEEP = 4 }, @{})
+        
+        # デバッグ: データベースの実際の内容を確認
+        try {
+            Import-Module "../../scripts/modules/Utils/Foundation/CoreUtils.psm1" -Force
+            $allData = CoreUtils\Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT sync_action, COUNT(*) as count FROM sync_result GROUP BY sync_action;" -ErrorAction Stop
+            Write-Host "デバッグ（ヘッダー）: データベース内容 - $($allData | ForEach-Object { "$($_.sync_action)|$($_.count)" } | Join-String ',')"
+        } catch {
+            Write-Host "デバッグ（ヘッダー）: クエリエラー - $($_.Exception.Message)"
+        }
             
         # Act - デフォルト設定で実行
         Invoke-CsvExport -DatabasePath $script:integrationDbPath -OutputFilePath $script:integrationOutputPath

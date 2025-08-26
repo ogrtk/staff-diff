@@ -588,8 +588,8 @@ VALUES ('$($record.syokuin_no)', '$($record.card_number)', '$($record.name)', '$
                 }
                 sync_action_labels = @{
                     mappings = @{
-                        ADD    = @{ value = "1"; enabled = $true; description = "新規追加" }
-                        UPDATE = @{ value = "2"; enabled = $true; description = "更新" }
+                        ADD    = @{ value = "1"; enabled = $false; description = "新規追加" }
+                        UPDATE = @{ value = "2"; enabled = $false; description = "更新" }
                         DELETE = @{ value = "3"; enabled = $true; description = "削除" }
                         KEEP   = @{ value = "9"; enabled = $true; description = "変更なし" }
                     }
@@ -1466,8 +1466,8 @@ function New-TestConfig {
             }
             sync_action_labels = @{
                 mappings = @{
-                    ADD    = @{ value = "1"; enabled = $true; description = "新規追加" }
-                    UPDATE = @{ value = "2"; enabled = $true; description = "更新" }
+                    ADD    = @{ value = "1"; enabled = $false; description = "新規追加" }
+                    UPDATE = @{ value = "2"; enabled = $false; description = "更新" }
                     DELETE = @{ value = "3"; enabled = $true; description = "削除" }
                     KEEP   = @{ value = "9"; enabled = $true; description = "変更なし" }
                 }

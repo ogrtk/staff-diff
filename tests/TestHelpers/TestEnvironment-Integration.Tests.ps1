@@ -5,7 +5,15 @@ using module "../../scripts/modules/Utils/Foundation/CoreUtils.psm1"
 using module "../../scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1"
 
 Describe "TestEnvironment統合テスト（単体）" {
+    BeforeAll {
+        # 全テストの開始前に設定をリセット
+        Reset-DataSyncConfig
+    }
+    
     BeforeEach {
+        # 設定をリセット
+        Reset-DataSyncConfig
+        
         # TestEnvironmentインスタンス作成
         $script:testEnv = [TestEnvironment]::new("CsvExportIntegration")
         
@@ -37,6 +45,11 @@ Describe "TestEnvironment統合テスト（単体）" {
         if ($script:testEnv) {
             $script:testEnv.Dispose()
         }
+        Reset-DataSyncConfig
+    }
+    
+    AfterAll {
+        # 全テスト終了後に設定をリセット
         Reset-DataSyncConfig
     }
     

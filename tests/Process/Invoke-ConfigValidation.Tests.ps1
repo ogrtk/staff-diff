@@ -557,7 +557,7 @@ Describe "Invoke-ConfigValidation モジュール" {
             Mock -ModuleName "Invoke-ConfigValidation" -CommandName Split-Path { return $paramDir }
             
             # Act
-            $result = Invoke-ConfigValidation @allPaths
+            $result = Invoke-ConfigValidation -DatabasePath $allPaths.DatabasePath -ProvidedDataFilePath $allPaths.ProvidedDataFilePath -CurrentDataFilePath $allPaths.CurrentDataFilePath -OutputFilePath $allPaths.OutputFilePath -ConfigFilePath $allPaths.ConfigFilePath
             
             # Assert
             $result.DatabasePath | Should -Be $allPaths.DatabasePath
