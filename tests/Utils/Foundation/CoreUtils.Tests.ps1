@@ -35,11 +35,6 @@ Describe "CoreUtils モジュール" {
     
     BeforeEach {
         # モックのリセットは不要。Pesterが自動で管理。
-        # 全体で使用するWrite-SystemLog関数をグローバルスコープで定義
-        function global:Write-SystemLog {
-            param($Message, $Level = "Info")
-            # モック関数：何もしない
-        }
         # 全テストで共通のsqlite3コマンドをモック（グローバル関数として定義）
         function global:sqlite3 {
             param()
@@ -61,7 +56,8 @@ Describe "CoreUtils モジュール" {
                 param($Name, $ErrorAction)
                 if ($Name -eq "sqlite3") { 
                     return $mockSqlite3 
-                } else {
+                }
+                else {
                     return $null
                 }
             } -ModuleName "CoreUtils"
@@ -155,7 +151,8 @@ Describe "CoreUtils モジュール" {
                 param($Path)
                 if ($Path -eq $testPath) {
                     return $true
-                } else {
+                }
+                else {
                     return $false
                 }
             } -ModuleName "CoreUtils"
@@ -174,7 +171,8 @@ Describe "CoreUtils モジュール" {
                 param($Path)
                 if ($Path -eq $testPath) {
                     return $false
-                } else {
+                }
+                else {
                     return $true
                 }
             } -ModuleName "CoreUtils"
@@ -399,7 +397,8 @@ Describe "CoreUtils モジュール" {
             # 空の場合はnullまたは空配列が返されることを許容する
             if ($null -eq $result) {
                 $result | Should -BeNullOrEmpty
-            } else {
+            }
+            else {
                 $result | Should -BeOfType [System.Array]
                 $result.Count | Should -Be 0
             }

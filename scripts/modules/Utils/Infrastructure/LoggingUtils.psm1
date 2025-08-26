@@ -45,10 +45,11 @@ function Write-LogToFile {
         
         [string]$Level = "Info"
     )
-    
+
     # 設定ファイルベースのログ設定を使用
     $logConfig = Get-LoggingConfig
-        
+
+    
     if (-not $logConfig.enabled) {
         # ログ設定が無効の場合何もしない
         return
@@ -123,6 +124,11 @@ function Write-SystemLog {
         Write-LogToFile -Message $Message -Level $Level
     }
     catch {
+        # FIXME: debug
+        Write-Warning             
+        "Write-LogToFile failed:      
+     $($_.Exception.Message)"      
+        throw  # テスト用に再スロー   
         # ファイル出力に失敗してもエラーにしない
         # ※設定読込前やファイルシステムエラー時のフォールバック
     }

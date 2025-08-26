@@ -46,12 +46,6 @@ Describe "ConfigurationUtils モジュール" {
         if (Get-Command "Reset-DataSyncConfig" -ErrorAction SilentlyContinue) {
             Reset-DataSyncConfig
         }
-        
-        # 全体で使用するWrite-SystemLog関数をグローバルスコープで定義
-        function global:Write-SystemLog {
-            param($Message, $Level = "Info", $Category = "General")
-            # モック関数：何もしない
-        }
     }
 
     Context "Get-DataSyncConfig 関数" {
@@ -104,11 +98,11 @@ Describe "ConfigurationUtils モジュール" {
             
             # Forceで再読み込み時、新しい設定内容を直接Mock
             $updatedConfig = @{
-                version = "2.0.0"
-                tables = $script:ValidTestConfig.tables
+                version    = "2.0.0"
+                tables     = $script:ValidTestConfig.tables
                 sync_rules = $script:ValidTestConfig.sync_rules
                 csv_format = $script:ValidTestConfig.csv_format
-                logging = $script:ValidTestConfig.logging
+                logging    = $script:ValidTestConfig.logging
             }
             Mock Get-Content { 
                 return ($updatedConfig | ConvertTo-Json -Depth 10)
@@ -358,7 +352,7 @@ Describe "ConfigurationUtils モジュール" {
                 sync_rules = [PSCustomObject]@{
                     sync_result_mapping = [PSCustomObject]@{
                         description = "テスト用sync_result_mapping"
-                        mappings = [PSCustomObject]@{
+                        mappings    = [PSCustomObject]@{
                             test_field = "test_value"
                         }
                     }
@@ -381,7 +375,7 @@ Describe "ConfigurationUtils モジュール" {
             $configWithoutMapping = [PSCustomObject]@{ 
                 sync_rules = [PSCustomObject]@{
                     column_mappings = [PSCustomObject]@{ mappings = [PSCustomObject]@{} }
-                    key_columns = [PSCustomObject]@{}
+                    key_columns     = [PSCustomObject]@{}
                     # sync_result_mappingが不足
                 } 
             }
@@ -472,17 +466,17 @@ Describe "ConfigurationUtils モジュール" {
         It "csv_format設定が存在しない場合、エラーをスローする" {
             # Arrange
             $configWithoutCsvFormat = @{
-                tables = @{
+                tables     = @{
                     provided_data = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
-                    current_data = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
-                    sync_result = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
+                    current_data  = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
+                    sync_result   = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
                 }
                 sync_rules = @{
-                    column_mappings = @{ mappings = @{} }
-                    key_columns = @{}
+                    column_mappings     = @{ mappings = @{} }
+                    key_columns         = @{}
                     sync_result_mapping = @{ mappings = @{} }
                 }
-                logging = @{ levels = @("Info") }
+                logging    = @{ levels = @("Info") }
             }
             New-MockLoggingSystem -SuppressOutput
             
@@ -493,10 +487,10 @@ Describe "ConfigurationUtils モジュール" {
         It "has_header設定が不足している場合、設定検証でエラーになる" {
             # Arrange
             $configWithoutHasHeader = @{
-                tables = @{
+                tables     = @{
                     provided_data = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
-                    current_data = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
-                    sync_result = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
+                    current_data  = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
+                    sync_result   = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
                 }
                 csv_format = @{
                     provided_data = @{
@@ -506,11 +500,11 @@ Describe "ConfigurationUtils モジュール" {
                     }
                 }
                 sync_rules = @{
-                    column_mappings = @{ mappings = @{} }
-                    key_columns = @{}
+                    column_mappings     = @{ mappings = @{} }
+                    key_columns         = @{}
                     sync_result_mapping = @{ mappings = @{} }
                 }
-                logging = @{ levels = @("Info") }
+                logging    = @{ levels = @("Info") }
             }
             New-MockLoggingSystem -SuppressOutput
             
@@ -521,26 +515,26 @@ Describe "ConfigurationUtils モジュール" {
         It "include_header設定が不足している場合、設定検証でエラーになる" {
             # Arrange
             $configWithoutIncludeHeader = @{
-                tables = @{
+                tables     = @{
                     provided_data = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
-                    current_data = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
-                    sync_result = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
+                    current_data  = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
+                    sync_result   = @{ columns = @(@{ name = "id"; type = "INTEGER" }) }
                 }
                 csv_format = @{
                     provided_data = @{ has_header = $true; encoding = "UTF-8" }
-                    current_data = @{ has_header = $true; encoding = "UTF-8" }
-                    output = @{
+                    current_data  = @{ has_header = $true; encoding = "UTF-8" }
+                    output        = @{
                         encoding  = "UTF-8"
                         delimiter = ","
                         # include_header が不足
                     }
                 }
                 sync_rules = @{
-                    column_mappings = @{ mappings = @{} }
-                    key_columns = @{}
+                    column_mappings     = @{ mappings = @{} }
+                    key_columns         = @{}
                     sync_result_mapping = @{ mappings = @{} }
                 }
-                logging = @{ levels = @("Info") }
+                logging    = @{ levels = @("Info") }
             }
             New-MockLoggingSystem -SuppressOutput
             

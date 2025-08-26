@@ -106,12 +106,10 @@
   pwsh ./tests/run-test.ps1 -OutputFormat HTML
 
   # カスタムパスにHTMLレポート生成
-  pwsh ./tests/run-test.ps1 -OutputFormat HTML
-  -OutputPath "./reports/test-result.html"
+  pwsh ./tests/run-test.ps1 -OutputFormat HTML -OutputPath "./reports/test-result.html"
 
   # コードカバレッジ付きHTMLレポート
-  pwsh ./tests/run-test.ps1 -OutputFormat HTML
-  -ShowCoverage
+  pwsh ./tests/run-test.ps1 -OutputFormat HTML -ShowCoverage
 
   2. XML形式での出力（CI/CD用）
 

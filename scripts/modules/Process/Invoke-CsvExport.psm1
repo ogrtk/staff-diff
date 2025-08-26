@@ -18,7 +18,18 @@ function Invoke-CsvExport {
         
         [string]$OutputFilePath
     )
-    $filePathConfig = Get-FilePathConfig
+    # 設定ファイルから履歴保存設定を取得
+    $config = Get-DataSyncConfig
+    
+    # ファイルパス設定を直接取得（Get-FilePathConfigは内部でGet-DataSyncConfigを呼び出すため使用しない）
+    $filePathConfig = if ($config.file_paths) {
+        $config.file_paths
+    } else {
+        @{
+            output_history_directory = "./data/output/"
+            timezone = "Asia/Tokyo"
+        }
+    }
 
     # 出力ファイルパスの解決
     if ([string]::IsNullOrEmpty($OutputFilePath)) {
@@ -34,9 +45,8 @@ function Invoke-CsvExport {
         $syncResultKeys = Get-TableKeyColumns -TableName "sync_result"
         $firstKey = if ($syncResultKeys -is [array]) { $syncResultKeys[0] } else { $syncResultKeys }
         
-        # フィルタリング条件を生成
+        # フィルタリング条件を生成（既に読み込み済みの設定を使用）
         $whereClause = ""
-        $config = Get-DataSyncConfig
         $syncActionLabels = $config.sync_rules.sync_action_labels.mappings
         
         $enabledActions = @()

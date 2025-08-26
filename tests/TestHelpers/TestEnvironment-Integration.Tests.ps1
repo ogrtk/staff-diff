@@ -71,20 +71,33 @@ Describe "TestEnvironment統合テスト（単体）" {
         $tableExists | Should -Not -BeNullOrEmpty
         
         # データが正しく挿入されていることを確認
-        $recordCount = Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT COUNT(*) FROM sync_result;"
+        $recordCountResult = Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT COUNT(*) FROM sync_result;"
+        
+        if ($recordCountResult -and $recordCountResult.Count -gt 0) {
+            # 文字列として結合し、数値に変換
+            $countString = [string]::Join('', $recordCountResult)
+            $recordCount = [int]$countString
+        } else {
+            $recordCount = 0
+        }
+        
         $recordCount | Should -Be 14  # 5+3+2+4
         
         # 各アクションの件数確認
-        $addCount = Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT COUNT(*) FROM sync_result WHERE sync_action = '1';"
+        $addCountResult = Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT COUNT(*) FROM sync_result WHERE sync_action = '1';"
+        $addCount = if ($addCountResult -and $addCountResult.Count -gt 0) { [int][string]::Join('', $addCountResult) } else { 0 }
         $addCount | Should -Be 5
         
-        $updateCount = Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT COUNT(*) FROM sync_result WHERE sync_action = '2';"
+        $updateCountResult = Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT COUNT(*) FROM sync_result WHERE sync_action = '2';"
+        $updateCount = if ($updateCountResult -and $updateCountResult.Count -gt 0) { [int][string]::Join('', $updateCountResult) } else { 0 }
         $updateCount | Should -Be 3
         
-        $deleteCount = Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT COUNT(*) FROM sync_result WHERE sync_action = '3';"
+        $deleteCountResult = Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT COUNT(*) FROM sync_result WHERE sync_action = '3';"
+        $deleteCount = if ($deleteCountResult -and $deleteCountResult.Count -gt 0) { [int][string]::Join('', $deleteCountResult) } else { 0 }
         $deleteCount | Should -Be 2
         
-        $keepCount = Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT COUNT(*) FROM sync_result WHERE sync_action = '9';"
+        $keepCountResult = Invoke-SqliteCommand -DatabasePath $script:integrationDbPath -Query "SELECT COUNT(*) FROM sync_result WHERE sync_action = '9';"
+        $keepCount = if ($keepCountResult -and $keepCountResult.Count -gt 0) { [int][string]::Join('', $keepCountResult) } else { 0 }
         $keepCount | Should -Be 4
     }
     

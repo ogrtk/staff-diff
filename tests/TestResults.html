@@ -24,18 +24,18 @@
     <div class="header">
         <h1>PowerShell & SQLite データ同期システム</h1>
         <h2>テスト実行結果</h2>
-        <p>実行日時: 2025年08月23日 07:27:39</p>
+        <p>実行日時: 2025年08月26日 23:45:22</p>
     </div>
     
     <div class="summary">
         <h3>実行サマリー</h3>
         <table>
             <tr><th>項目</th><th>件数</th></tr>
-            <tr><td>総テスト数</td><td>36</td></tr>
-            <tr><td class="passed">成功</td><td>23</td></tr>
-            <tr><td class="failed">失敗</td><td>13</td></tr>
-            <tr><td class="skipped">スキップ</td><td>0</td></tr>
-            <tr><td>実行時間</td><td>00:29.494</td></tr>
+            <tr><td>総テスト数</td><td>255</td></tr>
+            <tr><td class="passed">成功</td><td>244</td></tr>
+            <tr><td class="failed">失敗</td><td>8</td></tr>
+            <tr><td class="skipped">スキップ</td><td>3</td></tr>
+            <tr><td>実行時間</td><td>00:23.098</td></tr>
         </table>
     </div>
     
@@ -43,111 +43,132 @@
         <h3>モジュール別実行結果</h3>
         <table>
             <tr><th>モジュール</th><th>総数</th><th>成功</th><th>失敗</th><th>スキップ</th><th>実行時間</th></tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>32</td>
+                <td class="passed">32</td>
+                <td class="failed">0</td>
+                <td class="skipped">0</td>
+                <td>00:01.628</td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>28</td>
+                <td class="passed">28</td>
+                <td class="failed">0</td>
+                <td class="skipped">0</td>
+                <td>00:02.074</td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>30</td>
+                <td class="passed">30</td>
+                <td class="failed">0</td>
+                <td class="skipped">0</td>
+                <td>00:01.459</td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>27</td>
+                <td class="passed">24</td>
+                <td class="failed">0</td>
+                <td class="skipped">3</td>
+                <td>00:01.480</td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>28</td>
+                <td class="passed">28</td>
+                <td class="failed">0</td>
+                <td class="skipped">0</td>
+                <td>00:01.298</td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>32</td>
+                <td class="passed">32</td>
+                <td class="failed">0</td>
+                <td class="skipped">0</td>
+                <td>00:02.788</td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>29</td>
+                <td class="passed">29</td>
+                <td class="failed">0</td>
+                <td class="skipped">0</td>
+                <td>00:01.460</td>
+            </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>23</td>
                 <td class="passed">23</td>
                 <td class="failed">0</td>
                 <td class="skipped">0</td>
-                <td>00:05.561</td>
+                <td>00:02.246</td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
-                <td>13</td>
-                <td class="passed">0</td>
-                <td class="failed">13</td>
+                <td>8</td>
+                <td class="passed">8</td>
+                <td class="failed">0</td>
                 <td class="skipped">0</td>
-                <td>00:22.356</td>
+                <td>00:01.966</td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>18</td>
+                <td class="passed">10</td>
+                <td class="failed">8</td>
+                <td class="skipped">0</td>
+                <td>00:02.585</td>
             </tr>        </table>
     </div>    <div class="test-details">
         <h3>失敗したテスト</h3>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - 全ての同期アクションが有効な場合、フィルタリングなしで出力される</div>
-            <div class="test-time">実行時間: 00:03.516</div>
+            <div class="test-name">[LoggingUtils] [-] Write-SystemLog 関数 - 基本動作 - 有効なメッセージでログが正常に出力される</div>
+            <div class="test-time">実行時間: 00:00.247</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
-                SQLite3 CSV出力の実行に失敗しました: sqlite3 CSV出力エラー (終了コード: 1): Error: in prepare, no such table: sync_result
+                Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times
             </div>
         </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - ADDアクションのみ有効な場合、新規作成のみ出力される</div>
-            <div class="test-time">実行時間: 00:00.099</div>
+            <div class="test-name">[LoggingUtils] [-] Write-SystemLog 関数 - 基本動作 - 異なるログレベルで正常に出力される</div>
+            <div class="test-time">実行時間: 00:00.172</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
-                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+                Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times
             </div>
         </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - KEEPアクションのみ無効な場合、変更なし以外が出力される</div>
-            <div class="test-time">実行時間: 00:00.080</div>
+            <div class="test-name">[LoggingUtils] [-] Write-SystemLog 関数 - 基本動作 - 複数のログメッセージが順次追記される</div>
+            <div class="test-time">実行時間: 00:00.212</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
-                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+                Expected Get-LoggingConfig in module LoggingUtils to be called at least 2 times, but was called 0 times
             </div>
         </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - 全ての同期アクションが無効な場合、空の結果が出力される</div>
-            <div class="test-time">実行時間: 00:00.087</div>
+            <div class="test-name">[LoggingUtils] [-] Write-SystemLog 関数 - 基本動作 - 日本語メッセージが正常に処理される</div>
+            <div class="test-time">実行時間: 00:00.164</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
-                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+                Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times
             </div>
         </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] 出力フィルタリング機能 - enabled設定がない場合、全レコードが出力される</div>
-            <div class="test-time">実行時間: 00:00.079</div>
+            <div class="test-name">[LoggingUtils] [-] エラーハンドリングとエッジケース - 空のメッセージでもログが記録される</div>
+            <div class="test-time">実行時間: 00:00.171</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
-                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+                Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times
             </div>
         </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] 履歴保存機能 - 履歴ディレクトリが存在しない場合、作成される</div>
-            <div class="test-time">実行時間: 00:00.068</div>
+            <div class="test-name">[LoggingUtils] [-] エラーハンドリングとエッジケース - 非常に長いメッセージでも正常に処理される</div>
+            <div class="test-time">実行時間: 00:00.265</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
-                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+                Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times
             </div>
         </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] 履歴保存機能 - 出力ファイルが履歴ディレクトリにコピーされる</div>
-            <div class="test-time">実行時間: 00:00.075</div>
+            <div class="test-name">[LoggingUtils] [-] エラーハンドリングとエッジケース - 特殊文字を含むメッセージが正常に処理される</div>
+            <div class="test-time">実行時間: 00:00.156</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
-                設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。
+                Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times
             </div>
         </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] エラーハンドリング - 出力ファイルパスが指定されていない場合、例外がスローされる</div>
-            <div class="test-time">実行時間: 00:00.101</div>
+            <div class="test-name">[LoggingUtils] [-] パフォーマンステスト - 大量のログ出力でも一定時間内に完了する</div>
+            <div class="test-time">実行時間: 00:00.362</div>
             <div class="error-message">
                 <strong>エラーメッセージ:</strong><br>
-                Expected an exception with message like '*出力ファイルパスが指定されていません*' to be thrown, but the message was '設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。'. from /workspaces/ps-sqlite/scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1:21 char:9<br>    +         throw "設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。"<br>    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            </div>
-        </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] TestEnvironment統合テスト - 実際のsync_resultデータで全アクション出力テスト</div>
-            <div class="test-time">実行時間: 00:03.611</div>
-            <div class="error-message">
-                <strong>エラーメッセージ:</strong><br>
-                テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。
-            </div>
-        </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] TestEnvironment統合テスト - ADDアクションのみフィルタリングテスト</div>
-            <div class="test-time">実行時間: 00:03.911</div>
-            <div class="error-message">
-                <strong>エラーメッセージ:</strong><br>
-                テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。
-            </div>
-        </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] TestEnvironment統合テスト - KEEPアクション除外フィルタリングテスト</div>
-            <div class="test-time">実行時間: 00:03.642</div>
-            <div class="error-message">
-                <strong>エラーメッセージ:</strong><br>
-                テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。
-            </div>
-        </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] TestEnvironment統合テスト - 全アクション無効時の空出力テスト</div>
-            <div class="test-time">実行時間: 00:03.627</div>
-            <div class="error-message">
-                <strong>エラーメッセージ:</strong><br>
-                テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。
-            </div>
-        </div>        <div class="test-container">
-            <div class="test-name">[Invoke-CsvExport] [-] TestEnvironment統合テスト - 履歴保存機能の実テスト</div>
-            <div class="test-time">実行時間: 00:03.454</div>
-            <div class="error-message">
-                <strong>エラーメッセージ:</strong><br>
-                テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。
+                Expected Get-LoggingConfig in module LoggingUtils to be called at least 100 times, but was called 0 times
             </div>
         </div></div>    <div class="test-details">
         <h3>すべてのテスト結果</h3>
@@ -160,259 +181,1790 @@
                 <th>実行時間</th>
                 <th>詳細</th>
             </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Get-Sqlite3Path 関数</td>
+                <td>sqlite3コマンドが利用可能な場合、コマンド情報を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.503</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Get-Sqlite3Path 関数</td>
+                <td>sqlite3コマンドが見つからない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.088</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Get-Sqlite3Path 関数</td>
+                <td>Get-Commandでエラーが発生した場合、適切なエラーメッセージをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.070</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Get-CrossPlatformEncoding 関数</td>
+                <td>PowerShell Core (6+) の場合、UTF8 (BOM なし) を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.053</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Get-CrossPlatformEncoding 関数</td>
+                <td>Windows PowerShell (5.1) の場合、UTF8 (BOM あり) を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.026</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Test-PathSafe 関数</td>
+                <td>有効なパスが存在する場合、Trueを返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.075</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Test-PathSafe 関数</td>
+                <td>パスが存在しない場合、Falseを返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.027</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Test-PathSafe 関数</td>
+                <td>パスがnullまたは空の場合、Falseを返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.021</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Test-PathSafe 関数</td>
+                <td>Test-Pathが呼び出されない場合（null/空文字）</td>
+                <td class="passed">Passed</td>
+                <td>00:00.032</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Get-Timestamp 関数</td>
+                <td>デフォルトフォーマットでAsia/Tokyoタイムスタンプを返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.033</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Get-Timestamp 関数</td>
+                <td>カスタムフォーマットでタイムスタンプを返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.013</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Get-Timestamp 関数</td>
+                <td>異なるタイムゾーンでタイムスタンプを返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.014</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Get-Timestamp 関数</td>
+                <td>無効なタイムゾーンの場合、フォールバック（UTC+9）を使用する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.032</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Invoke-SqliteCommand 関数</td>
+                <td>正常なクエリの場合、結果を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.186</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Invoke-SqliteCommand 関数</td>
+                <td>SQLiteコマンドがエラーを返す場合、例外をスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.092</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Invoke-SqliteCommand 関数</td>
+                <td>一時ファイルが適切に作成・削除される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.097</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Invoke-SqliteCsvQuery 関数</td>
+                <td>CSVクエリ結果を正しくパースして返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.138</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Invoke-SqliteCsvQuery 関数</td>
+                <td>空の結果の場合、空配列を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.099</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Invoke-SqliteCsvQuery 関数</td>
+                <td>SQLiteエラーの場合、例外をスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.063</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Invoke-SqliteCsvExport 関数</td>
+                <td>CSV出力が正常に実行される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.027</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Invoke-SqliteCsvExport 関数</td>
+                <td>空の結果の場合、0を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.022</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] Invoke-SqliteCsvExport 関数</td>
+                <td>SQLiteエラーの場合、例外をスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.035</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] 関数のエクスポート確認</td>
+                <td>すべての期待される関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td>00:00.034</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] 統合テスト</td>
+                <td>実際のタイムスタンプとエンコーディングの組み合わせテスト</td>
+                <td class="passed">Passed</td>
+                <td>00:00.017</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] 統合テスト</td>
+                <td>Test-PathSafeとGet-Timestampの組み合わせテスト</td>
+                <td class="passed">Passed</td>
+                <td>00:00.035</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>Get-Timestamp でフォーマット文字列が無効な場合の処理</td>
+                <td class="passed">Passed</td>
+                <td>00:00.010</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>Invoke-SqliteCommand で空のクエリを処理</td>
+                <td class="passed">Passed</td>
+                <td>00:00.142</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CoreUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>複数の同時実行でのタイムスタンプ一意性確認</td>
+                <td class="passed">Passed</td>
+                <td>00:00.077</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-DataSyncConfig 関数</td>
+                <td>初回読み込み時、設定ファイルから正しく設定を読み込む</td>
+                <td class="passed">Passed</td>
+                <td>00:00.094</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-DataSyncConfig 関数</td>
+                <td>キャッシュされた設定がある場合、ファイルを再読み込みしない</td>
+                <td class="passed">Passed</td>
+                <td>00:00.072</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-DataSyncConfig 関数</td>
+                <td>Forceスイッチ使用時、キャッシュを無視して再読み込みする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.139</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-DataSyncConfig 関数</td>
+                <td>設定ファイルが存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.095</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-DataSyncConfig 関数</td>
+                <td>設定パスが未指定の場合、デフォルト設定ファイルを読み込む</td>
+                <td class="passed">Passed</td>
+                <td>00:00.100</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-DataSyncConfig 関数</td>
+                <td>設定パス未指定でデフォルトファイルが存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.098</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-DataSyncConfig 関数</td>
+                <td>JSON解析エラーの場合、適切なエラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.068</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-FilePathConfig 関数</td>
+                <td>file_paths設定が存在する場合、その設定を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.139</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-FilePathConfig 関数</td>
+                <td>file_paths設定が存在しない場合、デフォルト値を生成する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.046</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-FilePathConfig 関数</td>
+                <td>部分的なfile_paths設定の場合、欠損項目にデフォルト値を設定する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.059</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-LoggingConfig 関数</td>
+                <td>logging設定が存在する場合、その設定を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.055</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-LoggingConfig 関数</td>
+                <td>logging設定が存在しない場合、デフォルト値を生成する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.047</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-DataFilterConfig 関数</td>
+                <td>指定されたテーブルのフィルタ設定が存在する場合、その設定を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.045</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-DataFilterConfig 関数</td>
+                <td>指定されたテーブルのフィルタ設定が存在しない場合、nullを返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.031</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-DataFilterConfig 関数</td>
+                <td>data_filters設定自体が存在しない場合、nullを返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.023</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-SyncResultMappingConfig 関数</td>
+                <td>sync_result_mapping設定が存在する場合、その設定を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.030</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-SyncResultMappingConfig 関数</td>
+                <td>sync_result_mapping設定が存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.023</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Get-SyncResultMappingConfig 関数</td>
+                <td>sync_rules設定自体が存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.024</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Test-DataSyncConfig 関数</td>
+                <td>有効な設定の場合、エラーなく完了する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.019</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Test-DataSyncConfig 関数</td>
+                <td>tables設定が存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.015</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Test-DataSyncConfig 関数</td>
+                <td>必須テーブルが不足している場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.019</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Test-DataSyncConfig 関数</td>
+                <td>テーブルのカラム定義が空の場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.013</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Test-DataSyncConfig 関数（CSV形式検証を含む）</td>
+                <td>csv_format設定が存在しない場合、エラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.020</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Test-DataSyncConfig 関数（CSV形式検証を含む）</td>
+                <td>has_header設定が不足している場合、設定検証でエラーになる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.016</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Test-DataSyncConfig 関数（CSV形式検証を含む）</td>
+                <td>include_header設定が不足している場合、設定検証でエラーになる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.019</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] Reset-DataSyncConfig 関数</td>
+                <td>設定キャッシュが正しくクリアされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.068</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] 関数のエクスポート確認</td>
+                <td>すべての期待される関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td>00:00.019</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>巨大な設定ファイルの処理</td>
+                <td class="passed">Passed</td>
+                <td>00:00.096</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>並行アクセス時の設定キャッシュの動作</td>
+                <td class="passed">Passed</td>
+                <td>00:00.058</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>不正なJSON構造の詳細なエラー処理 - 構文エラー</td>
+                <td class="passed">Passed</td>
+                <td>00:00.023</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>不正なJSON構造の詳細なエラー処理 - 型エラー</td>
+                <td class="passed">Passed</td>
+                <td>00:00.019</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ConfigurationUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>不正なJSON構造の詳細なエラー処理 - null値</td>
+                <td class="passed">Passed</td>
+                <td>00:00.020</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Get-ErrorHandlingConfig 関数</td>
+                <td>設定が存在する場合、その設定を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.062</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Get-ErrorHandlingConfig 関数</td>
+                <td>error_handling設定が存在しない場合、デフォルト設定を生成する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.071</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Get-ErrorHandlingConfig 関数</td>
+                <td>設定取得でエラーが発生した場合、最低限のフォールバック設定を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.041</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - 基本動作</td>
+                <td>正常なスクリプトブロックの場合、結果を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.028</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - 基本動作</td>
+                <td>エラーハンドリングが無効の場合、直接実行する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.029</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - 基本動作</td>
+                <td>スクリプトブロックでエラーが発生した場合、例外を再スローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.065</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - 基本動作</td>
+                <td>SuppressThrowスイッチが有効な場合、エラーでもnullを返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.050</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - リトライ機能</td>
+                <td>External カテゴリでエラーが発生した場合、設定に従ってリトライする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.090</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - リトライ機能</td>
+                <td>リトライ対象外カテゴリ（System）の場合、リトライしない</td>
+                <td class="passed">Passed</td>
+                <td>00:00.064</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - リトライ機能</td>
+                <td>最大試行回数に達した場合、最終的にエラーをスローする</td>
+                <td class="passed">Passed</td>
+                <td>00:00.130</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - クリーンアップ機能</td>
+                <td>エラー時にクリーンアップスクリプトが実行される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.073</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - クリーンアップ機能</td>
+                <td>クリーンアップスクリプトでエラーが発生しても、元のエラーが優先される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.109</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - クリーンアップ機能</td>
+                <td>cleanup_on_error設定がfalseの場合、クリーンアップが実行されない</td>
+                <td class="passed">Passed</td>
+                <td>00:00.068</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - 継続設定</td>
+                <td>Data カテゴリでcontinue_on_errorがtrueの場合、エラーでも継続する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.109</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-WithErrorHandling 関数 - 継続設定</td>
+                <td>System カテゴリでcontinue_on_errorがfalseの場合、エラーで停止する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.082</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Get-ErrorLevel 関数</td>
+                <td>設定されたエラーレベルを正しく返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.028</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Get-ErrorLevel 関数</td>
+                <td>設定されていないカテゴリの場合、デフォルトレベルを返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.024</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Get-ShouldContinueOnError 関数</td>
+                <td>設定された継続フラグを正しく返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.021</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Get-ShouldContinueOnError 関数</td>
+                <td>設定されていないカテゴリの場合、デフォルト（false）を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.026</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Write-ErrorDetails 関数</td>
+                <td>基本的なエラー情報をログ出力する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.069</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Write-ErrorDetails 関数</td>
+                <td>スタックトレースが設定されている場合、スタックトレースを出力する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.045</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Write-ErrorDetails 関数</td>
+                <td>コンテキスト情報が提供された場合、コンテキストを出力する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.051</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Write-ErrorDetails 関数</td>
+                <td>カテゴリ別の対処方法メッセージを出力する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.034</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-FileOperationWithErrorHandling 関数</td>
+                <td>ファイル操作が正常な場合、結果を返す</td>
+                <td class="passed">Passed</td>
+                <td>00:00.048</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-FileOperationWithErrorHandling 関数</td>
+                <td>ファイル操作でエラーが発生した場合、External カテゴリでエラーハンドリングされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.078</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] Invoke-FileOperationWithErrorHandling 関数</td>
+                <td>適切なコンテキスト情報が設定される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.112</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] 関数のエクスポート確認</td>
+                <td>すべての期待される関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td>00:00.020</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] エラーカテゴリ列挙型</td>
+                <td>ErrorCategory 列挙型が正しく定義されている</td>
+                <td class="passed">Passed</td>
+                <td>00:00.026</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] エラーカテゴリ列挙型</td>
+                <td>ErrorCategory を文字列として正しく変換できる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.029</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] 統合テストとエッジケース</td>
+                <td>複雑なネストしたエラーハンドリング</td>
+                <td class="passed">Passed</td>
+                <td>00:00.076</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] 統合テストとエッジケース</td>
+                <td>長時間実行されるリトライ処理のタイムアウト</td>
+                <td class="passed">Passed</td>
+                <td>00:00.351</td>
+                <td></td>
+            </tr>            <tr>
+                <td>ErrorHandlingUtils</td>
+                <td>[+] 統合テストとエッジケース</td>
+                <td>メモリ使用量の大きなエラーコンテキスト処理</td>
+                <td class="passed">Passed</td>
+                <td>00:00.666</td>
+                <td></td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[-] Write-SystemLog 関数 - 基本動作</td>
+                <td>有効なメッセージでログが正常に出力される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.247</td>
+                <td>Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[-] Write-SystemLog 関数 - 基本動作</td>
+                <td>異なるログレベルで正常に出力される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.172</td>
+                <td>Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[-] Write-SystemLog 関数 - 基本動作</td>
+                <td>複数のログメッセージが順次追記される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.212</td>
+                <td>Expected Get-LoggingConfig in module LoggingUtils to be called at least 2 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[-] Write-SystemLog 関数 - 基本動作</td>
+                <td>日本語メッセージが正常に処理される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.164</td>
+                <td>Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[+] Write-LogToFile 関数 - ログファイル操作</td>
+                <td>ログディレクトリが存在しない場合、自動作成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.097</td>
+                <td></td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[+] Write-LogToFile 関数 - ログファイル操作</td>
+                <td>ログ設定が無効の場合、ログファイルが作成されない</td>
+                <td class="passed">Passed</td>
+                <td>00:00.046</td>
+                <td></td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[+] Write-LogToFile 関数 - ログファイル操作</td>
+                <td>無効なログレベルで警告が出力される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.078</td>
+                <td></td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[+] Move-LogFileToRotate 関数 - ログローテーション</td>
+                <td>ログファイルが正常にローテーションされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.070</td>
+                <td></td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[+] Move-LogFileToRotate 関数 - ログローテーション</td>
+                <td>最大ファイル数を超える古いログファイルが削除される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.270</td>
+                <td></td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[+] Move-LogFileToRotate 関数 - ログローテーション</td>
+                <td>ログファイルが存在しない場合でもエラーが発生しない</td>
+                <td class="passed">Passed</td>
+                <td>00:00.046</td>
+                <td></td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[+] ログファイルサイズ制限とローテーション統合テスト</td>
+                <td>ファイルサイズ制限を超えた場合、自動でローテーションされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.073</td>
+                <td></td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[-] エラーハンドリングとエッジケース</td>
+                <td>書き込み権限がない場合でもエラーで停止しない</td>
+                <td class="passed">Passed</td>
+                <td>00:00.054</td>
+                <td></td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[-] エラーハンドリングとエッジケース</td>
+                <td>空のメッセージでもログが記録される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.171</td>
+                <td>Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[-] エラーハンドリングとエッジケース</td>
+                <td>非常に長いメッセージでも正常に処理される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.265</td>
+                <td>Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[-] エラーハンドリングとエッジケース</td>
+                <td>特殊文字を含むメッセージが正常に処理される</td>
+                <td class="failed">Failed</td>
+                <td>00:00.156</td>
+                <td>Expected Get-LoggingConfig in module LoggingUtils to be called at least 1 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[+] 設定ファイル連携テスト</td>
+                <td>設定ファイルの変更がログ出力に反映される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.058</td>
+                <td></td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[-] パフォーマンステスト</td>
+                <td>大量のログ出力でも一定時間内に完了する</td>
+                <td class="failed">Failed</td>
+                <td>00:00.362</td>
+                <td>Expected Get-LoggingConfig in module LoggingUtils to be called at least 100 times, but was called 0 times</td>
+            </tr>            <tr>
+                <td>LoggingUtils</td>
+                <td>[+] 関数のエクスポート確認</td>
+                <td>必要な関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td>00:00.037</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Get-TableDefinition 関数 - 基本動作</td>
+                <td>有効なテーブル名でテーブル定義が取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.079</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Get-TableDefinition 関数 - 基本動作</td>
+                <td>一時テーブル名（_tempサフィックス）でベーステーブル定義が取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.054</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Get-TableDefinition 関数 - 基本動作</td>
+                <td>無効なテーブル名で例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.064</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Get-TableDefinition 関数 - 基本動作</td>
+                <td>複数のテーブル定義が設定から正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.089</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Get-CsvColumns 関数 - CSVカラム取得</td>
+                <td>CSV出力対象カラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.057</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Get-CsvColumns 関数 - CSVカラム取得</td>
+                <td>sync_resultテーブルのCSVカラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.057</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Get-CsvColumns 関数 - CSVカラム取得</td>
+                <td>一時テーブルでもCSVカラムが正常に取得される</td>
+                <td class="skipped">Skipped</td>
+                <td>00:00.075</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Get-RequiredColumns 関数 - 必須カラム取得</td>
+                <td>必須カラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.026</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Get-RequiredColumns 関数 - 必須カラム取得</td>
+                <td>current_dataテーブルの必須カラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.028</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Get-RequiredColumns 関数 - 必須カラム取得</td>
+                <td>sync_resultテーブルの必須カラムが正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.034</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Clear-Table 関数 - テーブルクリア</td>
+                <td>テーブルが存在する場合、正常にクリアされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.124</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Clear-Table 関数 - テーブルクリア</td>
+                <td>テーブルが存在しない場合、スキップメッセージが出力される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.066</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] Clear-Table 関数 - テーブルクリア</td>
+                <td>ShowStatistics=falseの場合、カウント処理がスキップされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.060</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] New-CreateTableSql 関数 - テーブル作成SQL生成</td>
+                <td>基本的なテーブル作成SQLが正常に生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.063</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] New-CreateTableSql 関数 - テーブル作成SQL生成</td>
+                <td>一時テーブルでも正常にSQL生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.041</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] New-CreateTableSql 関数 - テーブル作成SQL生成</td>
+                <td>PRIMARY KEY制約を含むテーブルでSQL生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.043</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] New-CreateTableSql 関数 - テーブル作成SQL生成</td>
+                <td>UNIQUE制約がテーブル制約として正常に生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.039</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] New-CreateTableSql 関数 - テーブル作成SQL生成</td>
+                <td>複数のテーブル制約が正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.030</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] New-CreateTableSql 関数 - テーブル作成SQL生成</td>
+                <td>無効なテーブル名で例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.033</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] インデックス生成機能</td>
+                <td>New-CreateIndexSql関数が存在する場合、インデックス作成SQLが生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.080</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>SQLiteコマンド実行エラーが適切に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.040</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>設定ファイル読み込みエラーが適切に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.043</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>空のカラム定義でも例外が発生しない</td>
+                <td class="skipped">Skipped</td>
+                <td>00:00.045</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>制約なしテーブルでもSQL生成が正常に動作する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.069</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] パフォーマンステスト</td>
+                <td>大きなテーブル定義でも一定時間内にSQL生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.049</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] 設定ファイル連携テスト</td>
+                <td>カスタム設定ファイルからテーブル定義が正常に読み込まれる</td>
+                <td class="skipped">Skipped</td>
+                <td>00:00.042</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DatabaseUtils</td>
+                <td>[+] 関数のエクスポート確認</td>
+                <td>必要な関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td>00:00.037</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] New-HistoryFileName 関数 - 履歴ファイル名生成</td>
+                <td>基本的なファイル名でタイムスタンプ付きファイル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.083</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] New-HistoryFileName 関数 - 履歴ファイル名生成</td>
+                <td>拡張子なしファイル名でデフォルト拡張子が使用される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.051</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] New-HistoryFileName 関数 - 履歴ファイル名生成</td>
+                <td>カスタム拡張子が正常に使用される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.043</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] New-HistoryFileName 関数 - 履歴ファイル名生成</td>
+                <td>複数の拡張子を含むファイル名で正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.055</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] New-HistoryFileName 関数 - 履歴ファイル名生成</td>
+                <td>日本語ファイル名でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.031</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] New-HistoryFileName 関数 - 履歴ファイル名生成</td>
+                <td>パス区切り文字を含むファイル名でベース名のみが使用される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.028</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] New-HistoryFileName 関数 - 履歴ファイル名生成</td>
+                <td>特殊文字を含むファイル名でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.029</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Copy-InputFileToHistory 関数 - 履歴保存</td>
+                <td>有効なファイルが履歴ディレクトリに正常にコピーされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.103</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Copy-InputFileToHistory 関数 - 履歴保存</td>
+                <td>履歴ディレクトリが存在しない場合、自動作成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.051</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Copy-InputFileToHistory 関数 - 履歴保存</td>
+                <td>履歴ディレクトリが既に存在する場合、作成ログが出力されない</td>
+                <td class="passed">Passed</td>
+                <td>00:00.050</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Copy-InputFileToHistory 関数 - 履歴保存</td>
+                <td>ソースファイルが存在しない場合、例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.031</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Copy-InputFileToHistory 関数 - 履歴保存</td>
+                <td>大きなファイルでも正常にコピーされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.055</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Copy-InputFileToHistory 関数 - 履歴保存</td>
+                <td>日本語を含むファイルでも正常にコピーされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.043</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Resolve-FilePath 関数 - ファイルパス解決</td>
+                <td>パラメータが指定された場合、パラメータが優先される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.040</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Resolve-FilePath 関数 - ファイルパス解決</td>
+                <td>パラメータが未指定の場合、設定ファイルから取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.063</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Resolve-FilePath 関数 - ファイルパス解決</td>
+                <td>パラメータも設定ファイルも無効な場合、例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.035</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Resolve-FilePath 関数 - ファイルパス解決</td>
+                <td>無効なConfigKeyが指定された場合、例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.043</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Resolve-FilePath 関数 - ファイルパス解決</td>
+                <td>相対パスが絶対パスに変換される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.042</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Resolve-FilePath 関数 - ファイルパス解決</td>
+                <td>絶対パスがそのまま返される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.030</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Resolve-FilePath 関数 - ファイルパス解決</td>
+                <td>空文字列パラメータの場合、設定ファイルから取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.038</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] Resolve-FilePath 関数 - ファイルパス解決</td>
+                <td>null パラメータの場合、設定ファイルから取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.035</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>読み取り専用ディレクトリでも履歴保存が試行される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.053</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>非常に長いパスでも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.034</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>特殊文字を含むパスでも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.030</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>空のファイルでも履歴保存が正常に動作する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.045</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] 設定ファイル連携テスト</td>
+                <td>カスタム設定ファイルからファイルパスが正常に読み込まれる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.051</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] 設定ファイル連携テスト</td>
+                <td>複数のタイムスタンプで異なる履歴ファイル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.079</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] パフォーマンステスト</td>
+                <td>複数ファイルの履歴保存が一定時間内に完了する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.144</td>
+                <td></td>
+            </tr>            <tr>
+                <td>FileSystemUtils</td>
+                <td>[+] 関数のエクスポート確認</td>
+                <td>必要な関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td>00:00.030</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Get-CsvFormatConfig 関数 - CSV設定取得</td>
+                <td>provided_dataテーブルのCSV設定が正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.093</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Get-CsvFormatConfig 関数 - CSV設定取得</td>
+                <td>current_dataテーブルのCSV設定が正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.046</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Get-CsvFormatConfig 関数 - CSV設定取得</td>
+                <td>sync_resultテーブル（output設定）が正常に取得される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.038</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Get-CsvFormatConfig 関数 - CSV設定取得</td>
+                <td>無効なテーブル名で例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.040</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Get-CsvFormatConfig 関数 - CSV設定取得</td>
+                <td>設定ファイルエラーが適切にハンドリングされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.032</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] ConvertTo-PowerShellEncoding 関数 - エンコーディング変換</td>
+                <td>UTF-8がUTF8に変換される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.020</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] ConvertTo-PowerShellEncoding 関数 - エンコーディング変換</td>
+                <td>UTF-16がUnicodeに変換される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.016</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] ConvertTo-PowerShellEncoding 関数 - エンコーディング変換</td>
+                <td>SHIFT_JISが正常に変換される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.020</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] ConvertTo-PowerShellEncoding 関数 - エンコーディング変換</td>
+                <td>小文字のエンコーディング名でも正常に変換される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.020</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] ConvertTo-PowerShellEncoding 関数 - エンコーディング変換</td>
+                <td>未サポートのエンコーディング名でUTF8がデフォルトとして返される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.028</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] ConvertTo-PowerShellEncoding 関数 - エンコーディング変換</td>
+                <td>ASCIIエンコーディングが正常に変換される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.031</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] ConvertTo-PowerShellEncoding 関数 - エンコーディング変換</td>
+                <td>ISO-8859-1がLatin1に変換される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.028</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Import-CsvWithFormat 関数 - CSV読み込み</td>
+                <td>ヘッダー付きCSVファイルが正常に読み込まれる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.065</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Import-CsvWithFormat 関数 - CSV読み込み</td>
+                <td>ヘッダーなしCSVファイルが正常に読み込まれる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.030</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Import-CsvWithFormat 関数 - CSV読み込み</td>
+                <td>null値が正常に変換される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.049</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Import-CsvWithFormat 関数 - CSV読み込み</td>
+                <td>日本語を含むCSVファイルが正常に読み込まれる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.038</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Import-CsvWithFormat 関数 - CSV読み込み</td>
+                <td>存在しないファイルで例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.041</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Import-CsvWithFormat 関数 - CSV読み込み</td>
+                <td>空のCSVファイルで空の配列が返される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.043</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Test-CsvFormat 関数 - CSV検証</td>
+                <td>有効なCSVファイルで検証が成功する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.027</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Test-CsvFormat 関数 - CSV検証</td>
+                <td>空のCSVファイルで検証が成功する（allow_empty_file=true）</td>
+                <td class="passed">Passed</td>
+                <td>00:00.022</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Test-CsvFormat 関数 - CSV検証</td>
+                <td>空のCSVファイルで検証が失敗する（allow_empty_file=false）</td>
+                <td class="passed">Passed</td>
+                <td>00:00.088</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] Test-CsvFormat 関数 - CSV検証</td>
+                <td>不正なCSVファイルで例外がスローされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.018</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>非常に大きなCSVファイルでも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.249</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>特殊文字を含むCSVファイルが正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.033</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>異なる区切り文字のCSVファイルが正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.032</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>破損したファイルで適切にエラーがハンドリングされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.016</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] 設定ファイル連携テスト</td>
+                <td>カスタムCSV設定が正常に適用される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.027</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] 設定ファイル連携テスト</td>
+                <td>複数のCSV設定が同時に利用できる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.023</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] パフォーマンステスト</td>
+                <td>複数のCSVファイル処理が一定時間内に完了する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.211</td>
+                <td></td>
+            </tr>            <tr>
+                <td>CsvProcessingUtils</td>
+                <td>[+] 関数のエクスポート確認</td>
+                <td>必要な関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td>00:00.018</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] New-TempTableName 関数 - 一時テーブル名生成</td>
+                <td>基本的なテーブル名で一時テーブル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.036</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] New-TempTableName 関数 - 一時テーブル名生成</td>
+                <td>current_dataテーブルで一時テーブル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.032</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] New-TempTableName 関数 - 一時テーブル名生成</td>
+                <td>sync_resultテーブルで一時テーブル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.023</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] New-TempTableName 関数 - 一時テーブル名生成</td>
+                <td>カスタムテーブル名で一時テーブル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.025</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] New-TempTableName 関数 - 一時テーブル名生成</td>
+                <td>既に_tempサフィックスがあるテーブル名でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.025</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] New-TempTableName 関数 - 一時テーブル名生成</td>
+                <td>空文字列のテーブル名でも一時テーブル名が生成される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.025</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Show-FilteringStatistics 関数 - フィルタリング統計表示</td>
+                <td>フィルタあり結果で統計が正常に表示される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.044</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Show-FilteringStatistics 関数 - フィルタリング統計表示</td>
+                <td>フィルタなし結果で統計が正常に表示される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.044</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Show-FilteringStatistics 関数 - フィルタリング統計表示</td>
+                <td>全件除外の場合で統計が正常に表示される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.049</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Show-FilteringStatistics 関数 - フィルタリング統計表示</td>
+                <td>全件通過の場合で除外警告が表示されない</td>
+                <td class="passed">Passed</td>
+                <td>00:00.046</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Show-FilteringStatistics 関数 - フィルタリング統計表示</td>
+                <td>データ件数が0の場合で統計が正常に表示される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.041</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Show-FilteringStatistics 関数 - フィルタリング統計表示</td>
+                <td>少数点を含む通過率が正しく計算される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.049</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Save-ExcludedDataForKeep 関数 - 除外データ保存</td>
+                <td>除外データが正常にKEEP用テーブルに保存される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.101</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Save-ExcludedDataForKeep 関数 - 除外データ保存</td>
+                <td>フィルタ条件がない場合、処理がスキップされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.040</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Save-ExcludedDataForKeep 関数 - 除外データ保存</td>
+                <td>空白文字のみのフィルタ条件でも処理がスキップされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.042</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Save-ExcludedDataForKeep 関数 - 除外データ保存</td>
+                <td>除外データが0件の場合でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.054</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] Save-ExcludedDataForKeep 関数 - 除外データ保存</td>
+                <td>複雑なフィルタ条件でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.054</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>SQLiteコマンド実行エラーが適切に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.037</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>Get-CsvColumnsエラーが適切に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.049</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>負の数値での統計表示も正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.042</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>FilteredCountがTotalCountより大きい場合も処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.042</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>非常に長いテーブル名でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.031</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] エラーハンドリングとエッジケース</td>
+                <td>特殊文字を含むテーブル名でも正常に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.023</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] 統合シナリオテスト</td>
+                <td>provided_dataの除外データ保存シナリオ</td>
+                <td class="passed">Passed</td>
+                <td>00:00.071</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] 統合シナリオテスト</td>
+                <td>current_dataの除外データ保存シナリオ</td>
+                <td class="passed">Passed</td>
+                <td>00:00.080</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] パフォーマンステスト</td>
+                <td>大量データでの統計表示が一定時間内に完了する</td>
+                <td class="passed">Passed</td>
+                <td>00:00.051</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] パフォーマンステスト</td>
+                <td>複数の一時テーブル名生成が効率的に処理される</td>
+                <td class="passed">Passed</td>
+                <td>00:00.106</td>
+                <td></td>
+            </tr>            <tr>
+                <td>DataFilteringUtils</td>
+                <td>[+] 関数のエクスポート確認</td>
+                <td>必要な関数がエクスポートされている</td>
+                <td class="passed">Passed</td>
+                <td>00:00.025</td>
+                <td></td>
+            </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 基本動作</td>
                 <td>有効なパラメータで正常に処理を完了する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.847</td>
+                <td>00:00.222</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 基本動作</td>
                 <td>DatabasePathが未指定の場合、デフォルトパスを設定する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.257</td>
+                <td>00:00.118</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 基本動作</td>
                 <td>設定ファイル読み込みが正常に実行される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.339</td>
+                <td>00:00.102</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 外部依存関係検証</td>
                 <td>SQLite3コマンドが利用可能な場合、成功メッセージをログ出力する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.244</td>
+                <td>00:00.096</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - 外部依存関係検証</td>
                 <td>SQLite3コマンドが見つからない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.220</td>
+                <td>00:00.061</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイルパス解決</td>
                 <td>実ファイルを使ったパス解決テスト</td>
                 <td class="passed">Passed</td>
-                <td>00:00.356</td>
+                <td>00:00.200</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイルパス解決</td>
                 <td>パラメータで指定されたパスが優先される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.223</td>
+                <td>00:00.123</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイルパス解決</td>
                 <td>パラメータが未指定の場合、設定ファイルから解決される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.247</td>
+                <td>00:00.095</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイル存在チェック</td>
                 <td>解決されたパスでファイル存在チェックが実行される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.279</td>
+                <td>00:00.098</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ファイル存在チェック</td>
                 <td>ファイル存在チェックでエラーが発生した場合、例外をスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.242</td>
+                <td>00:00.076</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ログ出力</td>
                 <td>処理パラメータが適切にログ出力される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.279</td>
+                <td>00:00.095</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] Invoke-ConfigValidation 関数 - ログ出力</td>
                 <td>各処理段階で適切な進捗ログが出力される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.295</td>
+                <td>00:00.112</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>すべてのファイルが存在する場合、正常に完了する</td>
                 <td class="passed">Passed</td>
-                <td>00:00.342</td>
+                <td>00:00.094</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>提供データファイルが存在しない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.172</td>
+                <td>00:00.083</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>現在データファイルが存在しない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.145</td>
+                <td>00:00.076</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] ファイル存在チェック（Test-ResolvedFilePaths経由）</td>
                 <td>出力ディレクトリが存在しない場合、エラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.169</td>
+                <td>00:00.082</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] 関数のエクスポート確認</td>
                 <td>Invoke-ConfigValidation 関数がエクスポートされている</td>
                 <td class="passed">Passed</td>
-                <td>00:00.077</td>
+                <td>00:00.046</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>空のProjectRootパラメータでエラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.091</td>
+                <td>00:00.049</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>無効なProjectRootパスでエラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.083</td>
+                <td>00:00.052</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>設定検証でエラーが発生した場合、適切にエラーをスローする</td>
                 <td class="passed">Passed</td>
-                <td>00:00.111</td>
+                <td>00:00.057</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>日本語データを含むファイルパスの処理</td>
                 <td class="passed">Passed</td>
-                <td>00:00.220</td>
+                <td>00:00.107</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>複数のパラメータが同時に指定された場合の優先順位</td>
                 <td class="passed">Passed</td>
-                <td>00:00.165</td>
+                <td>00:00.096</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-ConfigValidation</td>
                 <td>[+] エラーハンドリングとエッジケース</td>
                 <td>非常に長いファイルパスでも正常に処理される</td>
                 <td class="passed">Passed</td>
-                <td>00:00.148</td>
+                <td>00:00.094</td>
                 <td></td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
-                <td>[-] 出力フィルタリング機能</td>
-                <td>全ての同期アクションが有効な場合、フィルタリングなしで出力される</td>
-                <td class="failed">Failed</td>
-                <td>00:03.516</td>
-                <td>SQLite3 CSV出力の実行に失敗しました: sqlite3 CSV出力エラー (終了コード: 1): Error: in prepare, no such table: sync_result</td>
+                <td>[+] 出力フィルタリング機能</td>
+                <td>デフォルト設定ではADD/UPDATEが無効、DELETE/KEEPが有効</td>
+                <td class="passed">Passed</td>
+                <td>00:00.258</td>
+                <td></td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
-                <td>[-] 出力フィルタリング機能</td>
-                <td>ADDアクションのみ有効な場合、新規作成のみ出力される</td>
-                <td class="failed">Failed</td>
-                <td>00:00.099</td>
-                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
+                <td>[+] 履歴保存機能</td>
+                <td>履歴ディレクトリが作成され、ファイルがコピーされる</td>
+                <td class="passed">Passed</td>
+                <td>00:00.138</td>
+                <td></td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
-                <td>[-] 出力フィルタリング機能</td>
-                <td>KEEPアクションのみ無効な場合、変更なし以外が出力される</td>
-                <td class="failed">Failed</td>
-                <td>00:00.080</td>
-                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
-            </tr>            <tr>
-                <td>Invoke-CsvExport</td>
-                <td>[-] 出力フィルタリング機能</td>
-                <td>全ての同期アクションが無効な場合、空の結果が出力される</td>
-                <td class="failed">Failed</td>
-                <td>00:00.087</td>
-                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
-            </tr>            <tr>
-                <td>Invoke-CsvExport</td>
-                <td>[-] 出力フィルタリング機能</td>
-                <td>enabled設定がない場合、全レコードが出力される</td>
-                <td class="failed">Failed</td>
-                <td>00:00.079</td>
-                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
-            </tr>            <tr>
-                <td>Invoke-CsvExport</td>
-                <td>[-] 履歴保存機能</td>
-                <td>履歴ディレクトリが存在しない場合、作成される</td>
-                <td class="failed">Failed</td>
-                <td>00:00.068</td>
-                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
-            </tr>            <tr>
-                <td>Invoke-CsvExport</td>
-                <td>[-] 履歴保存機能</td>
-                <td>出力ファイルが履歴ディレクトリにコピーされる</td>
-                <td class="failed">Failed</td>
-                <td>00:00.075</td>
-                <td>設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。</td>
-            </tr>            <tr>
-                <td>Invoke-CsvExport</td>
-                <td>[-] エラーハンドリング</td>
+                <td>[+] エラーハンドリング</td>
                 <td>出力ファイルパスが指定されていない場合、例外がスローされる</td>
-                <td class="failed">Failed</td>
-                <td>00:00.101</td>
-                <td>Expected an exception with message like '*出力ファイルパスが指定されていません*' to be thrown, but the message was '設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。'. from /workspaces/ps-sqlite/scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1:21 char:9
-    +         throw "設定がまだ読み込まれていません。最初にConfigPathを指定して呼び出す必要があります。"
-    +         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</td>
+                <td class="passed">Passed</td>
+                <td>00:00.077</td>
+                <td></td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
-                <td>[-] TestEnvironment統合テスト</td>
-                <td>実際のsync_resultデータで全アクション出力テスト</td>
-                <td class="failed">Failed</td>
-                <td>00:03.611</td>
-                <td>テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。</td>
+                <td>[+] TestEnvironment統合テスト</td>
+                <td>実際のsync_resultデータでデフォルトフィルタリングテスト</td>
+                <td class="passed">Passed</td>
+                <td>00:00.248</td>
+                <td></td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
-                <td>[-] TestEnvironment統合テスト</td>
-                <td>ADDアクションのみフィルタリングテスト</td>
-                <td class="failed">Failed</td>
-                <td>00:03.911</td>
-                <td>テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。</td>
+                <td>[+] TestEnvironment統合テスト</td>
+                <td>デフォルト設定でのフィルタリング動作テスト</td>
+                <td class="passed">Passed</td>
+                <td>00:00.339</td>
+                <td></td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
-                <td>[-] TestEnvironment統合テスト</td>
-                <td>KEEPアクション除外フィルタリングテスト</td>
-                <td class="failed">Failed</td>
-                <td>00:03.642</td>
-                <td>テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。</td>
+                <td>[+] TestEnvironment統合テスト</td>
+                <td>大量データでのフィルタリングテスト</td>
+                <td class="passed">Passed</td>
+                <td>00:00.180</td>
+                <td></td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
-                <td>[-] TestEnvironment統合テスト</td>
-                <td>全アクション無効時の空出力テスト</td>
-                <td class="failed">Failed</td>
-                <td>00:03.627</td>
-                <td>テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。</td>
+                <td>[+] TestEnvironment統合テスト</td>
+                <td>デフォルト設定でのヘッダーチェック</td>
+                <td class="passed">Passed</td>
+                <td>00:00.299</td>
+                <td></td>
             </tr>            <tr>
                 <td>Invoke-CsvExport</td>
-                <td>[-] TestEnvironment統合テスト</td>
+                <td>[+] TestEnvironment統合テスト</td>
                 <td>履歴保存機能の実テスト</td>
-                <td class="failed">Failed</td>
-                <td>00:03.454</td>
-                <td>テーブル 'sync_result' のkey_columnsが設定されていません。設定ファイルを確認してください。</td>
+                <td class="passed">Passed</td>
+                <td>00:00.423</td>
+                <td></td>
             </tr>        </table>
     </div></body>
 </html>

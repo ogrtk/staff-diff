@@ -371,10 +371,14 @@ class TestEnvironment {
             # sync_resultテーブル用データ生成
             $syncData = $this.CreateSyncResultData($ActionCounts, $Options)
             
+            # 既存のテーブルを削除（クリーンアップ）
+            $dropTableSql = "DROP TABLE IF EXISTS sync_result;"
+            Invoke-SqliteCommand -DatabasePath $DatabasePath -Query $dropTableSql
+            
             # データベースにテーブル作成とデータ挿入
             # CoreUtilsのInvoke-SqliteCommand関数を使用
             $createTableSql = @"
-CREATE TABLE IF NOT EXISTS sync_result (
+CREATE TABLE sync_result (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     syokuin_no TEXT NOT NULL UNIQUE,
     card_number TEXT,
