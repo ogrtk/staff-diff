@@ -3,6 +3,7 @@
 using module "../Foundation/CoreUtils.psm1"
 using module "../Infrastructure/LoggingUtils.psm1"
 using module "../Infrastructure/ConfigurationUtils.psm1"
+using module "../DataAccess/DatabaseUtils.psm1"
 
 # 一時テーブル名の生成（utils関数）
 function New-TempTableName {

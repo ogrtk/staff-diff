@@ -75,7 +75,7 @@ function Invoke-CsvImportMain {
     
     # 履歴ディレクトリにコピー保存(リトライ考慮無し)
     Invoke-WithErrorHandling -Category External -Operation "履歴ファイルコピー" -ScriptBlock {
-        return Copy-InputFileToHistory -SourceFilePath $CsvPath -HistoryDirectory $HistoryDirectory
+        Copy-InputFileToHistory -SourceFilePath $CsvPath -HistoryDirectory $HistoryDirectory | Out-Null
     }
 
     # ヘッダー無しCSVの場合、ヘッダーを付与した一時ファイルを作成

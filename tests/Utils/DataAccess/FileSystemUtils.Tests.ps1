@@ -18,26 +18,24 @@ Describe "FileSystemUtils モジュール" {
     BeforeAll {
         $script:ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.Parent.Parent.FullName
 
-        # テスト環境の初期化
-        $script:TestEnv = Initialize-TestEnvironment
+        # TestEnvironmentクラスを使用してテスト環境を初期化
+        $script:TestEnv = [TestEnvironment]::new("FileSystemUtils")
         
-        # テスト用ディレクトリ
-        $script:TestDataDir = Get-TestDataPath -SubPath "filesystem" -Temp
-        if (-not (Test-Path $script:TestDataDir)) {
-            New-Item -Path $script:TestDataDir -ItemType Directory -Force | Out-Null
+        # テスト用ディレクトリはTestEnvironmentの一時ディレクトリを使用
+        $script:TestDataDir = $script:TestEnv.GetTempDirectory()
+        
+        # テスト用設定ファイルを作成
+        $script:TestConfig = $script:TestEnv.GetConfig()
+        if (-not $script:TestConfig) {
+            $script:ConfigPath = $script:TestEnv.CreateConfigFile(@{}, "test-config")
+            $script:TestConfig = $script:TestEnv.GetConfig()
         }
-        
-        # テスト用設定データ
-        $script:TestConfig = New-TestConfig
     }
     
     AfterAll {
-        # テスト環境のクリーンアップ
-        Clear-TestEnvironment
-        
-        # テスト用ディレクトリのクリーンアップ
-        if (Test-Path $script:TestDataDir) {
-            Remove-Item $script:TestDataDir -Recurse -Force -ErrorAction SilentlyContinue
+        # TestEnvironmentオブジェクトのクリーンアップ（一時ディレクトリも自動的にクリーンアップされる）
+        if ($script:TestEnv -and -not $script:TestEnv.IsDisposed) {
+            $script:TestEnv.Dispose()
         }
     }
     
@@ -132,7 +130,7 @@ Describe "FileSystemUtils モジュール" {
             # Assert
             Test-Path $result | Should -Be $true
             $result | Should -Match "source_20231201_120000.csv$"
-            $result | Should -Match [regex]::Escape($historyDir)
+            $result | Should -Match ([regex]::Escape($historyDir))
             
             # ファイル内容の確認
             $content = Get-Content $result -Raw
@@ -269,8 +267,8 @@ Describe "FileSystemUtils モジュール" {
             
             # Assert
             [System.IO.Path]::IsPathRooted($result) | Should -Be $true
-            $result | Should -Match [regex]::Escape("relative")
-            $result | Should -Match [regex]::Escape("file.csv")
+            $result | Should -Match ([regex]::Escape("relative"))
+            $result | Should -Match ([regex]::Escape("file.csv"))
         }
         
         It "絶対パスがそのまま返される" {

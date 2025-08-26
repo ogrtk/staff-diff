@@ -18,19 +18,25 @@ Describe "DatabaseUtils モジュール" {
     BeforeAll {
         $script:ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.Parent.Parent.FullName
 
-        # テスト環境の初期化
-        $script:TestEnv = Initialize-TestEnvironment -CreateTempDatabase
+        # TestEnvironmentクラスを使用してテスト環境を初期化
+        $script:TestEnv = [TestEnvironment]::new("DatabaseUtils")
         
-        # テスト用データベースパス
-        $script:TestDbPath = $script:TestEnv.TestDatabasePath
+        # テスト用データベースを作成
+        $script:TestDbPath = $script:TestEnv.CreateDatabase("test_database_utils")
         
-        # テスト用設定データ
-        $script:TestConfig = New-TestConfig
+        # テスト用設定ファイルを作成
+        $script:TestConfig = $script:TestEnv.GetConfig()
+        if (-not $script:TestConfig) {
+            $script:ConfigPath = $script:TestEnv.CreateConfigFile(@{}, "test-config")
+            $script:TestConfig = $script:TestEnv.GetConfig()
+        }
     }
     
     AfterAll {
-        # テスト環境のクリーンアップ
-        Clear-TestEnvironment
+        # TestEnvironmentオブジェクトのクリーンアップ
+        if ($script:TestEnv -and -not $script:TestEnv.IsDisposed) {
+            $script:TestEnv.Dispose()
+        }
     }
     
     BeforeEach {

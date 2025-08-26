@@ -516,7 +516,7 @@
       "mappings": {
         "ADD": {
           "value": "1",
-          "enabled": false,
+          "enabled": true,
           "description": "新規追加"
         },
         "UPDATE": {
