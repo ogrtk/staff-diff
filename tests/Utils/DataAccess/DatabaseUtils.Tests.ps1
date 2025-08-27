@@ -131,45 +131,6 @@ Describe "DatabaseUtils モジュール" {
         }
     }
 
-    # Context "Get-CsvColumns 関数 - CSVカラム取得" {
-        
-    #     It "CSV出力対象カラムが正常に取得される" {
-    #         # Act
-    #         $result = Get-CsvColumns -TableName "provided_data"
-            
-    #         # Assert
-    #         $result | Should -Not -BeNullOrEmpty
-    #         $result | Should -Contain "employee_id"
-    #         $result | Should -Contain "name"
-    #         $result | Should -Not -Contain "id"  # csv_include=false のカラムは除外される
-    #     }
-        
-    #     It "sync_resultテーブルのCSVカラムが正常に取得される" {
-    #         # Act
-    #         $result = Get-CsvColumns -TableName "sync_result"
-            
-    #         # Assert
-    #         $result | Should -Not -BeNullOrEmpty
-    #         $result | Should -Contain "syokuin_no"
-    #         $result | Should -Contain "sync_action"
-    #         $result | Should -Not -Contain "department"  # csv_include=false のカラムは除外される
-    #     }
-        
-    #     It "一時テーブルでもCSVカラムが正常に取得される" {
-    #         # Note: current_data_tempは一時テーブルなので、current_dataの定義を使用する
-    #         # Act
-    #         $result = Get-CsvColumns -TableName "current_data_temp"
-            
-    #         # Assert
-    #         $result | Should -Not -BeNullOrEmpty
-    #         $result.Count | Should -BeGreaterThan 0
-    #         # current_dataテーブルの基本的なカラムが含まれていることを確認
-    #         $result | Should -Contain "user_id"
-    #         $result | Should -Contain "name"
-    #     }
-    # }
-
-
     Context "Clear-Table 関数 - テーブルクリア" {
         
         It "テーブルが存在する場合、正常にクリアされる" {
