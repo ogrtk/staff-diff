@@ -232,6 +232,294 @@ Describe "Invoke-CsvImport モジュール" {
         }
     }
 
+    Context "Invoke-CsvImport 関数 - ヘッダー処理（New-TempCsvWithHeader内部実行）" {
+        
+        It "ヘッダーなしCSVファイルで一時ファイル生成処理が実行される" {
+            # Arrange
+            $testCsvPath = "/test/noheader.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-noheader-test")
+            $dataType = "provided_data"
+            
+            # ヘッダーなしの設定をモック
+            $noHeaderFormatConfig = @{
+                has_header = $false
+                encoding = "UTF8"
+                delimiter = ","
+                newline = "CRLF"
+            }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Get-CsvFormatConfig { return $noHeaderFormatConfig }
+            
+            #一時ファイル処理のモック
+            $tempFilePath = "/temp/generated_header_file.csv"
+            Mock -ModuleName "Invoke-CsvImport" -CommandName New-TempCsvWithHeader { return $tempFilePath } -Verifiable
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Test-Path -ParameterFilter { $Path -eq $tempFilePath } { return $true }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Remove-Item -ParameterFilter { $Path -eq $tempFilePath } { } -Verifiable
+            
+            # Act
+            Invoke-CsvImport -CsvPath $testCsvPath -DatabasePath $testDbPath -DataType $dataType
+            
+            # Assert
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName New-TempCsvWithHeader -Times 1 -Scope It
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Remove-Item -ParameterFilter { $Path -eq $tempFilePath } -Times 1 -Scope It
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Write-SystemLog -ParameterFilter { $Message -match "ヘッダー付きファイル作成完了" } -Times 1 -Scope It
+        }
+        
+        It "ヘッダー付きCSVファイルでは一時ファイル生成処理をスキップする" {
+            # Arrange
+            $testCsvPath = "/test/withheader.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-withheader-test")
+            $dataType = "provided_data"
+            
+            # ヘッダーありの設定をモック
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Get-CsvFormatConfig { return $script:TestCsvFormatConfig }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName New-TempCsvWithHeader { throw "Should not be called" }
+            
+            # Act
+            Invoke-CsvImport -CsvPath $testCsvPath -DatabasePath $testDbPath -DataType $dataType
+            
+            # Assert
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName New-TempCsvWithHeader -Times 0 -Scope It
+        }
+        
+        It "一時ファイル作成でエラーが発生した場合、適切にクリーンアップされる" {
+            # Arrange
+            $testCsvPath = "/test/noheader_error.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-error-test")
+            $dataType = "provided_data"
+            
+            $noHeaderFormatConfig = @{ has_header = $false; encoding = "UTF8"; delimiter = ","; newline = "CRLF" }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Get-CsvFormatConfig { return $noHeaderFormatConfig }
+            
+            # エラー処理の確認のため、実際のエラーハンドリングを実行
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Invoke-WithErrorHandling {
+                param($ScriptBlock, $Category, $Operation, $CleanupScript)
+                try {
+                    & $ScriptBlock
+                } catch {
+                    if ($CleanupScript) { & $CleanupScript }
+                    throw
+                }
+            }
+            
+            Mock -ModuleName "Invoke-CsvImport" -CommandName New-TempCsvWithHeader { throw "一時ファイル作成エラー" }
+            
+            # Act & Assert
+            { Invoke-CsvImport -CsvPath $testCsvPath -DatabasePath $testDbPath -DataType $dataType } | Should -Throw "*一時ファイル作成エラー*"
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName New-TempCsvWithHeader -Times 1 -Scope It
+        }
+    }
+    
+    Context "Invoke-CsvImport 関数 - フィルタリング処理（Invoke-Filtering内部実行）" {
+        
+        It "空でないCSVファイルでフィルタリング処理が実行される" {
+            # Arrange
+            $testCsvPath = "/test/data_with_content.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-filtering-test")
+            $dataType = "provided_data"
+            
+            $mockCsvData = @(
+                @{ id = "1"; name = "テスト1" }
+                @{ id = "2"; name = "テスト2" }
+                @{ id = "3"; name = "テスト3" }
+            )
+            
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Import-CsvWithFormat { return $mockCsvData }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering { 
+                return @{ TotalCount = 3; FilteredCount = 2; TableName = "provided_data" }
+            } -Verifiable
+            
+            # Act
+            Invoke-CsvImport -CsvPath $testCsvPath -DatabasePath $testDbPath -DataType $dataType
+            
+            # Assert
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering -Times 1 -Scope It
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Write-SystemLog -ParameterFilter { 
+                $Message -match "処理件数: 2 / 読み込み件数: 3" 
+            } -Times 1 -Scope It
+        }
+        
+        It "空のCSVファイルでフィルタリング処理をスキップする" {
+            # Arrange
+            $testCsvPath = "/test/empty_data.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-empty-test")
+            $dataType = "provided_data"
+            
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Import-CsvWithFormat { return @() }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering { throw "Should not be called for empty CSV" }
+            
+            # Act
+            Invoke-CsvImport -CsvPath $testCsvPath -DatabasePath $testDbPath -DataType $dataType
+            
+            # Assert
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering -Times 0 -Scope It
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Write-SystemLog -ParameterFilter { 
+                $Message -match "空のCSVファイルのためフィルタリング処理をスキップします" 
+            } -Times 1 -Scope It
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Write-SystemLog -ParameterFilter { 
+                $Message -match "処理件数: 0 / 読み込み件数: 0" 
+            } -Times 1 -Scope It
+        }
+        
+        It "フィルタリング処理でエラーが発生した場合、適切にハンドリングされる" {
+            # Arrange
+            $testCsvPath = "/test/data_filter_error.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-filter-error-test")
+            $dataType = "provided_data"
+            
+            $mockCsvData = @(@{ id = "1"; name = "テスト" })
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Import-CsvWithFormat { return $mockCsvData }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering { throw "フィルタリング処理エラー" }
+            
+            # エラーハンドリングを実行
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Invoke-WithErrorHandling {
+                param($ScriptBlock, $Category, $Operation, $CleanupScript)
+                try {
+                    & $ScriptBlock
+                } catch {
+                    if ($CleanupScript) { & $CleanupScript }
+                    throw
+                }
+            }
+            
+            # Act & Assert
+            { Invoke-CsvImport -CsvPath $testCsvPath -DatabasePath $testDbPath -DataType $dataType } | Should -Throw "*フィルタリング処理エラー*"
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering -Times 1 -Scope It
+        }
+    }
+    
+    Context "Invoke-CsvImport 関数 - 現在データでの除外データ保存処理" {
+        
+        It "現在データで除外データ保存設定が有効の場合、適切に処理される" {
+            # Arrange
+            $testCsvPath = "/test/current_data.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-current-test")
+            $dataType = "current_data"
+            
+            # 除外データ保存設定が有効な設定をモック
+            $configWithExcludedSave = @{ 
+                data_filters = @{ 
+                    current_data = @{ 
+                        output_excluded_as_keep = @{ enabled = $true } 
+                    } 
+                } 
+            }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Get-DataSyncConfig { return $configWithExcludedSave }
+            
+            $mockCsvData = @(@{ id = "1"; name = "テスト" })
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Import-CsvWithFormat { return $mockCsvData }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering { 
+                return @{ TotalCount = 1; FilteredCount = 1; TableName = "current_data" }
+            }
+            
+            # Act
+            Invoke-CsvImport -CsvPath $testCsvPath -DatabasePath $testDbPath -DataType $dataType
+            
+            # Assert
+            # Get-DataSyncConfig は Invoke-Filtering 内で呼び出される（直接呼び出しはされない）
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering -Times 1 -Scope It
+        }
+        
+        It "提供データでは除外データ保存処理が実行されない" {
+            # Arrange
+            $testCsvPath = "/test/provided_data.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-provided-test")
+            $dataType = "provided_data"
+            
+            $mockCsvData = @(@{ id = "1"; name = "テスト" })
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Import-CsvWithFormat { return $mockCsvData }
+            
+            # 除外データ保存処理は current_data のみで実行されることを確認
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering { 
+                param($DatabasePath, $TableName, $CsvFilePath, $ShowStatistics)
+                # 提供データの場合、TableNameは "provided_data" であることを確認
+                $TableName | Should -Be "provided_data"
+                return @{ TotalCount = 1; FilteredCount = 1; TableName = "provided_data" }
+            }
+            
+            # Act
+            Invoke-CsvImport -CsvPath $testCsvPath -DatabasePath $testDbPath -DataType $dataType
+            
+            # Assert
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering -Times 1 -Scope It
+        }
+    }
+    
+    Context "Invoke-CsvImport 関数 - 複雑なエラーシナリオ" {
+        
+        It "CSVファイルが存在しない場合のエラーハンドリング" {
+            # Arrange
+            $nonExistentPath = "/test/nonexistent.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-missing-file-test")
+            $dataType = "provided_data"
+            
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Test-Path { return $false } -ParameterFilter { $Path -eq $nonExistentPath }
+            
+            # Act & Assert
+            { Invoke-CsvImport -CsvPath $nonExistentPath -DatabasePath $testDbPath -DataType $dataType } | Should -Throw "*CSVファイルが見つかりません*"
+        }
+        
+        It "CSVフォーマット検証に失敗した場合のクリーンアップ" {
+            # Arrange
+            $testCsvPath = "/test/invalid_format.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-invalid-format-test")
+            $dataType = "provided_data"
+            
+            $noHeaderFormatConfig = @{ has_header = $false; encoding = "UTF8"; delimiter = ","; newline = "CRLF" }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Get-CsvFormatConfig { return $noHeaderFormatConfig }
+            
+            $tempFilePath = "/temp/invalid_header_file.csv"
+            Mock -ModuleName "Invoke-CsvImport" -CommandName New-TempCsvWithHeader { return $tempFilePath }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Test-Path -ParameterFilter { $Path -eq $tempFilePath } { return $true }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Test-CsvFormat { return $false }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Remove-Item -ParameterFilter { $Path -eq $tempFilePath } { } -Verifiable
+            
+            # エラーハンドリングで実際にクリーンアップが実行されるようにモック
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Invoke-WithErrorHandling {
+                param($ScriptBlock, $Category, $Operation, $CleanupScript)
+                try {
+                    & $ScriptBlock
+                } catch {
+                    if ($CleanupScript) { & $CleanupScript }
+                    throw
+                }
+            }
+            
+            # Act & Assert
+            { Invoke-CsvImport -CsvPath $testCsvPath -DatabasePath $testDbPath -DataType $dataType } | Should -Throw "*CSVフォーマットの検証に失敗*"
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Remove-Item -ParameterFilter { $Path -eq $tempFilePath } -Times 1 -Scope It
+        }
+        
+        It "大量データでの処理性能確認" {
+            # Arrange
+            $testCsvPath = "/test/large_data.csv"
+            $testDbPath = $script:TestEnv.CreateDatabase("csv-import-large-test")
+            $dataType = "provided_data"
+            
+            # 大量データをシミュレート
+            $largeMockData = @()
+            for ($i = 1; $i -le 1000; $i++) {
+                $largeMockData += @{ id = "ID_$i"; name = "テストデータ_$i" }
+            }
+            
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Import-CsvWithFormat { return $largeMockData }
+            Mock -ModuleName "Invoke-CsvImport" -CommandName Invoke-Filtering { 
+                return @{ TotalCount = 1000; FilteredCount = 800; TableName = "provided_data" }
+            }
+            
+            # Act
+            $startTime = Get-Date
+            Invoke-CsvImport -CsvPath $testCsvPath -DatabasePath $testDbPath -DataType $dataType
+            $endTime = Get-Date
+            $duration = ($endTime - $startTime).TotalSeconds
+            
+            # Assert
+            $duration | Should -BeLessThan 10  # 10秒以内に完了すべき
+            Should -Invoke -ModuleName "Invoke-CsvImport" -CommandName Write-SystemLog -ParameterFilter { 
+                $Message -match "処理件数: 800 / 読み込み件数: 1000" 
+            } -Times 1 -Scope It
+        }
+    }
+
     Context "関数のエクスポート確認" {
         
         It "Invoke-CsvImport 関数がエクスポートされている" {

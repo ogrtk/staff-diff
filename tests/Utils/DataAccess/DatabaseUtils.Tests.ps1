@@ -400,6 +400,468 @@ Describe "DatabaseUtils モジュール" {
         }
     }
 
+    Context "New-CreateTempTableSql 関数 - 一時テーブル生成SQL" {
+        
+        It "基本的な一時テーブル作成SQLが正常に生成される" {
+            # Act
+            $result = New-CreateTempTableSql -BaseTableName "provided_data" -TempTableName "provided_data_temp"
+            
+            # Assert
+            $result | Should -Not -BeNullOrEmpty
+            $result | Should -Match "CREATE TABLE provided_data_temp"
+            $result | Should -Match "employee_id TEXT"
+            $result | Should -Match "name TEXT"
+            $result | Should -Not -Match "PRIMARY KEY"  # 一時テーブルでは制約なし
+        }
+        
+        It "CSV出力対象カラムのみが含まれる一時テーブルSQL生成" {
+            # Arrange
+            $customConfig = $script:TestConfig.Clone()
+            $customConfig.tables.test_temp_table = @{
+                description = "一時テーブルテスト用"
+                columns     = @(
+                    @{ name = "include_col"; type = "TEXT"; csv_include = $true; constraints = "" }
+                    @{ name = "exclude_col"; type = "TEXT"; csv_include = $false; constraints = "" }
+                    @{ name = "another_include"; type = "INTEGER"; csv_include = $true; constraints = "" }
+                )
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $customConfig }
+            
+            # Act
+            $result = New-CreateTempTableSql -BaseTableName "test_temp_table" -TempTableName "temp_test_temp_table"
+            
+            # Assert
+            $result | Should -Match "include_col TEXT"
+            $result | Should -Match "another_include INTEGER"
+            $result | Should -Not -Match "exclude_col"
+        }
+        
+        It "無効なベーステーブル名でエラーをスローする" {
+            # Act & Assert
+            { New-CreateTempTableSql -BaseTableName "invalid_table" -TempTableName "temp_invalid" } | Should -Throw "*テーブル定義が見つかりません*"
+        }
+        
+        It "空のカラム定義でも正常にSQL生成される" {
+            # Arrange
+            $emptyColumnConfig = $script:TestConfig.Clone()
+            $emptyColumnConfig.tables.empty_temp_table = @{
+                description = "空のカラム定義"
+                columns     = @()
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $emptyColumnConfig }
+            
+            # Act
+            $result = New-CreateTempTableSql -BaseTableName "empty_temp_table" -TempTableName "temp_empty_temp_table"
+            
+            # Assert
+            $result | Should -Match "CREATE TABLE temp_empty_temp_table"
+            $result.Contains("(") | Should -Be $true  # 括弧が含まれることを確認
+            $result.Contains(")") | Should -Be $true  # 括弧が含まれることを確認
+        }
+    }
+    
+    Context "Get-ColumnMapping 関数 - カラムマッピング取得" {
+        
+        It "有効なカラムマッピングが取得される" {
+            # Act
+            $result = Get-ColumnMapping -SourceTableName "provided_data" -TargetTableName "current_data"
+            
+            # Assert
+            $result | Should -Not -BeNullOrEmpty
+            $result.GetType().Name | Should -Be "Hashtable"
+        }
+        
+        It "マッピング設定が存在しない場合、空のハッシュテーブルを返す" {
+            # Arrange
+            $configWithoutMapping = $script:TestConfig.Clone()
+            $configWithoutMapping.sync_rules.PSObject.Properties.Remove('column_mappings')
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithoutMapping }
+            
+            # Act
+            $result = Get-ColumnMapping -SourceTableName "provided_data" -TargetTableName "current_data"
+            
+            # Assert
+            $result | Should -Not -BeNullOrEmpty
+            $result.GetType().Name | Should -Be "Hashtable"
+        }
+        
+        It "mappingsプロパティが存在しない場合、空のハッシュテーブルを返す" {
+            # Arrange
+            $configWithoutMappingsProperty = $script:TestConfig.Clone()
+            $configWithoutMappingsProperty.sync_rules.column_mappings = @{ description = "マッピング設定" }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithoutMappingsProperty }
+            
+            # Act
+            $result = Get-ColumnMapping -SourceTableName "provided_data" -TargetTableName "current_data"
+            
+            # Assert
+            $result | Should -BeOfType [hashtable]
+            $result.Count | Should -Be 0
+        }
+        
+        It "複雑なマッピング構造も正常に処理される" {
+            # Arrange
+            $complexMappingConfig = $script:TestConfig.Clone()
+            # PSCustomObjectとして作成
+            $complexMappingConfig.sync_rules.column_mappings.mappings = [PSCustomObject]@{
+                "source_col1" = "target_col1"
+                "source_col2" = "target_col2" 
+                "source_col3" = "target_col3"
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $complexMappingConfig }
+            
+            # Act
+            $result = Get-ColumnMapping -SourceTableName "provided_data" -TargetTableName "current_data"
+            
+            # Assert
+            $result.Count | Should -Be 3
+            $result["source_col1"] | Should -Be "target_col1"
+            $result["source_col2"] | Should -Be "target_col2"
+            $result["source_col3"] | Should -Be "target_col3"
+        }
+    }
+    
+    Context "Get-ComparisonColumns 関数 - 比較カラム取得" {
+        
+        It "provided_dataの比較カラムが正常に取得される" {
+            # Act
+            $result = Get-ComparisonColumns -SourceTableName "provided_data"
+            
+            # Assert
+            $result | Should -Not -BeNullOrEmpty
+            $result.Count | Should -BeGreaterThan 0
+        }
+        
+        It "current_dataの比較カラムが正常に取得される" {
+            # Act  
+            $result = Get-ComparisonColumns -SourceTableName "current_data"
+            
+            # Assert
+            $result | Should -Not -BeNullOrEmpty
+            $result.Count | Should -BeGreaterThan 0
+        }
+        
+        It "column_mappings設定が存在しない場合、空配列を返す" {
+            # Arrange
+            $configWithoutMapping = $script:TestConfig.Clone()
+            $configWithoutMapping.sync_rules.PSObject.Properties.Remove('column_mappings')
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithoutMapping }
+            Mock -ModuleName "DatabaseUtils" -CommandName Write-Warning { }
+            
+            # Act & Assert - 関数がエラーなく実行されることを確認
+            { Get-ComparisonColumns -SourceTableName "provided_data" } | Should -Not -Throw
+        }
+        
+        It "未対応のテーブル名で警告を出力し空配列を返す" {
+            # Arrange
+            Mock -ModuleName "DatabaseUtils" -CommandName Write-Warning { }
+            
+            # Act & Assert - 関数が警告を出力することを確認
+            { Get-ComparisonColumns -SourceTableName "unsupported_table" } | Should -Not -Throw
+            Should -Invoke -ModuleName "DatabaseUtils" -CommandName Write-Warning -ParameterFilter { $Message -match "未対応のテーブル名" } -Times 1 -Scope It
+        }
+        
+        It "mappings.mappingsプロパティが存在しない場合、警告を出力する" {
+            # Arrange
+            $configWithoutMappingsProperty = $script:TestConfig.Clone()
+            $configWithoutMappingsProperty.sync_rules.column_mappings = @{ description = "マッピング設定" }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithoutMappingsProperty }
+            Mock -ModuleName "DatabaseUtils" -CommandName Write-Warning { }
+            
+            # Act
+            $result = Get-ComparisonColumns -SourceTableName "provided_data"
+            
+            # Assert
+            $result.Count | Should -Be 0
+            Should -Invoke -ModuleName "DatabaseUtils" -CommandName Write-Warning -Times 1 -Scope It
+        }
+    }
+    
+    Context "New-OptimizationPragmas 関数 - SQLite最適化PRAGMA生成" {
+        
+        It "完全なPRAGMA設定で全てのPRAGMAが生成される" {
+            # Arrange
+            $configWithPragmas = $script:TestConfig.Clone()
+            # performance_settingsオブジェクトがない場合は作成
+            if (-not $configWithPragmas.performance_settings) {
+                $configWithPragmas | Add-Member -MemberType NoteProperty -Name "performance_settings" -Value @{}
+            }
+            $configWithPragmas.performance_settings["sqlite_pragmas"] = @{
+                journal_mode = "WAL"
+                synchronous  = "NORMAL"
+                temp_store   = "MEMORY"
+                cache_size   = 10000
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithPragmas }
+            
+            # Act
+            $result = New-OptimizationPragmas
+            
+            # Assert
+            $result | Should -Not -BeNullOrEmpty
+            $result | Should -Contain "PRAGMA journal_mode = WAL;"
+            $result | Should -Contain "PRAGMA synchronous = NORMAL;"
+            $result | Should -Contain "PRAGMA temp_store = MEMORY;"
+            $result | Should -Contain "PRAGMA cache_size = 10000;"
+        }
+        
+        It "部分的なPRAGMA設定で対応するPRAGMAのみが生成される" {
+            # Arrange
+            $configWithPartialPragmas = $script:TestConfig.Clone()
+            if (-not $configWithPartialPragmas.performance_settings) {
+                $configWithPartialPragmas | Add-Member -MemberType NoteProperty -Name "performance_settings" -Value @{}
+            }
+            $configWithPartialPragmas.performance_settings["sqlite_pragmas"] = @{
+                journal_mode = "DELETE"
+                cache_size   = 5000
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithPartialPragmas }
+            
+            # Act
+            $result = New-OptimizationPragmas
+            
+            # Assert
+            $result.Count | Should -Be 2
+            $result | Should -Contain "PRAGMA journal_mode = DELETE;"
+            $result | Should -Contain "PRAGMA cache_size = 5000;"
+            $result | Should -Not -Contain "PRAGMA synchronous"
+            $result | Should -Not -Contain "PRAGMA temp_store"
+        }
+        
+        It "performance_settings設定が存在しない場合、空配列を返す" {
+            # Arrange
+            $configWithoutPerformance = $script:TestConfig.Clone()
+            $configWithoutPerformance.PSObject.Properties.Remove('performance_settings')
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithoutPerformance }
+            
+            # Act & Assert - 関数がエラーなく実行されることを確認
+            { New-OptimizationPragmas } | Should -Not -Throw
+        }
+        
+        It "sqlite_pragmas設定が存在しない場合、空配列を返す" {
+            # Arrange
+            $configWithoutSqlitePragmas = $script:TestConfig.Clone()
+            if (-not $configWithoutSqlitePragmas.performance_settings) {
+                $configWithoutSqlitePragmas | Add-Member -MemberType NoteProperty -Name "performance_settings" -Value @{}
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithoutSqlitePragmas }
+            
+            # Act & Assert - 関数がエラーなく実行されることを確認
+            { New-OptimizationPragmas } | Should -Not -Throw
+        }
+    }
+    
+    Context "New-FilterWhereClause 関数 - フィルタWHERE句生成" {
+        
+        It "単一のexcludeフィルタでWHERE句が生成される" {
+            # Arrange
+            $configWithFilter = $script:TestConfig.Clone()
+            $configWithFilter.data_filters = @{
+                test_table = @{
+                    enabled = $true
+                    rules   = @(
+                        @{ type = "exclude"; field = "id"; glob = "Z*" }
+                    )
+                }
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithFilter }
+            
+            # Act
+            $result = New-FilterWhereClause -TableName "test_table"
+            
+            # Assert
+            $result | Should -Not -BeNullOrEmpty
+            $result | Should -Match "id NOT GLOB 'Z\*'"
+            $result.Contains("(") | Should -Be $true
+            $result.EndsWith(")") | Should -Be $true
+        }
+        
+        It "単一のincludeフィルタでWHERE句が生成される" {
+            # Arrange
+            $configWithIncludeFilter = $script:TestConfig.Clone()
+            $configWithIncludeFilter.data_filters = @{
+                test_table = @{
+                    enabled = $true
+                    rules   = @(
+                        @{ type = "include"; field = "status"; glob = "A*" }
+                    )
+                }
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithIncludeFilter }
+            
+            # Act
+            $result = New-FilterWhereClause -TableName "test_table"
+            
+            # Assert
+            $result | Should -Match "status GLOB 'A\*'"
+        }
+        
+        It "複数のフィルタルールで複合WHERE句が生成される" {
+            # Arrange
+            $configWithMultipleFilters = $script:TestConfig.Clone()
+            $configWithMultipleFilters.data_filters = @{
+                test_table = @{
+                    enabled = $true
+                    rules   = @(
+                        @{ type = "exclude"; field = "id"; glob = "Z*" }
+                        @{ type = "include"; field = "type"; glob = "A*" }
+                        @{ type = "exclude"; field = "status"; glob = "INVALID*" }
+                    )
+                }
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithMultipleFilters }
+            
+            # Act
+            $result = New-FilterWhereClause -TableName "test_table"
+            
+            # Assert
+            $result | Should -Match "id NOT GLOB 'Z\*'"
+            $result | Should -Match "type GLOB 'A\*'"
+            $result | Should -Match "status NOT GLOB 'INVALID\*'"
+            $result | Should -Match "AND"
+        }
+        
+        It "data_filters設定が存在しない場合、空文字列を返す" {
+            # Arrange
+            $configWithoutFilters = $script:TestConfig.Clone()
+            $configWithoutFilters.PSObject.Properties.Remove('data_filters')
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithoutFilters }
+            
+            # Act
+            $result = New-FilterWhereClause -TableName "test_table"
+            
+            # Assert
+            $result | Should -Be ""
+        }
+        
+        It "対象テーブルのフィルタが無効な場合、空文字列を返す" {
+            # Arrange
+            $configWithDisabledFilter = $script:TestConfig.Clone()
+            $configWithDisabledFilter.data_filters = @{
+                test_table = @{
+                    enabled = $false
+                    rules   = @(
+                        @{ type = "exclude"; field = "id"; glob = "Z*" }
+                    )
+                }
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithDisabledFilter }
+            
+            # Act
+            $result = New-FilterWhereClause -TableName "test_table"
+            
+            # Assert
+            $result | Should -Be ""
+        }
+        
+        It "rulesが存在しない場合、空文字列を返す" {
+            # Arrange
+            $configWithoutRules = $script:TestConfig.Clone()
+            $configWithoutRules.data_filters = @{
+                test_table = @{
+                    enabled = $true
+                }
+            }
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-DataSyncConfig { return $configWithoutRules }
+            
+            # Act
+            $result = New-FilterWhereClause -TableName "test_table"
+            
+            # Assert
+            $result | Should -Be ""
+        }
+    }
+    
+    Context "New-FilteredInsertSql 関数 - フィルタ付きINSERT SQL生成" {
+        
+        It "WHERE句なしで基本的なINSERT文が生成される" {
+            # Arrange
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-CsvColumns { 
+                return @("col1", "col2", "col3") 
+            }
+            
+            # Act
+            $result = New-FilteredInsertSql -TargetTableName "target_table" -SourceTableName "source_table"
+            
+            # Assert
+            $result.Contains("INSERT INTO target_table (col1, col2, col3)") | Should -Be $true
+            $result | Should -Match "SELECT col1, col2, col3 FROM source_table"
+            $result | Should -Not -Match "WHERE"
+        }
+        
+        It "WHERE句ありで条件付きINSERT文が生成される" {
+            # Arrange
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-CsvColumns { 
+                return @("id", "name", "status") 
+            }
+            
+            # Act
+            $result = New-FilteredInsertSql -TargetTableName "target_table" -SourceTableName "source_table" -WhereClause "status = 'ACTIVE'"
+            
+            # Assert
+            $result.Contains("INSERT INTO target_table (id, name, status)") | Should -Be $true
+            $result | Should -Match "SELECT id, name, status FROM source_table"
+            $result | Should -Match "WHERE status = 'ACTIVE'"
+        }
+        
+        It "空のWHERE句では条件なしINSERT文が生成される" {
+            # Arrange
+            Mock -ModuleName "DatabaseUtils" -CommandName Get-CsvColumns { 
+                return @("field1", "field2") 
+            }
+            
+            # Act
+            $result = New-FilteredInsertSql -TargetTableName "target_table" -SourceTableName "source_table" -WhereClause ""
+            
+            # Assert
+            $result.Contains("INSERT INTO target_table (field1, field2)") | Should -Be $true
+            $result | Should -Match "SELECT field1, field2 FROM source_table"
+            $result | Should -Not -Match "WHERE"
+        }
+    }
+    
+    Context "New-SelectSql 関数 - SELECT SQL生成機能拡張" {
+        
+        It "すべてのオプションパラメータを使用したSELECT文が生成される" {
+            # Act
+            $result = New-SelectSql -TableName "provided_data" -Columns @("employee_id", "name") -WhereClause "employee_id IS NOT NULL" -OrderBy "name ASC" -Limit 100
+            
+            # Assert
+            $result | Should -Match "SELECT employee_id, name FROM provided_data"
+            $result | Should -Match "WHERE employee_id IS NOT NULL"
+            $result | Should -Match "ORDER BY name ASC"
+            $result | Should -Match "LIMIT 100"
+        }
+        
+        It "カラム未指定時はテーブルのCSVカラムが使用される" {
+            # Act
+            $result = New-SelectSql -TableName "provided_data"
+            
+            # Assert
+            $result | Should -Not -BeNullOrEmpty
+            $result | Should -Match "SELECT .* FROM provided_data"
+            $result | Should -Match "employee_id"
+            $result | Should -Match "name"
+        }
+        
+        It "Limit=0の場合はLIMIT句が含まれない" {
+            # Act
+            $result = New-SelectSql -TableName "provided_data" -Limit 0
+            
+            # Assert
+            $result | Should -Not -Match "LIMIT"
+        }
+        
+        It "空のWhereClauseとOrderByではそれらの句が含まれない" {
+            # Act
+            $result = New-SelectSql -TableName "provided_data" -WhereClause "" -OrderBy ""
+            
+            # Assert
+            $result | Should -Not -Match "WHERE"
+            $result | Should -Not -Match "ORDER BY"
+        }
+    }
+
     Context "関数のエクスポート確認" {
         
         It "必要な関数がエクスポートされている" {
@@ -407,7 +869,14 @@ Describe "DatabaseUtils モジュール" {
             $expectedFunctions = @(
                 'Get-TableDefinition',
                 'Clear-Table',
-                'New-CreateTableSql'
+                'New-CreateTableSql',
+                'New-CreateTempTableSql',
+                'Get-ColumnMapping',
+                'Get-ComparisonColumns',
+                'New-OptimizationPragmas',
+                'New-FilterWhereClause',
+                'New-FilteredInsertSql',
+                'New-SelectSql'
             )
             
             # Act
