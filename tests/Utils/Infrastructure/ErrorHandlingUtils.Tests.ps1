@@ -176,10 +176,10 @@ Describe "ErrorHandlingUtils モジュール" {
             $retryConfig.retry_settings.delay_seconds = @(0, 0, 0)  # 待機時間を0にしてテストを高速化
             Mock Get-DataSyncConfig { return @{ error_handling = $retryConfig } } -ModuleName ErrorHandlingUtils
             
-            $global:attemptCount = 0
+            $script:attemptCount = 0
             $retryScript = {
-                $global:attemptCount++
-                if ($global:attemptCount -lt 3) {
+                $script:attemptCount++
+                if ($script:attemptCount -lt 3) {
                     throw "リトライテスト"
                 }
                 return "成功"
@@ -190,22 +190,22 @@ Describe "ErrorHandlingUtils モジュール" {
             
             # Assert
             $result | Should -Be "成功"
-            $global:attemptCount | Should -Be 3
+            $script:attemptCount | Should -Be 3
         }
         
         It "リトライ対象外カテゴリ（System）の場合、リトライしない" {
             # Arrange
             Mock Get-DataSyncConfig { return @{ error_handling = $script:DefaultErrorConfig } } -ModuleName ErrorHandlingUtils
             
-            $global:attemptCount = 0
+            $script:attemptCount = 0
             $noRetryScript = {
-                $global:attemptCount++
+                $script:attemptCount++
                 throw "Systemエラー"
             }
             
             # Act & Assert
             { Invoke-WithErrorHandling -ScriptBlock $noRetryScript -Category System -Operation "リトライなしテスト" } | Should -Throw
-            $global:attemptCount | Should -Be 1
+            $script:attemptCount | Should -Be 1
         }
         
         It "最大試行回数に達した場合、最終的にエラーをスローする" {
@@ -472,10 +472,10 @@ Describe "ErrorHandlingUtils モジュール" {
             $retryConfig.retry_settings.delay_seconds = @(0, 0)
             Mock Get-DataSyncConfig { return @{ error_handling = $retryConfig } } -ModuleName ErrorHandlingUtils
             
-            $global:attemptCount = 0
+            $script:attemptCount = 0
             $fileOperation = {
-                $global:attemptCount++
-                if ($global:attemptCount -eq 1) {
+                $script:attemptCount++
+                if ($script:attemptCount -eq 1) {
                     throw "ファイルアクセスエラー"
                 }
                 return "リトライ成功"
@@ -487,7 +487,7 @@ Describe "ErrorHandlingUtils モジュール" {
             
             # Assert
             $result | Should -Be "リトライ成功"
-            $global:attemptCount | Should -Be 2
+            $script:attemptCount | Should -Be 2
         }
         
         It "適切なコンテキスト情報が設定される" {

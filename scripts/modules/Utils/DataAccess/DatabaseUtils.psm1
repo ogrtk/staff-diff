@@ -3,6 +3,7 @@
 using module "../Foundation/CoreUtils.psm1"
 using module "../Infrastructure/LoggingUtils.psm1"
 using module "../Infrastructure/ConfigurationUtils.psm1"
+using module "../DataProcessing/CsvProcessingUtils.psm1"
 
 # テーブル定義の取得（一時テーブル対応）
 function Get-TableDefinition {
@@ -26,31 +27,7 @@ function Get-TableDefinition {
     return $config.tables.$baseTableName
 }
 
-# CSVカラムリストの取得
-function Get-CsvColumns {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$TableName
-    )
-    
-    $tableDefinition = Get-TableDefinition -TableName $TableName
-    $csvColumns = $tableDefinition.columns | Where-Object { $_.csv_include -eq $true } | ForEach-Object { $_.name }
-    
-    return $csvColumns
-}
 
-# 必須カラムリストの取得
-function Get-RequiredColumns {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$TableName
-    )
-    
-    $tableDefinition = Get-TableDefinition -TableName $TableName
-    $requiredColumns = $tableDefinition.columns | Where-Object { $_.required -eq $true } | ForEach-Object { $_.name }
-    
-    return $requiredColumns
-}
 
 # テーブルクリア（汎用・リトライ対応）
 function Clear-Table {
@@ -783,8 +760,6 @@ function New-PriorityBasedSyncResultSelectClause {
 
 Export-ModuleMember -Function @(
     'Get-TableDefinition',
-    'Get-CsvColumns',
-    'Get-RequiredColumns',
     'Clear-Table',
     'New-CreateTableSql',
     'New-CreateTempTableSql',

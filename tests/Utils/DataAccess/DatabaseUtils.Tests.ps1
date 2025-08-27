@@ -45,24 +45,24 @@ Describe "DatabaseUtils モジュール" {
         
         # empty_tableの定義を追加
         $enhancedTestConfig.tables.empty_table = @{
-            description = "空のテーブル"
-            columns = @()
+            description       = "空のテーブル"
+            columns           = @()
             table_constraints = @()
         }
         
         # custom_tableの定義を追加
         $enhancedTestConfig.tables.custom_table = @{
-            description = "カスタムテーブル"
-            columns = @(
+            description       = "カスタムテーブル"
+            columns           = @(
                 @{ name = "custom_id"; type = "INTEGER"; constraints = "PRIMARY KEY"; csv_include = $true; required = $true }
                 @{ name = "custom_name"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true }
                 @{ name = "custom_data"; type = "BLOB"; constraints = ""; csv_include = $false; required = $false }
             )
             table_constraints = @(
                 @{
-                    name = "uk_custom_name"
-                    type = "UNIQUE"
-                    columns = @("custom_name")
+                    name        = "uk_custom_name"
+                    type        = "UNIQUE"
+                    columns     = @("custom_name")
                     description = "カスタム名の一意制約"
                 }
             )
@@ -131,87 +131,44 @@ Describe "DatabaseUtils モジュール" {
         }
     }
 
-    Context "Get-CsvColumns 関数 - CSVカラム取得" {
+    # Context "Get-CsvColumns 関数 - CSVカラム取得" {
         
-        It "CSV出力対象カラムが正常に取得される" {
-            # Act
-            $result = Get-CsvColumns -TableName "provided_data"
+    #     It "CSV出力対象カラムが正常に取得される" {
+    #         # Act
+    #         $result = Get-CsvColumns -TableName "provided_data"
             
-            # Assert
-            $result | Should -Not -BeNullOrEmpty
-            $result | Should -Contain "employee_id"
-            $result | Should -Contain "name"
-            $result | Should -Not -Contain "id"  # csv_include=false のカラムは除外される
-        }
+    #         # Assert
+    #         $result | Should -Not -BeNullOrEmpty
+    #         $result | Should -Contain "employee_id"
+    #         $result | Should -Contain "name"
+    #         $result | Should -Not -Contain "id"  # csv_include=false のカラムは除外される
+    #     }
         
-        It "sync_resultテーブルのCSVカラムが正常に取得される" {
-            # Act
-            $result = Get-CsvColumns -TableName "sync_result"
+    #     It "sync_resultテーブルのCSVカラムが正常に取得される" {
+    #         # Act
+    #         $result = Get-CsvColumns -TableName "sync_result"
             
-            # Assert
-            $result | Should -Not -BeNullOrEmpty
-            $result | Should -Contain "syokuin_no"
-            $result | Should -Contain "sync_action"
-            $result | Should -Not -Contain "department"  # csv_include=false のカラムは除外される
-        }
+    #         # Assert
+    #         $result | Should -Not -BeNullOrEmpty
+    #         $result | Should -Contain "syokuin_no"
+    #         $result | Should -Contain "sync_action"
+    #         $result | Should -Not -Contain "department"  # csv_include=false のカラムは除外される
+    #     }
         
-        It "一時テーブルでもCSVカラムが正常に取得される" {
-            # Note: current_data_tempは一時テーブルなので、current_dataの定義を使用する
-            # TestEnvironmentが標準的なcurrent_dataテーブル定義を持っている場合のテスト
-            try {
-                # Act
-                $result = Get-CsvColumns -TableName "current_data_temp"
-                
-                # Assert
-                $result | Should -Not -BeNullOrEmpty
-                if ($result -contains "user_id") {
-                    $result | Should -Contain "user_id"
-                    $result | Should -Contain "name"
-                } else {
-                    # current_dataテーブルの定義が異なる場合は、基本的な検証のみ
-                    $result.Count | Should -BeGreaterThan 0
-                }
-            }
-            catch {
-                # current_dataテーブルの定義が見つからない場合はスキップ
-                Set-ItResult -Skipped -Because "current_dataテーブル定義がテスト環境に存在しません: $($_.Exception.Message)"
-            }
-        }
-    }
+    #     It "一時テーブルでもCSVカラムが正常に取得される" {
+    #         # Note: current_data_tempは一時テーブルなので、current_dataの定義を使用する
+    #         # Act
+    #         $result = Get-CsvColumns -TableName "current_data_temp"
+            
+    #         # Assert
+    #         $result | Should -Not -BeNullOrEmpty
+    #         $result.Count | Should -BeGreaterThan 0
+    #         # current_dataテーブルの基本的なカラムが含まれていることを確認
+    #         $result | Should -Contain "user_id"
+    #         $result | Should -Contain "name"
+    #     }
+    # }
 
-    Context "Get-RequiredColumns 関数 - 必須カラム取得" {
-        
-        It "必須カラムが正常に取得される" {
-            # Act
-            $result = Get-RequiredColumns -TableName "provided_data"
-            
-            # Assert
-            $result | Should -Not -BeNullOrEmpty
-            $result | Should -Contain "employee_id"
-            $result | Should -Contain "name"
-        }
-        
-        It "current_dataテーブルの必須カラムが正常に取得される" {
-            # Act
-            $result = Get-RequiredColumns -TableName "current_data"
-            
-            # Assert
-            $result | Should -Not -BeNullOrEmpty
-            $result | Should -Contain "user_id"
-            $result | Should -Contain "name"
-        }
-        
-        It "sync_resultテーブルの必須カラムが正常に取得される" {
-            # Act
-            $result = Get-RequiredColumns -TableName "sync_result"
-            
-            # Assert
-            $result | Should -Not -BeNullOrEmpty
-            $result | Should -Contain "syokuin_no"
-            $result | Should -Contain "name"
-            $result | Should -Contain "sync_action"
-        }
-    }
 
     Context "Clear-Table 関数 - テーブルクリア" {
         
@@ -350,22 +307,13 @@ Describe "DatabaseUtils モジュール" {
         }
         
         It "New-CreateIndexSql関数が存在する場合、インデックス作成SQLが生成される" {
-            # テスト用の関数存在確認
-            $indexFunction = Get-Command "New-CreateIndexSql" -Module "DatabaseUtils" -ErrorAction SilentlyContinue
-            
-            if ($indexFunction) {
-                # Act
-                $result = New-CreateIndexSql -TableName "provided_data"
+            # Act
+            $result = New-CreateIndexSql -TableName "provided_data"
                 
-                # Assert
-                $result | Should -Not -BeNullOrEmpty
-                $result | Should -Match "CREATE INDEX"
-                $result | Should -Match "idx_provided_employee_id"
-            }
-            else {
-                # 関数が存在しない場合はテストをスキップ
-                Set-ItResult -Skipped -Because "New-CreateIndexSql関数が実装されていません"
-            }
+            # Assert
+            $result | Should -Not -BeNullOrEmpty
+            $result | Should -Match "CREATE INDEX"
+            $result | Should -Match "idx_provided_employee_id"
         }
     }
 
@@ -391,21 +339,17 @@ Describe "DatabaseUtils モジュール" {
             { Get-TableDefinition -TableName "provided_data" } | Should -Throw "*設定ファイル読み込みエラー*"
         }
         
-        It "空のカラム定義でも例外が発生しない" {
+        It "空のテーブル定義から正常にSQL生成される" {
             # Note: empty_tableはBeforeEachで定義済み
-            try {
-                # Act
-                $csvColumns = Get-CsvColumns -TableName "empty_table"
-                $requiredColumns = Get-RequiredColumns -TableName "empty_table"
-                
-                # Assert
-                $csvColumns | Should -Be @()
-                $requiredColumns | Should -Be @()
-            }
-            catch {
-                # empty_tableの定義が見つからない場合はスキップ
-                Set-ItResult -Skipped -Because "empty_tableの定義がテスト環境に存在しません: $($_.Exception.Message)"
-            }
+            # Act
+            $tableDefinition = Get-TableDefinition -TableName "empty_table"
+            $sql = New-CreateTableSql -TableName "empty_table"
+            
+            # Assert
+            $tableDefinition | Should -Not -BeNullOrEmpty
+            $tableDefinition.columns.Count | Should -Be 0
+            $sql | Should -Match "CREATE TABLE"
+            $sql | Should -Match "empty_table"
         }
         
         It "制約なしテーブルでもSQL生成が正常に動作する" {
@@ -413,8 +357,8 @@ Describe "DatabaseUtils モジュール" {
             $noConstraintConfig = @{
                 tables = @{
                     simple_table = @{
-                        description = "シンプルなテーブル"
-                        columns = @(
+                        description       = "シンプルなテーブル"
+                        columns           = @(
                             @{ name = "id"; type = "INTEGER"; constraints = ""; csv_include = $true; required = $false }
                             @{ name = "name"; type = "TEXT"; constraints = ""; csv_include = $true; required = $true }
                         )
@@ -443,8 +387,8 @@ Describe "DatabaseUtils モジュール" {
             $largeTableConfig = @{
                 tables = @{
                     large_table = @{
-                        description = "大きなテーブル"
-                        columns = @()
+                        description       = "大きなテーブル"
+                        columns           = @()
                         table_constraints = @()
                     }
                 }
@@ -453,11 +397,11 @@ Describe "DatabaseUtils モジュール" {
             # 100個のカラムを生成
             for ($i = 1; $i -le 100; $i++) {
                 $largeTableConfig.tables.large_table.columns += @{
-                    name = "column_$i"
-                    type = "TEXT"
+                    name        = "column_$i"
+                    type        = "TEXT"
                     constraints = ""
                     csv_include = ($i % 2 -eq 0)  # 偶数番目のみCSV出力
-                    required = ($i % 10 -eq 0)    # 10の倍数のみ必須
+                    required    = ($i % 10 -eq 0)    # 10の倍数のみ必須
                 }
             }
             
@@ -480,27 +424,18 @@ Describe "DatabaseUtils モジュール" {
         
         It "カスタム設定ファイルからテーブル定義が正常に読み込まれる" {
             # Note: custom_tableはBeforeEachで定義済み
-            try {
-                # Act
-                $tableDefinition = Get-TableDefinition -TableName "custom_table"
-                $csvColumns = Get-CsvColumns -TableName "custom_table"
-                $requiredColumns = Get-RequiredColumns -TableName "custom_table"
-                $sql = New-CreateTableSql -TableName "custom_table"
-                
-                # Assert
-                $tableDefinition.description | Should -Be "カスタムテーブル"
-                $csvColumns | Should -Contain "custom_id"
-                $csvColumns | Should -Contain "custom_name"
-                $csvColumns | Should -Not -Contain "custom_data"
-                $requiredColumns | Should -Contain "custom_id"
-                $requiredColumns | Should -Contain "custom_name"
-                $sql | Should -Match "custom_table"
-                $sql | Should -Match "CONSTRAINT uk_custom_name UNIQUE"
-            }
-            catch {
-                # custom_tableの定義が見つからない場合はスキップ
-                Set-ItResult -Skipped -Because "custom_tableの定義がテスト環境に存在しません: $($_.Exception.Message)"
-            }
+            # Act
+            $tableDefinition = Get-TableDefinition -TableName "custom_table"
+            $sql = New-CreateTableSql -TableName "custom_table"
+            
+            # Assert
+            $tableDefinition.description | Should -Be "カスタムテーブル"
+            $tableDefinition.columns.Count | Should -Be 3
+            $tableDefinition.columns[0].name | Should -Be "custom_id"
+            $tableDefinition.columns[1].name | Should -Be "custom_name"
+            $tableDefinition.columns[2].name | Should -Be "custom_data"
+            $sql | Should -Match "custom_table"
+            $sql | Should -Match "CONSTRAINT uk_custom_name UNIQUE"
         }
     }
 
@@ -510,8 +445,6 @@ Describe "DatabaseUtils モジュール" {
             # Arrange
             $expectedFunctions = @(
                 'Get-TableDefinition',
-                'Get-CsvColumns', 
-                'Get-RequiredColumns',
                 'Clear-Table',
                 'New-CreateTableSql'
             )
