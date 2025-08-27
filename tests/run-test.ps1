@@ -9,6 +9,7 @@ param(
     [string]$OutputFormat = "Console",
     [string]$OutputPath = "",
     [switch]$ShowCoverage,
+    [string]$CoverageOutputPath,
     [switch]$Detailed,
     [switch]$SkipSlowTests
 )
@@ -205,16 +206,6 @@ function Get-TestClassification {
     return "テスト"
 }
 
-# テストファイルパスからモジュール名を抽出（レガシー関数 - 後方互換性のため保持）
-function Get-ModuleNameFromTest {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$TestPath
-    )
-    
-    return Get-ModuleNameFromPath -FilePath $TestPath
-}
-
 # テストファイルから対応するモジュールファイルパスを取得
 function Get-ModulePathFromTest {
     param(
@@ -394,6 +385,7 @@ function Initialize-PesterConfiguration {
         [string]$OutputFormat,
         [string]$OutputPath,
         [bool]$ShowCoverage,
+        [string]$CoverageOutputPath,
         [bool]$SkipSlowTests,
         [string]$ProjectRoot,
         [bool]$Detailed
@@ -449,7 +441,10 @@ function Initialize-PesterConfiguration {
         $coveragePaths = Get-CoverageFilePaths -ProjectRoot $ProjectRoot -TestTargets $TestTargets
         $config.CodeCoverage.Path = $coveragePaths
         $config.CodeCoverage.OutputFormat = "JaCoCo"
-        $config.CodeCoverage.OutputPath = Join-Path $TestsRoot "Coverage.xml"
+        if ([string]::IsNullOrEmpty($CoverageOutputPath)) {
+            $CoverageOutputPath = Join-Path $ProjectRoot "Coverage.xml"
+        }
+        $config.CodeCoverage.OutputPath = $CoverageOutputPath
     }   
     return $config
 }
@@ -784,7 +779,7 @@ function Invoke-TestExecution {
         Install-RequiredModules
 
         # Pester設定の初期化
-        $config = Initialize-PesterConfiguration -TestPath $TestPath -TestType $TestType -OutputFormat $OutputFormat -OutputPath $OutputPath -ShowCoverage $ShowCoverage -SkipSlowTests $SkipSlowTests -ProjectRoot $ProjectRoot -Detailed $Detailed
+        $config = Initialize-PesterConfiguration -TestPath $TestPath -TestType $TestType -OutputFormat $OutputFormat -OutputPath $OutputPath -ShowCoverage $ShowCoverage -CoverageOutputPath $CoverageOutputPath -SkipSlowTests $SkipSlowTests -ProjectRoot $ProjectRoot -Detailed $Detailed
     
         Write-Host "テストを開始します..." -ForegroundColor Green
         $startTime = Get-Date
@@ -807,7 +802,7 @@ function Invoke-TestExecution {
         # HTML レポートの生成
         if ($OutputFormat -eq "HTML") {
             if ([string]::IsNullOrEmpty($OutputPath)) {
-                $OutputPath = Join-Path $TestsRoot "TestResults.html"
+                $OutputPath = Join-Path $ProjectRoot "TestResults.html"
             }
             New-HtmlReport -TestResult $result -OutputPath $OutputPath -TestTargets $testTargets
         }
@@ -887,6 +882,7 @@ PowerShell & SQLite データ同期システム テスト実行スクリプト
   -OutputFormat <形式>      出力形式 (Console, NUnitXml, HTML, Text)
   -OutputPath <パス>        出力ファイルのパス
   -ShowCoverage            コードカバレッジを表示
+  -CoverageOutputPath <パス>  コードカバレッジの出力パス
   -Detailed               詳細な出力を表示
   -SkipSlowTests          時間のかかるテストをスキップ
 

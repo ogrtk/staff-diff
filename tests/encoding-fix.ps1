@@ -24,11 +24,11 @@ if ([string]::IsNullOrEmpty($TargetPath)) {
 
 # エンコーディング変換マップ
 $EncodingMap = @{
-    "UTF8" = [System.Text.UTF8Encoding]::new($false)  # BOM無し
-    "UTF8BOM" = [System.Text.UTF8Encoding]::new($true)  # BOM有り
-    "ASCII" = [System.Text.ASCIIEncoding]::new()
-    "Unicode" = [System.Text.UnicodeEncoding]::new()
-    "UTF32" = [System.Text.UTF32Encoding]::new()
+    "UTF8"      = [System.Text.UTF8Encoding]::new($false)  # BOM無し
+    "UTF8BOM"   = [System.Text.UTF8Encoding]::new($true)  # BOM有り
+    "ASCII"     = [System.Text.ASCIIEncoding]::new()
+    "Unicode"   = [System.Text.UnicodeEncoding]::new()
+    "UTF32"     = [System.Text.UTF32Encoding]::new()
     "SHIFT_JIS" = [System.Text.Encoding]::GetEncoding("Shift_JIS")
 }
 
@@ -44,8 +44,8 @@ function Get-FileEncoding {
         $fileInfo = Get-Item $FilePath
         if ($fileInfo.Length -eq 0) {
             return @{
-                Encoding = "Empty"
-                HasBOM = $false
+                Encoding   = "Empty"
+                HasBOM     = $false
                 Confidence = 100
             }
         }
@@ -56,28 +56,28 @@ function Get-FileEncoding {
         $sampleBytes = $bytes[0..($maxBytesToCheck - 1)]
         
         # BOM検出
-        $bomInfo = Detect-BOM -Bytes $bytes
+        $bomInfo = Find-BOM -Bytes $bytes
         if ($bomInfo.HasBOM) {
             return $bomInfo
         }
         
         # BOMがない場合のエンコーディング推定
-        $encodingGuess = Guess-EncodingFromContent -Bytes $sampleBytes
+        $encodingGuess = Get-EstimatedEncoding -Bytes $sampleBytes
         
         return $encodingGuess
     }
     catch {
         Write-Warning "ファイル '$FilePath' のエンコーディング検出に失敗しました: $($_.Exception.Message)"
         return @{
-            Encoding = "Unknown"
-            HasBOM = $false
+            Encoding   = "Unknown"
+            HasBOM     = $false
             Confidence = 0
         }
     }
 }
 
 # BOM検出
-function Detect-BOM {
+function Find-BOM {
     param(
         [byte[]]$Bytes
     )
@@ -110,7 +110,7 @@ function Detect-BOM {
 }
 
 # コンテンツからのエンコーディング推定
-function Guess-EncodingFromContent {
+function Get-EstimatedEncoding {
     param(
         [byte[]]$Bytes
     )
@@ -191,8 +191,8 @@ function Guess-EncodingFromContent {
     }
     
     return @{
-        Encoding = $bestEncoding
-        HasBOM = $false
+        Encoding   = $bestEncoding
+        HasBOM     = $false
         Confidence = $bestScore
     }
 }
@@ -217,7 +217,8 @@ function Convert-FileEncoding {
         if ($SourceEncoding -eq "Auto") {
             $currentEncoding = Get-FileEncoding -FilePath $FilePath
             $sourceEncodingName = $currentEncoding.Encoding
-        } else {
+        }
+        else {
             $sourceEncodingName = $SourceEncoding
         }
         
@@ -225,8 +226,8 @@ function Convert-FileEncoding {
         if ($sourceEncodingName -eq $TargetEncoding) {
             Write-Host "  → スキップ (既に $TargetEncoding)" -ForegroundColor Gray
             return @{
-                Success = $true
-                Action = "Skipped"
+                Success        = $true
+                Action         = "Skipped"
                 SourceEncoding = $sourceEncodingName
                 TargetEncoding = $TargetEncoding
             }
@@ -236,8 +237,8 @@ function Convert-FileEncoding {
         if ($DryRun) {
             Write-Host "  → 変換予定: $sourceEncodingName → $TargetEncoding" -ForegroundColor Yellow
             return @{
-                Success = $true
-                Action = "DryRun"
+                Success        = $true
+                Action         = "DryRun"
                 SourceEncoding = $sourceEncodingName
                 TargetEncoding = $TargetEncoding
             }
@@ -253,7 +254,8 @@ function Convert-FileEncoding {
         # ソースエンコーディングの取得
         $sourceEnc = if ($EncodingMap.ContainsKey($sourceEncodingName)) {
             $EncodingMap[$sourceEncodingName]
-        } else {
+        }
+        else {
             [System.Text.Encoding]::Default
         }
         
@@ -267,8 +269,8 @@ function Convert-FileEncoding {
         Write-Host "  → 変換完了: $sourceEncodingName → $TargetEncoding" -ForegroundColor Green
         
         return @{
-            Success = $true
-            Action = "Converted"
+            Success        = $true
+            Action         = "Converted"
             SourceEncoding = $sourceEncodingName
             TargetEncoding = $TargetEncoding
         }
@@ -276,9 +278,9 @@ function Convert-FileEncoding {
     catch {
         Write-Host "  → エラー: $($_.Exception.Message)" -ForegroundColor Red
         return @{
-            Success = $false
-            Action = "Error"
-            Error = $_.Exception.Message
+            Success        = $false
+            Action         = "Error"
+            Error          = $_.Exception.Message
             SourceEncoding = $sourceEncodingName
             TargetEncoding = $TargetEncoding
         }
@@ -298,7 +300,8 @@ function Get-TargetFiles {
     foreach ($extension in $Extensions) {
         if ($Recursive) {
             $foundFiles = Get-ChildItem -Path $Path -Filter $extension -Recurse -File -ErrorAction SilentlyContinue
-        } else {
+        }
+        else {
             $foundFiles = Get-ChildItem -Path $Path -Filter $extension -File -ErrorAction SilentlyContinue
         }
         $files += $foundFiles
@@ -359,11 +362,11 @@ function Invoke-EncodingFix {
     Write-Host ""
     
     $results = @{
-        Total = $targetFiles.Count
+        Total     = $targetFiles.Count
         Converted = 0
-        Skipped = 0
-        Errors = 0
-        DryRun = 0
+        Skipped   = 0
+        Errors    = 0
+        DryRun    = 0
     }
     
     foreach ($file in $targetFiles) {
@@ -387,7 +390,8 @@ function Invoke-EncodingFix {
     
     if ($DryRun) {
         Write-Host "変換予定: $($results.DryRun)" -ForegroundColor Yellow
-    } else {
+    }
+    else {
         Write-Host "変換完了: $($results.Converted)" -ForegroundColor Green
     }
     
@@ -401,9 +405,11 @@ function Invoke-EncodingFix {
     
     if ($DryRun) {
         Write-Host "DryRunモードで実行されました。実際の変換を行うには -DryRun パラメータを外してください。" -ForegroundColor Yellow
-    } elseif ($results.Converted -gt 0) {
+    }
+    elseif ($results.Converted -gt 0) {
         Write-Host "✓ エンコーディング変換が完了しました！" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "変換が必要なファイルはありませんでした。" -ForegroundColor Yellow
     }
 }
@@ -487,7 +493,8 @@ if ($args -contains "-ShowInfo") {
         $infoFilePath = $args[$infoIndex + 1]
         Show-EncodingInfo -FilePath $infoFilePath
         exit 0
-    } else {
+    }
+    else {
         Write-Error "-ShowInfo パラメータにはファイルパスが必要です"
         exit 1
     }

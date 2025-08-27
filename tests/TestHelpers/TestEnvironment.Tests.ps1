@@ -4,16 +4,6 @@ using module "./TestEnvironmentHelpers.psm1"
 
 Describe "TestEnvironmentクラス 動作確認テスト" {
     
-    BeforeEach {
-        # テスト用環境変数の設定
-        $env:PESTER_TEST = $true
-    }
-    
-    AfterEach {
-        # 環境変数のクリーンアップ
-        Remove-Item Env:PESTER_TEST -ErrorAction SilentlyContinue
-    }
-    
     Context "TestEnvironment基本機能" {
         
         It "TestEnvironmentオブジェクトが正常に作成される" {
@@ -69,9 +59,9 @@ Describe "TestEnvironmentクラス 動作確認テスト" {
             
             # Act
             $csvPath = $testEnv.CreateCsvFile("provided_data", 5, @{
-                IncludeHeader = $true
-                IncludeJapanese = $false
-            })
+                    IncludeHeader   = $true
+                    IncludeJapanese = $false
+                })
             
             # Assert
             $csvPath | Should -Exist
@@ -90,7 +80,7 @@ Describe "TestEnvironmentクラス 動作確認テスト" {
             # Arrange
             $testEnv = [TestEnvironment]::new("ConfigTest")
             $customSettings = @{
-                version = "2.0.0"
+                version     = "2.0.0"
                 description = "カスタムテスト設定"
             }
             
@@ -140,9 +130,9 @@ Describe "TestEnvironmentクラス 動作確認テスト" {
             # いくつかのファイルを作成
             $dbPath = $testEnv.CreateDatabase("dispose_test")
             $csvPath = $testEnv.CreateCsvFile("provided_data", 3, @{
-                IncludeHeader = $true
-                IncludeJapanese = $false
-            })
+                    IncludeHeader   = $true
+                    IncludeJapanese = $false
+                })
             $configPath = $testEnv.CreateConfigFile(@{}, "dispose-config")
             
             # すべてのファイルが存在することを確認

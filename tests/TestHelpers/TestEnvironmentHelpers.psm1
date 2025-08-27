@@ -290,10 +290,10 @@ class TestEnvironment {
         
         # デフォルトのアクション件数
         $defaultCounts = @{
-            ADD = 3
+            ADD    = 3
             UPDATE = 2  
             DELETE = 1
-            KEEP = 4
+            KEEP   = 4
         }
         
         # アクション件数のマージ
@@ -306,7 +306,7 @@ class TestEnvironment {
         # デフォルトオプション
         $defaultOptions = @{
             IncludeJapanese = $false
-            StartId = 1000
+            StartId         = 1000
         }
         
         # オプションのマージ
@@ -316,10 +316,10 @@ class TestEnvironment {
         
         $records = [System.Collections.Generic.List[PSCustomObject]]::new()
         $actionValues = @{
-            ADD = "1"
+            ADD    = "1"
             UPDATE = "2"  
             DELETE = "3"
-            KEEP = "9"
+            KEEP   = "9"
         }
         
         $currentId = $defaultOptions.StartId
@@ -343,7 +343,8 @@ class TestEnvironment {
     hidden [PSCustomObject] GenerateSyncResultRecord([string]$Action, [string]$ActionValue, [int]$IdBase, [hashtable]$Options) {
         $names = if ($Options.IncludeJapanese) {
             @("山田太郎", "佐藤花子", "田中一郎", "鈴木美咲", "高橋健太", "伊藤由美", "渡辺悟", "中村理恵", "小林大輔", "加藤真由美")
-        } else {
+        }
+        else {
             @("John Doe", "Jane Smith", "Mike Johnson", "Lisa Brown", "Tom Wilson", "Sarah Davis", "Robert Miller", "Emily Jones", "David Garcia", "Jennifer Martin")
         }
         
@@ -351,14 +352,14 @@ class TestEnvironment {
         $positions = @("部長", "課長", "主任", "一般", "マネージャー", "リーダー")
         
         return [PSCustomObject]@{
-            syokuin_no = "S{0:D4}" -f $IdBase
+            syokuin_no  = "S{0:D4}" -f $IdBase
             card_number = "C{0:D6}" -f ($IdBase + 100000)
-            name = $names[($IdBase - 1000) % $names.Length]
-            department = $departments[($IdBase - 1000) % $departments.Length]
-            position = $positions[($IdBase - 1000) % $positions.Length]
-            email = "user$IdBase@company.com"
-            phone = "999-9999-9999"  # 固定値（設定による）
-            hire_date = (Get-Date).AddDays(-($IdBase % 365)).ToString("yyyy-MM-dd")
+            name        = $names[($IdBase - 1000) % $names.Length]
+            department  = $departments[($IdBase - 1000) % $departments.Length]
+            position    = $positions[($IdBase - 1000) % $positions.Length]
+            email       = "user$IdBase@company.com"
+            phone       = "999-9999-9999"  # 固定値（設定による）
+            hire_date   = (Get-Date).AddDays( - ($IdBase % 365)).ToString("yyyy-MM-dd")
             sync_action = $ActionValue
         }
     }
@@ -489,16 +490,16 @@ VALUES ('$($record.syokuin_no)', '$($record.card_number)', '$($record.name)', '$
             }
             tables      = @{
                 provided_data = @{
-                    description = "提供データテーブル"
+                    description       = "提供データテーブル"
                     table_constraints = @(
                         @{
-                            name = "uk_provided_employee_id"
-                            type = "UNIQUE"
-                            columns = @("employee_id")
+                            name        = "uk_provided_employee_id"
+                            type        = "UNIQUE"
+                            columns     = @("employee_id")
                             description = "職員IDの一意制約"
                         }
                     )
-                    columns = @(
+                    columns           = @(
                         @{ name = "id"; type = "INTEGER"; constraints = "PRIMARY KEY AUTOINCREMENT"; csv_include = $false; description = "内部ID" }
                         @{ name = "employee_id"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "職員ID" }
                         @{ name = "card_number"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "カード番号" }
@@ -509,25 +510,25 @@ VALUES ('$($record.syokuin_no)', '$($record.card_number)', '$($record.name)', '$
                         @{ name = "phone"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "電話番号" }
                         @{ name = "hire_date"; type = "DATE"; constraints = ""; csv_include = $true; required = $false; description = "入社日" }
                     )
-                    indexes = @(
+                    indexes           = @(
                         @{
-                            name = "idx_provided_employee_id"
-                            columns = @("employee_id")
+                            name        = "idx_provided_employee_id"
+                            columns     = @("employee_id")
                             description = "職員ID検索用インデックス"
                         }
                     )
                 }
-                current_data = @{
-                    description = "現在データテーブル"
+                current_data  = @{
+                    description       = "現在データテーブル"
                     table_constraints = @(
                         @{
-                            name = "uk_current_user_id"
-                            type = "UNIQUE"
-                            columns = @("user_id")
+                            name        = "uk_current_user_id"
+                            type        = "UNIQUE"
+                            columns     = @("user_id")
                             description = "利用者IDの一意制約"
                         }
                     )
-                    columns = @(
+                    columns           = @(
                         @{ name = "id"; type = "INTEGER"; constraints = "PRIMARY KEY AUTOINCREMENT"; csv_include = $false; description = "内部ID" }
                         @{ name = "user_id"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "利用者ID" }
                         @{ name = "card_number"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "カード番号" }
@@ -538,25 +539,25 @@ VALUES ('$($record.syokuin_no)', '$($record.card_number)', '$($record.name)', '$
                         @{ name = "phone"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "電話番号" }
                         @{ name = "hire_date"; type = "DATE"; constraints = ""; csv_include = $true; required = $false; description = "入社日" }
                     )
-                    indexes = @(
+                    indexes           = @(
                         @{
-                            name = "idx_current_user_id"
-                            columns = @("user_id")
+                            name        = "idx_current_user_id"
+                            columns     = @("user_id")
                             description = "利用者ID検索用インデックス"
                         }
                     )
                 }
-                sync_result = @{
-                    description = "同期結果テーブル"
+                sync_result   = @{
+                    description       = "同期結果テーブル"
                     table_constraints = @(
                         @{
-                            name = "uk_sync_result_syokuin_no"
-                            type = "UNIQUE"
-                            columns = @("syokuin_no")
+                            name        = "uk_sync_result_syokuin_no"
+                            type        = "UNIQUE"
+                            columns     = @("syokuin_no")
                             description = "職員番号の一意制約"
                         }
                     )
-                    columns = @(
+                    columns           = @(
                         @{ name = "id"; type = "INTEGER"; constraints = "PRIMARY KEY AUTOINCREMENT"; csv_include = $false; description = "内部ID" }
                         @{ name = "syokuin_no"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "職員ID" }
                         @{ name = "card_number"; type = "TEXT"; constraints = ""; csv_include = $true; required = $false; description = "カード番号" }
@@ -568,16 +569,16 @@ VALUES ('$($record.syokuin_no)', '$($record.card_number)', '$($record.name)', '$
                         @{ name = "hire_date"; type = "DATE"; constraints = ""; csv_include = $true; required = $false; description = "入社日" }
                         @{ name = "sync_action"; type = "TEXT"; constraints = "NOT NULL"; csv_include = $true; required = $true; description = "同期アクション" }
                     )
-                    indexes = @()
+                    indexes           = @()
                 }
             }
             sync_rules  = @{
-                key_columns = @{
+                key_columns        = @{
                     provided_data = @("employee_id")
                     current_data  = @("user_id")
                     sync_result   = @("syokuin_no")
                 }
-                column_mappings = @{
+                column_mappings    = @{
                     description = "テーブル間の比較項目対応付け"
                     mappings    = @{
                         employee_id = "user_id"
@@ -888,9 +889,6 @@ function Clear-TestEnvironment {
         if (Get-Command "Reset-DataSyncConfig" -ErrorAction SilentlyContinue) {
             Reset-DataSyncConfig
         }
-        
-        # 環境変数のクリーンアップ
-        Remove-Item Env:PESTER_TEST -ErrorAction SilentlyContinue
         
         Write-Host "✓ テスト環境をクリーンアップしました" -ForegroundColor Green
     }
@@ -1468,7 +1466,7 @@ function New-TestConfig {
                     }
                 }
             }
-            sync_action_labels = @{
+            sync_action_labels  = @{
                 mappings = @{
                     ADD    = @{ value = "1"; enabled = $false; description = "新規追加" }
                     UPDATE = @{ value = "2"; enabled = $false; description = "更新" }
