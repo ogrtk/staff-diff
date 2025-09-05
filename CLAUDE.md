@@ -49,13 +49,24 @@ pwsh ./scripts/main.ps1 -ConfigFilePath "/path/to/custom-config.json" -OutputFil
 pwsh ./tests/run-test.ps1
 
 # 特定テストファイルの実行
-pwsh ./tests/run-test.ps1 -TestPath "Utils\CommonUtils.Tests.ps1"
+pwsh ./tests/run-test.ps1 -TestPath "Utils\Foundation\CoreUtils.Tests.ps1"
 
 # カバレッジとHTMLレポート付き実行
 pwsh ./tests/run-test.ps1 -OutputFormat "HTML" -ShowCoverage
 
 # 統合テストのみ実行
 pwsh ./tests/run-test.ps1 -TestPath "Integration\FullSystem.Tests.ps1"
+
+# テストタイプ別実行
+pwsh ./tests/run-test.ps1 -TestType "Unit"          # ユニットテストのみ
+pwsh ./tests/run-test.ps1 -TestType "Integration"   # 統合テストのみ
+pwsh ./tests/run-test.ps1 -TestType "Foundation"    # 基盤層テストのみ
+pwsh ./tests/run-test.ps1 -TestType "Infrastructure" # インフラ層テストのみ
+pwsh ./tests/run-test.ps1 -TestType "Process"       # プロセステストのみ
+
+# 詳細出力・高速実行オプション
+pwsh ./tests/run-test.ps1 -Detailed                 # 詳細ログ付き実行
+pwsh ./tests/run-test.ps1 -SkipSlowTests            # 重い処理をスキップ
 ```
 
 ### 開発ユーティリティ
@@ -322,4 +333,35 @@ SELECT sync_action, COUNT(*) FROM sync_result GROUP BY sync_action;
 ```bash
 # 設定変更後の検証
 pwsh ./scripts/main.ps1 -ProvidedDataFilePath "./test-data/provided.csv" -CurrentDataFilePath "./test-data/current.csv" -OutputFilePath "./test-data/test-output.csv"
+
+# サンプルデータでのクイックテスト
+pwsh ./scripts/main.ps1 -ProvidedDataFilePath "./test-data/large-provided.csv" -CurrentDataFilePath "./test-data/large-current.csv" -OutputFilePath "./test-data/sync-result.csv"
+```
+
+## 主要コマンドリファレンス
+
+### プロダクション実行
+```bash
+# Windows用ショートカット（最推奨）
+.\run.bat
+
+# 直接実行（PowerShell 5.1以上）
+pwsh ./scripts/main.ps1
+
+# パラメータ指定実行
+pwsh ./scripts/main.ps1 -ProvidedDataFilePath "外部ファイル.csv" -CurrentDataFilePath "現在ファイル.csv" -OutputFilePath "出力ファイル.csv"
+```
+
+### 開発・デバッグ時
+```bash
+# テスト実行（推奨コマンド順）
+pwsh ./tests/run-test.ps1                                    # 全テスト実行
+pwsh ./tests/run-test.ps1 -TestType "Foundation"             # 基盤層のみ
+pwsh ./tests/run-test.ps1 -TestPath "Integration\FullSystem.Tests.ps1" # フルシステムテスト
+
+# UTF-8エンコーディング修正
+pwsh ./tests/encoding-fix.ps1
+
+# カバレッジレポート生成
+pwsh ./tests/run-test.ps1 -OutputFormat "HTML" -ShowCoverage
 ```

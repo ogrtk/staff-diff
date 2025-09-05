@@ -83,6 +83,16 @@ function Get-Timestamp {
     }
 }
 
+# SQLite3コマンドラッパー（テスト容易性のため）
+function Invoke-Sqlite3 {
+    param(
+        [Parameter(ValueFromRemainingArguments)]
+        [string[]]$Arguments
+    )
+    
+    & sqlite3 @Arguments
+}
+
 # SQLiteコマンド実行（汎用・設定非依存）
 function Invoke-SqliteCommand {
     param(
@@ -100,7 +110,7 @@ function Invoke-SqliteCommand {
         $encoding = Get-CrossPlatformEncoding
         $Query | Out-File -FilePath $tempFile -Encoding $encoding
                     
-        $result = & sqlite3 $DatabasePath ".read $tempFile" 2>&1
+        $result = Invoke-Sqlite3 $DatabasePath ".read $tempFile" 2>&1
 
         if ($LASTEXITCODE -ne 0) {
             throw "sqlite3コマンドエラー (終了コード: $LASTEXITCODE ,クエリ：$Query ,結果：$result ）"
@@ -141,7 +151,7 @@ function Invoke-SqliteCsvQuery {
             $Query
         )
         
-        $output = & sqlite3 @sqlite3Args 2>&1
+        $output = Invoke-Sqlite3 @sqlite3Args 2>&1
         
         if ($LASTEXITCODE -ne 0) {
             throw "SQLiteコマンド実行エラー: $output"
@@ -189,7 +199,7 @@ function Invoke-SqliteCsvExport {
     try {
         # SQLite3で直接CSV出力（ヘッダー付き）
         $csvArgs = @($DatabasePath, "-csv", "-header", $Query)
-        $result = & sqlite3 @csvArgs 2>&1
+        $result = Invoke-Sqlite3 @csvArgs 2>&1
                 
         if ($LASTEXITCODE -ne 0) {
             throw "sqlite3 CSV出力エラー (終了コード: $LASTEXITCODE): $result"
@@ -213,6 +223,7 @@ Export-ModuleMember -Function @(
     'Get-CrossPlatformEncoding',
     'Test-PathSafe',
     'Get-Timestamp',
+    'Invoke-Sqlite3',
     'Invoke-SqliteCommand',
     'Invoke-SqliteCsvQuery',
     'Invoke-SqliteCsvExport',

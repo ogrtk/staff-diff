@@ -1,17 +1,10 @@
 # PowerShell & SQLite データ同期システム
 # Foundation/CoreUtils.psm1 ユニットテスト
 
-# テスト環境の設定
-$ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.Parent.Parent.FullName
-$ModulePath = Join-Path $ProjectRoot "scripts" "modules" "Utils" "Foundation" "CoreUtils.psm1"
-$TestHelpersPath = Join-Path $ProjectRoot "tests" "TestHelpers"
-
-# テストヘルパーの読み込み
-Import-Module (Join-Path $TestHelpersPath "TestEnvironmentHelpers.psm1") -Force
-Import-Module (Join-Path $TestHelpersPath "MockHelpers.psm1") -Force
-
-# テスト対象モジュールの読み込み
-Import-Module $ModulePath -Force
+# using module文（スクリプト冒頭で静的パス指定）
+using module "../../../scripts/modules/Utils/Foundation/CoreUtils.psm1"
+using module "../../TestHelpers/TestEnvironmentHelpers.psm1"
+using module "../../TestHelpers/MockHelpers.psm1"
 
 Describe "CoreUtils モジュール" {
     
@@ -35,12 +28,11 @@ Describe "CoreUtils モジュール" {
     
     BeforeEach {
         # モックのリセットは不要。Pesterが自動で管理。
-        # 全テストで共通のsqlite3コマンドをモック（グローバル関数として定義）
-        function global:sqlite3 {
-            param()
+        # Invoke-Sqlite3関数のモック
+        Mock Invoke-Sqlite3 {
             $global:LASTEXITCODE = 0
             return "test_result"
-        }
+        } -ModuleName "CoreUtils"
     }
 
     Context "Get-Sqlite3Path 関数" {
@@ -256,12 +248,11 @@ Describe "CoreUtils モジュール" {
             $testDbPath = $script:TestEnvironment.CreateDatabase("test_normal_query")
             $testQuery = "SELECT * FROM test_table;"
             $expectedResult = "test_result"
-            # sqlite3コマンドのモック（個別設定）- グローバル関数を再定義
-            function global:sqlite3 {
-                param()
+            # Invoke-Sqlite3関数のモック（個別設定）
+            Mock Invoke-Sqlite3 {
                 $global:LASTEXITCODE = 0
                 return $expectedResult 
-            }
+            } -ModuleName "CoreUtils"
             $tempFile = $script:TestEnvironment.CreateTempFile("", ".sql", "normal_query_")
             Mock New-TemporaryFile { return [PSCustomObject]@{ FullName = $tempFile } }
             Mock Out-File { }
@@ -279,11 +270,10 @@ Describe "CoreUtils モジュール" {
             # Arrange
             $testDbPath = $script:TestEnvironment.CreateDatabase("test_error_command")
             $testQuery = "INVALID SQL;"
-            function global:sqlite3 {
-                param()
+            Mock Invoke-Sqlite3 {
                 $global:LASTEXITCODE = 1
                 return "Error: SQL error"
-            }
+            } -ModuleName "CoreUtils"
             $tempFile = $script:TestEnvironment.CreateTempFile("", ".sql", "error_command_")
             Mock New-TemporaryFile { return [PSCustomObject]@{ FullName = $tempFile } }
             Mock Out-File { }
@@ -298,11 +288,10 @@ Describe "CoreUtils モジュール" {
             # Arrange
             $testDbPath = $script:TestEnvironment.CreateDatabase("test_sqlite_command")
             $testQuery = "SELECT 1;"
-            function global:sqlite3 {
-                param()
+            Mock Invoke-Sqlite3 {
                 $global:LASTEXITCODE = 0
                 return "1" 
-            }
+            } -ModuleName "CoreUtils"
             
             # 一時ファイル作成のモック - TestEnvironmentの一時ディレクトリを使用
             $mockTempFile = $script:TestEnvironment.CreateTempFile("", ".sql", "sqlite_query_")
@@ -344,11 +333,10 @@ Describe "CoreUtils モジュール" {
                 "2,Jane"
             )
             
-            function global:sqlite3 {
-                param()
+            Mock Invoke-Sqlite3 {
                 $global:LASTEXITCODE = 0
                 return $csvOutput
-            }
+            } -ModuleName "CoreUtils"
             
             # CSVファイル処理のモック - TestEnvironmentの一時ファイルを使用
             $tempCsvFile = $script:TestEnvironment.CreateTempFile("", ".csv", "csv_query_")
@@ -379,11 +367,10 @@ Describe "CoreUtils モジュール" {
             $testDbPath = $script:TestEnvironment.CreateDatabase("test_empty_query")
             $testQuery = "SELECT * FROM empty_table;"
             
-            function global:sqlite3 {
-                param()
+            Mock Invoke-Sqlite3 {
                 $global:LASTEXITCODE = 0
                 return @()
-            }
+            } -ModuleName "CoreUtils"
             $tempFile = $script:TestEnvironment.CreateTempFile("", ".csv", "empty_query_")
             Mock New-TemporaryFile { return [PSCustomObject]@{ FullName = $tempFile } }
             Mock Test-Path { return $true }
@@ -409,11 +396,10 @@ Describe "CoreUtils モジュール" {
             $testDbPath = $script:TestEnvironment.CreateDatabase("test_error_query")
             $testQuery = "INVALID SQL;"
             
-            function global:sqlite3 {
-                param()
+            Mock Invoke-Sqlite3 {
                 $global:LASTEXITCODE = 1
                 return "Error: SQL error"
-            }
+            } -ModuleName "CoreUtils"
             $tempFile = $script:TestEnvironment.CreateTempFile("", ".csv", "error_query_")
             Mock New-TemporaryFile { return [PSCustomObject]@{ FullName = $tempFile } }
             Mock Remove-Item { }
@@ -432,11 +418,10 @@ Describe "CoreUtils モジュール" {
             $outputPath = $script:TestEnvironment.CreateTempFile("", ".csv", "output_")
             $csvData = @("id,name", "1,John", "2,Jane")
             
-            function global:sqlite3 {
-                param()
+            Mock Invoke-Sqlite3 {
                 $global:LASTEXITCODE = 0
                 return $csvData
-            }
+            } -ModuleName "CoreUtils"
             
             # Act
             $result = Invoke-SqliteCsvExport -DatabasePath $testDbPath -Query $testQuery -OutputPath $outputPath
@@ -451,11 +436,10 @@ Describe "CoreUtils モジュール" {
             $testQuery = "SELECT * FROM empty_table;"
             $outputPath = $script:TestEnvironment.CreateTempFile("", ".csv", "empty_output_")
             
-            function global:sqlite3 {
-                param()
+            Mock Invoke-Sqlite3 {
                 $global:LASTEXITCODE = 0
                 return "id,name"  # ヘッダーのみ
-            }
+            } -ModuleName "CoreUtils"
             
             # Act
             $result = Invoke-SqliteCsvExport -DatabasePath $testDbPath -Query $testQuery -OutputPath $outputPath
@@ -470,11 +454,10 @@ Describe "CoreUtils モジュール" {
             $testQuery = "INVALID SQL;"
             $outputPath = $script:TestEnvironment.CreateTempFile("", ".csv", "error_output_")
             
-            function global:sqlite3 {
-                param()
+            Mock Invoke-Sqlite3 {
                 $global:LASTEXITCODE = 1
                 return "Error: SQL error"
-            }
+            } -ModuleName "CoreUtils"
             
             # Act & Assert
             { Invoke-SqliteCsvExport -DatabasePath $testDbPath -Query $testQuery -OutputPath $outputPath } | Should -Throw "*sqlite3 CSV出力エラー*"
@@ -490,6 +473,7 @@ Describe "CoreUtils モジュール" {
                 'Get-CrossPlatformEncoding',
                 'Test-PathSafe', 
                 'Get-Timestamp',
+                'Invoke-Sqlite3',
                 'Invoke-SqliteCommand',
                 'Invoke-SqliteCsvQuery',
                 'Invoke-SqliteCsvExport'
@@ -549,10 +533,10 @@ Describe "CoreUtils モジュール" {
             # Arrange
             $testDbPath = $script:TestEnvironment.CreateDatabase("test_empty_command")
             $emptyQuery = " "  # 空白文字を使用してバリデーションを回避
-            Mock sqlite3 { 
+            Mock Invoke-Sqlite3 {
                 $global:LASTEXITCODE = 0
                 return ""
-            }
+            } -ModuleName "CoreUtils"
             $tempFile = $script:TestEnvironment.CreateTempFile("", ".sql", "empty_command_")
             Mock New-TemporaryFile { return [PSCustomObject]@{ FullName = $tempFile } }
             Mock Out-File { }

@@ -1,10 +1,13 @@
 # PowerShell & SQLite データ同期システム
 # UTF-8 テストファイル作成スクリプト
 
+# using module文（スクリプト冒頭で静的パス指定）
+using module "TestHelpers/TestEnvironmentHelpers.psm1"
+
 param(
     [string]$OutputDirectory = "",
     [switch]$Overwrite,
-    [switch]$IncludeJapanese = $true,
+    [bool]$IncludeJapanese = $true,
     [switch]$IncludeBOM,
     [int]$RecordCount = 20
 )
@@ -12,11 +15,6 @@ param(
 # スクリプトの場所を基準にプロジェクトルートを設定
 $ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.FullName
 $TestHelpersPath = Join-Path $PSScriptRoot "TestHelpers"
-
-# テストヘルパーの読み込み
-if (Test-Path (Join-Path $TestHelpersPath "TestEnvironmentHelpers.psm1")) {
-    Import-Module (Join-Path $TestHelpersPath "TestEnvironmentHelpers.psm1") -Force
-}
 
 # 出力ディレクトリの設定
 if ([string]::IsNullOrEmpty($OutputDirectory)) {
@@ -35,7 +33,8 @@ function Get-UTF8Encoding {
     
     if ($IncludeBOM) {
         return [System.Text.UTF8Encoding]::new($true)
-    } else {
+    }
+    else {
         return [System.Text.UTF8Encoding]::new($false)
     }
 }
@@ -67,7 +66,8 @@ function New-UTF8CsvFile {
             $value = $_.Value
             if ($value -match '[",\n\r]' -or [string]::IsNullOrEmpty($value)) {
                 "`"$($value -replace '"', '""')`""
-            } else {
+            }
+            else {
                 $value
             }
         }
@@ -105,12 +105,12 @@ function New-TestDataSets {
         $filterTestData += [PSCustomObject]@{
             employee_id = "E{0:D3}" -f $i
             card_number = "C{0:D6}" -f (100000 + $i)
-            name = if ($IncludeJapanese) { "通常職員$i" } else { "Employee$i" }
-            department = if ($IncludeJapanese) { "営業部" } else { "Sales" }
-            position = if ($IncludeJapanese) { "課長" } else { "Manager" }
-            email = "employee$i@company.com"
-            phone = "03-1234-567$i"
-            hire_date = (Get-Date).AddDays(-($i * 100)).ToString("yyyy-MM-dd")
+            name        = if ($IncludeJapanese) { "通常職員$i" } else { "Employee$i" }
+            department  = if ($IncludeJapanese) { "営業部" } else { "Sales" }
+            position    = if ($IncludeJapanese) { "課長" } else { "Manager" }
+            email       = "employee$i@company.com"
+            phone       = "03-1234-567$i"
+            hire_date   = (Get-Date).AddDays( - ($i * 100)).ToString("yyyy-MM-dd")
         }
     }
     
@@ -119,12 +119,12 @@ function New-TestDataSets {
         $filterTestData += [PSCustomObject]@{
             employee_id = "Z{0:D3}" -f $i
             card_number = "C9{0:D5}" -f (10000 + $i)
-            name = if ($IncludeJapanese) { "除外職員$i" } else { "ExcludeEmployee$i" }
-            department = if ($IncludeJapanese) { "テスト部" } else { "Test" }
-            position = if ($IncludeJapanese) { "テスト" } else { "Tester" }
-            email = "exclude$i@company.com"
-            phone = "03-9999-000$i"
-            hire_date = (Get-Date).AddDays(-30).ToString("yyyy-MM-dd")
+            name        = if ($IncludeJapanese) { "除外職員$i" } else { "ExcludeEmployee$i" }
+            department  = if ($IncludeJapanese) { "テスト部" } else { "Test" }
+            position    = if ($IncludeJapanese) { "テスト" } else { "Tester" }
+            email       = "exclude$i@company.com"
+            phone       = "03-9999-000$i"
+            hire_date   = (Get-Date).AddDays(-30).ToString("yyyy-MM-dd")
         }
     }
     
@@ -133,12 +133,12 @@ function New-TestDataSets {
         $filterTestData += [PSCustomObject]@{
             employee_id = "Y{0:D3}" -f $i
             card_number = "C8{0:D5}" -f (10000 + $i)
-            name = if ($IncludeJapanese) { "Y除外職員$i" } else { "YExcludeEmployee$i" }
-            department = if ($IncludeJapanese) { "Y部門" } else { "YDept" }
-            position = if ($IncludeJapanese) { "Yテスト" } else { "YTester" }
-            email = "yexclude$i@company.com"
-            phone = "03-8888-000$i"
-            hire_date = (Get-Date).AddDays(-60).ToString("yyyy-MM-dd")
+            name        = if ($IncludeJapanese) { "Y除外職員$i" } else { "YExcludeEmployee$i" }
+            department  = if ($IncludeJapanese) { "Y部門" } else { "YDept" }
+            position    = if ($IncludeJapanese) { "Yテスト" } else { "YTester" }
+            email       = "yexclude$i@company.com"
+            phone       = "03-8888-000$i"
+            hire_date   = (Get-Date).AddDays(-60).ToString("yyyy-MM-dd")
         }
     }
     
@@ -148,27 +148,27 @@ function New-TestDataSets {
     $currentFilterData = @()
     for ($i = 3; $i -le 7; $i++) {
         $currentFilterData += [PSCustomObject]@{
-            user_id = "E{0:D3}" -f $i
+            user_id     = "E{0:D3}" -f $i
             card_number = "C{0:D6}" -f (200000 + $i)
-            name = if ($IncludeJapanese) { "現在職員$i" } else { "CurrentEmployee$i" }
-            department = if ($IncludeJapanese) { "開発部" } else { "Development" }
-            position = if ($IncludeJapanese) { "主任" } else { "Supervisor" }
-            email = "current$i@company.com"
-            phone = "03-2345-678$i"
-            hire_date = (Get-Date).AddDays(-($i * 80)).ToString("yyyy-MM-dd")
+            name        = if ($IncludeJapanese) { "現在職員$i" } else { "CurrentEmployee$i" }
+            department  = if ($IncludeJapanese) { "開発部" } else { "Development" }
+            position    = if ($IncludeJapanese) { "主任" } else { "Supervisor" }
+            email       = "current$i@company.com"
+            phone       = "03-2345-678$i"
+            hire_date   = (Get-Date).AddDays( - ($i * 80)).ToString("yyyy-MM-dd")
         }
     }
     
     # 除外対象のcurrent_data（KEEPとして出力される）
     $currentFilterData += [PSCustomObject]@{
-        user_id = "Z888"
+        user_id     = "Z888"
         card_number = "C888888"
-        name = if ($IncludeJapanese) { "除外KEEP対象" } else { "ExcludedKeep"
-        department = if ($IncludeJapanese) { "保持部" } else { "KeepDept"
-        position = if ($IncludeJapanese) { "保持役" } else { "Keeper"
-        email = "keep@company.com"
-        phone = "03-8888-8888"
-        hire_date = "2023-01-01"
+        name        = if ($IncludeJapanese) { "除外KEEP対象" } else { "ExcludedKeep" }
+        department  = if ($IncludeJapanese) { "保持部" } else { "KeepDept" }
+        position    = if ($IncludeJapanese) { "保持役" } else { "Keeper" }
+        email       = "keep@company.com"
+        phone       = "03-8888-8888"
+        hire_date   = "2023-01-01"
     }
     
     New-UTF8CsvFile -FilePath (Join-Path $OutputDirectory "current-data-with-filters.csv") -Data $currentFilterData -IncludeHeader -IncludeBOM:$IncludeBOM
@@ -203,22 +203,22 @@ E003,C003,田中太郎,開発部,課長,extra_column,too_many_columns
         [PSCustomObject]@{
             employee_id = "S001"
             card_number = "C001"
-            name = if ($IncludeJapanese) { "特殊文字テスト「」〜♪" } else { "Special,Chars""Test"
-            department = if ($IncludeJapanese) { "特殊部署\n改行" } else { "Special\nDept"
-            position = if ($IncludeJapanese) { "特殊役職" } else { "Special""Position"
-            email = "special@company.com"
-            phone = "03-1234-5678"
-            hire_date = "2023-01-01"
+            name        = if ($IncludeJapanese) { "特殊文字テスト「」〜♪" } else { "Special,Chars""Test" }
+            department  = if ($IncludeJapanese) { "特殊部署\n改行" } else { "Special\nDept" }
+            position    = if ($IncludeJapanese) { "特殊役職" } else { "Special""Position" }
+            email       = "special@company.com"
+            phone       = "03-1234-5678"
+            hire_date   = "2023-01-01"
         }
         [PSCustomObject]@{
             employee_id = "S002"
             card_number = "C002"
-            name = if ($IncludeJapanese) { "山田　太郎（全角スペース）" } else { "John Doe (spaces)"
-            department = if ($IncludeJapanese) { "😀絵文字部😀" } else { "😀Emoji😀Dept"
-            position = if ($IncludeJapanese) { "Unicode🚀テスト" } else { "Unicode🚀Test"
-            email = "unicode@company.com"
-            phone = "03-9999-9999"
-            hire_date = "2023-02-01"
+            name        = if ($IncludeJapanese) { "山田　太郎（全角スペース）" } else { "John Doe (spaces)" }
+            department  = if ($IncludeJapanese) { "😀絵文字部😀" } else { "😀Emoji😀Dept" }
+            position    = if ($IncludeJapanese) { "Unicode🚀テスト" } else { "Unicode🚀Test" }
+            email       = "unicode@company.com"
+            phone       = "03-9999-9999"
+            hire_date   = "2023-02-01"
         }
     )
     
@@ -233,12 +233,12 @@ function New-EncodingTestFiles {
         [PSCustomObject]@{
             employee_id = "T001"
             card_number = "C001"
-            name = if ($IncludeJapanese) { "日本語テスト" } else { "Japanese Test"
-            department = if ($IncludeJapanese) { "日本語部署" } else { "Japanese Dept"
-            position = if ($IncludeJapanese) { "日本語役職" } else { "Japanese Position"
-            email = "japanese@company.com"
-            phone = "03-1234-5678"
-            hire_date = "2023-01-01"
+            name        = if ($IncludeJapanese) { "日本語テスト" } else { "Japanese Test" }
+            department  = if ($IncludeJapanese) { "日本語部署" } else { "Japanese Dept" }
+            position    = if ($IncludeJapanese) { "日本語役職" } else { "Japanese Position" }
+            email       = "japanese@company.com"
+            phone       = "03-1234-5678"
+            hire_date   = "2023-01-01"
         }
     )
     
@@ -281,22 +281,22 @@ function New-TestConfigFiles {
         # フィルタリング有効設定
         Write-Host "  - フィルタリング有効設定" -ForegroundColor Gray
         $filterConfig = New-TestConfig -CustomSettings @{
-            file_paths = @{
+            file_paths   = @{
                 provided_data_file_path = Join-Path $OutputDirectory "provided-data-with-filters.csv"
-                current_data_file_path = Join-Path $OutputDirectory "current-data-with-filters.csv"
-                output_file_path = Join-Path $OutputDirectory "test-output-filtered.csv"
+                current_data_file_path  = Join-Path $OutputDirectory "current-data-with-filters.csv"
+                output_file_path        = Join-Path $OutputDirectory "test-output-filtered.csv"
             }
             data_filters = @{
                 provided_data = @{
                     enabled = $true
-                    rules = @(
+                    rules   = @(
                         @{ field = "employee_id"; type = "exclude"; glob = "Z*"; description = "Z始まりを除外" }
                         @{ field = "employee_id"; type = "exclude"; glob = "Y*"; description = "Y始まりを除外" }
                     )
                 }
-                current_data = @{
-                    enabled = $true
-                    rules = @(
+                current_data  = @{
+                    enabled                 = $true
+                    rules                   = @(
                         @{ field = "user_id"; type = "exclude"; glob = "Z*"; description = "Z始まりを除外" }
                         @{ field = "user_id"; type = "exclude"; glob = "Y*"; description = "Y始まりを除外" }
                     )
@@ -312,14 +312,14 @@ function New-TestConfigFiles {
         # フィルタリング無効設定
         Write-Host "  - フィルタリング無効設定" -ForegroundColor Gray
         $noFilterConfig = New-TestConfig -CustomSettings @{
-            file_paths = @{
+            file_paths   = @{
                 provided_data_file_path = Join-Path $OutputDirectory "provided-data-basic.csv"
-                current_data_file_path = Join-Path $OutputDirectory "current-data-basic.csv"
-                output_file_path = Join-Path $OutputDirectory "test-output-no-filter.csv"
+                current_data_file_path  = Join-Path $OutputDirectory "current-data-basic.csv"
+                output_file_path        = Join-Path $OutputDirectory "test-output-no-filter.csv"
             }
             data_filters = @{
                 provided_data = @{ enabled = $false }
-                current_data = @{ enabled = $false }
+                current_data  = @{ enabled = $false }
             }
         }
         

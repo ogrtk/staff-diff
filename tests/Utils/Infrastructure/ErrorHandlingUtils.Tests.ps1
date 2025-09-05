@@ -1,25 +1,23 @@
 # PowerShell & SQLite データ同期システム
 # Infrastructure/ErrorHandlingUtils.psm1 ユニットテスト
 
+# using module文（スクリプト冒頭で静的パス指定）
+# レイヤアーキテクチャに従った依存モジュールの読み込み
+# Layer 1: Foundation（基盤層）
+using module "../../../scripts/modules/Utils/Foundation/CoreUtils.psm1"
+# Layer 2: Infrastructure（インフラ層）
+using module "../../../scripts/modules/Utils/Infrastructure/ConfigurationUtils.psm1"
+using module "../../../scripts/modules/Utils/Infrastructure/LoggingUtils.psm1"
+# テストヘルパー
+using module "../../TestHelpers/TestEnvironmentHelpers.psm1"
+using module "../../TestHelpers/MockHelpers.psm1"
+# テスト対象モジュール
+using module "../../../scripts/modules/Utils/Infrastructure/ErrorHandlingUtils.psm1"
+
 # テスト環境の設定
 $ProjectRoot = (Get-Item -Path $PSScriptRoot).Parent.Parent.Parent.FullName
 $ModulePath = Join-Path $ProjectRoot "scripts" "modules" "Utils" "Infrastructure" "ErrorHandlingUtils.psm1"
 $TestHelpersPath = Join-Path $ProjectRoot "tests" "TestHelpers"
-
-# レイヤアーキテクチャに従った依存モジュールの読み込み
-# Layer 1: Foundation（基盤層）
-Import-Module (Join-Path $ProjectRoot "scripts" "modules" "Utils" "Foundation" "CoreUtils.psm1") -Force
-
-# Layer 2: Infrastructure（インフラ層）
-Import-Module (Join-Path $ProjectRoot "scripts" "modules" "Utils" "Infrastructure" "ConfigurationUtils.psm1") -Force
-Import-Module (Join-Path $ProjectRoot "scripts" "modules" "Utils" "Infrastructure" "LoggingUtils.psm1") -Force
-
-# テストヘルパーの読み込み
-Import-Module (Join-Path $TestHelpersPath "TestEnvironmentHelpers.psm1") -Force
-Import-Module (Join-Path $TestHelpersPath "MockHelpers.psm1") -Force
-
-# テスト対象モジュールの読み込み
-Import-Module $ModulePath -Force
 
 Describe "ErrorHandlingUtils モジュール" {
     
@@ -498,10 +496,10 @@ Describe "ErrorHandlingUtils モジュール" {
             $operationType = "削除"
             
             # Invoke-WithErrorHandlingの呼び出しをモック化してコンテキストを確認
-            $global:capturedContext = $null
+            $script:capturedContext = $null
             Mock Invoke-WithErrorHandling {
                 param($ScriptBlock, $Category, $Operation, $Context, $CleanupScript)
-                $global:capturedContext = $Context
+                $script:capturedContext = $Context
                 throw "テストエラー"
             } -ModuleName ErrorHandlingUtils
             
@@ -514,9 +512,9 @@ Describe "ErrorHandlingUtils モジュール" {
             }
             
             # Assert
-            $global:capturedContext | Should -Not -BeNullOrEmpty
-            $global:capturedContext["ファイルパス"] | Should -Be $filePath
-            $global:capturedContext["操作種別"] | Should -Be $operationType
+            $script:capturedContext | Should -Not -BeNullOrEmpty
+            $script:capturedContext["ファイルパス"] | Should -Be $filePath
+            $script:capturedContext["操作種別"] | Should -Be $operationType
         }
     }
 
