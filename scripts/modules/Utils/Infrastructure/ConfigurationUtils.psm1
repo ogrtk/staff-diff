@@ -27,7 +27,7 @@ function Get-DataSyncConfig {
         }
             
         $encoding = Get-CrossPlatformEncoding
-        $configContent = Get-Content -Path $ConfigPath -Raw -Encoding $encoding
+        $configContent = Get-Content -Path $configPath -Raw -Encoding $encoding
         $script:DataSyncConfig = $configContent | ConvertFrom-Json
                 
         return $script:DataSyncConfig

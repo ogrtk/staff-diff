@@ -86,10 +86,11 @@ function Resolve-FilePath {
     }
     
     # 相対パスを絶対パスに変換
-    if (-not [System.IO.Path]::IsPathRooted($resolvedPath)) {
-        $resolvedPath = [System.IO.Path]::GetFullPath($resolvedPath)
-    }
-    
+    if (-not
+        [System.IO.Path]::IsPathRooted($resolvedPath)) {
+        $projectRoot = Find-ProjectRoot
+        $resolvedPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($projectRoot, $resolvedPath))
+    }    
     return $resolvedPath
 }
 
