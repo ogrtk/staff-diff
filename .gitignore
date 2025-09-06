@@ -1,0 +1,62 @@
+# データベースファイル
+database/
+
+# ログファイル
+logs/
+*.log
+
+# データ履歴ファイル（自動生成）
+data/
+
+# 一時ファイル・キャッシュ
+*.tmp
+*.temp
+.cache/
+
+# PowerShell実行ファイル
+*.exe
+
+# 機密情報を含む可能性のある設定ファイル
+config/production-*.json
+config/secrets.json
+config/*.secret.*
+
+# Node.js（claude code用）
+node_modules/
+
+# OS固有ファイル
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# エディタ・IDE
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+
+# バックアップファイル
+*.bak
+*.backup
+*.old
+
+# 圧縮ファイル
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
+# 個人用設定ファイル
+config/personal-*.json
+config/local-*.json

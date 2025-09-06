@@ -1,0 +1,639 @@
+{
+  "version": "1.0.0",
+  "description": "PowerShell & SQLite 職員データ管理システム スキーマ設定",
+  "file_paths": {
+    "description": "ファイルパス設定",
+    "provided_data_file_path": "./test-data/provided.csv",
+    "current_data_file_path": "./test-data/current.csv",
+    "output_file_path": "./test-data/sync-result.csv",
+    "provided_data_history_directory": "./data/provided-data/",
+    "current_data_history_directory": "./data/current-data/",
+    "output_history_directory": "./data/output/",
+    "timezone": "Asia/Tokyo"
+  },
+  "csv_format": {
+    "description": "CSVファイルフォーマット設定（テーブル別）",
+    "provided_data": {
+      "description": "提供データCSV読み込み設定",
+      "encoding": "SHIFT_JIS",
+      "delimiter": ",",
+      "newline": "CRLF",
+      "has_header": false,
+      "null_values": [
+        "",
+        "NULL",
+        "null"
+      ],
+      "allow_empty_file": false
+    },
+    "current_data": {
+      "description": "現在データCSV読み込み設定",
+      "encoding": "SHIFT_JIS",
+      "delimiter": ",",
+      "newline": "CRLF",
+      "has_header": true,
+      "null_values": [
+        "",
+        "NULL",
+        "null"
+      ],
+      "allow_empty_file": true
+    },
+    "output": {
+      "description": "同期結果CSV出力設定",
+      "encoding": "SHIFT_JIS",
+      "delimiter": ",",
+      "newline": "CRLF",
+      "include_header": true
+    }
+  },
+  "tables": {
+    "provided_data": {
+      "description": "提供データテーブル",
+      "table_constraints": [
+        {
+          "name": "uk_provided_employee_id",
+          "type": "UNIQUE",
+          "columns": [
+            "employee_id"
+          ],
+          "description": "職員IDの一意制約（明示的定義）"
+        }
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "constraints": "PRIMARY KEY AUTOINCREMENT",
+          "csv_include": false,
+          "description": "内部ID"
+        },
+        {
+          "name": "employee_id",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "職員ID"
+        },
+        {
+          "name": "card_number",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "カード番号"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "氏名"
+        },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "部署"
+        },
+        {
+          "name": "position",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "役職"
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "メールアドレス"
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "電話番号"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "入社日"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_provided_employee_id",
+          "columns": [
+            "employee_id"
+          ],
+          "description": "職員ID検索用インデックス（大量データ時の比較処理高速化）"
+        }
+      ]
+    },
+    "current_data": {
+      "description": "現在データテーブル",
+      "table_constraints": [
+        {
+          "name": "uk_current_user_id",
+          "type": "UNIQUE",
+          "columns": [
+            "user_id"
+          ],
+          "description": "利用者IDの一意制約（明示的定義）"
+        }
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "constraints": "PRIMARY KEY AUTOINCREMENT",
+          "csv_include": false,
+          "description": "内部ID"
+        },
+        {
+          "name": "user_id",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "利用者ID"
+        },
+        {
+          "name": "[カード１]カード番号",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "[カード１]カード番号"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "氏名"
+        },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "部署"
+        },
+        {
+          "name": "position",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "役職"
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "メールアドレス"
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "電話番号"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "入社日"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "idx_current_user_id",
+          "columns": [
+            "user_id"
+          ],
+          "description": "利用者ID検索用インデックス（大量データ時の比較処理高速化）"
+        }
+      ]
+    },
+    "sync_result": {
+      "description": "同期結果テーブル",
+      "table_constraints": [
+        {
+          "name": "uk_sync_result_syokuin_no",
+          "type": "UNIQUE",
+          "columns": [
+            "syokuin_no"
+          ],
+          "description": "職員番号の一意制約（重複レコード防止）"
+        },
+        {
+          "name": "uk_sync_result_composite",
+          "type": "UNIQUE",
+          "columns": [
+            "syokuin_no",
+            "sync_action"
+          ],
+          "description": "職員番号+同期アクションの複合一意制約（例：同一人物の重複処理防止）",
+          "enabled": false
+        }
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "constraints": "PRIMARY KEY AUTOINCREMENT",
+          "csv_include": false,
+          "description": "内部ID"
+        },
+        {
+          "name": "syokuin_no",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "職員ID"
+        },
+        {
+          "name": "[カード１]カード番号",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "[カード１]カード番号"
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "氏名"
+        },
+        {
+          "name": "department",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": false,
+          "required": false,
+          "description": "部署"
+        },
+        {
+          "name": "position",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "役職"
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "メールアドレス"
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "電話番号"
+        },
+        {
+          "name": "hire_date",
+          "type": "DATE",
+          "constraints": "",
+          "csv_include": true,
+          "required": false,
+          "description": "入社日"
+        },
+        {
+          "name": "sync_action",
+          "type": "TEXT",
+          "constraints": "NOT NULL",
+          "csv_include": true,
+          "required": true,
+          "description": "同期アクション (ADD, UPDATE, DELETE, KEEP)"
+        }
+      ],
+      "indexes": []
+    }
+  },
+  "sync_rules": {
+    "key_columns": {
+      "description": "各テーブルのレコード比較キー（sync_resultは出力時のソートに利用）",
+      "provided_data": [
+        "employee_id"
+      ],
+      "current_data": [
+        "user_id"
+      ],
+      "sync_result": [
+        "syokuin_no"
+      ]
+    },
+    "column_mappings": {
+      "description": "テーブル間の比較項目対応付け（provided_dataの項目:current_dataの項目）",
+      "mappings": {
+        "employee_id": "user_id",
+        "card_number": "[カード１]カード番号",
+        "name": "name",
+        "department": "department",
+        "position": "position",
+        "email": "email",
+        "phone": "phone",
+        "hire_date": "hire_date"
+      }
+    },
+    "sync_result_mapping": {
+      "description": "sync_resultテーブルへの格納項目対応付け（優先度順、自動フォールバック）",
+      "mappings": {
+        "syokuin_no": {
+          "description": "職員番号",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "employee_id",
+              "priority": 1,
+              "description": "提供データの職員ID（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "user_id",
+              "priority": 2,
+              "description": "現在データの利用者ID（フォールバック）"
+            }
+          ]
+        },
+        "[カード１]カード番号": {
+          "description": "[カード１]カード番号",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "card_number",
+              "priority": 1,
+              "description": "提供データのカード番号（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "[カード１]カード番号",
+              "priority": 2,
+              "description": "現在データのカード番号（フォールバック）"
+            }
+          ]
+        },
+        "name": {
+          "description": "氏名",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "name",
+              "priority": 1,
+              "description": "提供データの氏名（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "name",
+              "priority": 2,
+              "description": "現在データの氏名（フォールバック）"
+            }
+          ]
+        },
+        "department": {
+          "description": "部署",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "department",
+              "priority": 1,
+              "description": "提供データの部署（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "department",
+              "priority": 2,
+              "description": "現在データの部署（フォールバック）"
+            },
+            {
+              "type": "fixed_value",
+              "value": "未設定",
+              "priority": 3,
+              "description": "デフォルト部署名（最終フォールバック）"
+            }
+          ]
+        },
+        "position": {
+          "description": "役職",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "position",
+              "priority": 1,
+              "description": "提供データの役職（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "position",
+              "priority": 2,
+              "description": "現在データの役職（フォールバック）"
+            }
+          ]
+        },
+        "email": {
+          "description": "メールアドレス",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "email",
+              "priority": 1,
+              "description": "提供データのメールアドレス（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "email",
+              "priority": 2,
+              "description": "現在データのメールアドレス（フォールバック）"
+            }
+          ]
+        },
+        "phone": {
+          "description": "電話番号",
+          "sources": [
+            {
+              "type": "fixed_value",
+              "value": "999-9999-9999",
+              "priority": 1,
+              "description": "固定値"
+            }
+          ]
+        },
+        "hire_date": {
+          "description": "入社日",
+          "sources": [
+            {
+              "type": "provided_data",
+              "field": "hire_date",
+              "priority": 1,
+              "description": "提供データの入社日（最優先）"
+            },
+            {
+              "type": "current_data",
+              "field": "hire_date",
+              "priority": 2,
+              "description": "現在データの入社日（フォールバック）"
+            }
+          ]
+        }
+      }
+    },
+    "sync_action_labels": {
+      "description": "同期アクションの表示設定",
+      "mappings": {
+        "ADD": {
+          "value": "1",
+          "enabled": true,
+          "description": "新規追加"
+        },
+        "UPDATE": {
+          "value": "2",
+          "enabled": false,
+          "description": "更新"
+        },
+        "DELETE": {
+          "value": "3",
+          "enabled": true,
+          "description": "削除"
+        },
+        "KEEP": {
+          "value": "9",
+          "enabled": true,
+          "description": "変更なし"
+        }
+      }
+    }
+  },
+  "data_filters": {
+    "provided_data": {
+      "enabled": true,
+      "description": "提供データのフィルタリング設定",
+      "rules": [
+        {
+          "field": "employee_id",
+          "type": "exclude",
+          "glob": "Z*",
+          "description": "Z始まりの職員番号を除外"
+        },
+        {
+          "field": "employee_id",
+          "type": "exclude",
+          "glob": "Y*",
+          "description": "Y始まりの職員番号を除外"
+        }
+      ]
+    },
+    "current_data": {
+      "enabled": true,
+      "description": "現在データのフィルタリング設定",
+      "rules": [
+        {
+          "field": "user_id",
+          "type": "exclude",
+          "glob": "Z*",
+          "description": "E始まりの職員番号を除外"
+        },
+        {
+          "field": "user_id",
+          "type": "exclude",
+          "glob": "Y*",
+          "description": "Y始まりの職員番号を除外"
+        }
+      ],
+      "output_excluded_as_keep": {
+        "enabled": true,
+        "description": "除外データをKEEPとして出力するかどうか（true: 除外データもKEEPアクションで出力、false: 除外データは出力しない）"
+      }
+    }
+  },
+  "performance_settings": {
+    "description": "性能最適化設定",
+    "index_threshold": 100000,
+    "batch_size": 1000,
+    "auto_optimization": true,
+    "sqlite_pragmas": {
+      "journal_mode": "WAL",
+      "synchronous": "NORMAL",
+      "temp_store": "MEMORY",
+      "cache_size": 10000
+    }
+  },
+  "error_handling": {
+    "description": "エラーハンドリング設定",
+    "enabled": true,
+    "log_stack_trace": true,
+    "retry_settings": {
+      "description": "リトライ設定",
+      "enabled": true,
+      "max_attempts": 3,
+      "delay_seconds": [
+        1,
+        2,
+        5
+      ],
+      "retryable_categories": [
+        "External"
+      ]
+    },
+    "error_levels": {
+      "description": "エラーカテゴリ別のログレベル設定",
+      "System": "Error",
+      "Data": "Warning",
+      "External": "Error"
+    },
+    "continue_on_error": {
+      "description": "エラー発生時の処理継続設定",
+      "System": false,
+      "Data": true,
+      "External": false
+    },
+    "cleanup_on_error": true
+  },
+  "logging": {
+    "description": "ログ設定",
+    "enabled": true,
+    "log_directory": "./logs/",
+    "log_file_name": "data-sync-system.log",
+    "max_file_size_mb": 10,
+    "max_files": 5,
+    "levels": [
+      "Info",
+      "Warning",
+      "Error",
+      "Success"
+    ]
+  }
+}
