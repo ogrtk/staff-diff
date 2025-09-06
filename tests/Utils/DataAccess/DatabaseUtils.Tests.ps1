@@ -30,6 +30,9 @@ Describe "DatabaseUtils モジュール" {
             $script:ConfigPath = $script:TestEnv.CreateConfigFile(@{}, "test-config")
             $script:TestConfig = $script:TestEnv.GetConfig()
         }
+        
+        # 設定キャッシュをリセット
+        Reset-DataSyncConfig
     }
     
     AfterAll {

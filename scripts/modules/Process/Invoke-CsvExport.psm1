@@ -18,7 +18,7 @@ function Invoke-CsvExport {
         
         [string]$OutputFilePath
     )
-    # 設定ファイルから履歴保存設定を取得
+    # グローバルキャッシュから既存設定を取得（テスト時の設定を保持）
     $config = Get-DataSyncConfig
     
     # ファイルパス設定を直接取得（Get-FilePathConfigは内部でGet-DataSyncConfigを呼び出すため使用しない）

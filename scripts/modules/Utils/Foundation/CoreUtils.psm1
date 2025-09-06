@@ -1,14 +1,15 @@
 # PowerShell & SQLite データ同期システム
 
 # SQL識別子エスケープ関数（基盤機能）
-function Escape-SqlIdentifier {
+function Protect-SqliteIdentifier {
     param(
         [Parameter(Mandatory = $true)]
         [string]$Identifier
     )
     
-    # SQLite識別子エスケープ：角括弧を含む場合は二重引用符で囲む
-    if ($Identifier -match '[\[\]]') {
+    # SQLite識別子エスケープ：角括弧または二重引用符を含む場合は二重引用符で囲む
+    if ($Identifier -match '[\[\]"]') {
+        # 二重引用符を二重にエスケープしてから、全体を二重引用符で囲む
         return "`"$($Identifier.Replace('`"', '`"`"'))`""
     }
     
@@ -234,7 +235,7 @@ function Invoke-SqliteCsvExport {
 }
 
 Export-ModuleMember -Function @(
-    'Escape-SqlIdentifier',
+    'Protect-SqliteIdentifier',
     'Get-Sqlite3Path',
     'Get-CrossPlatformEncoding',
     'Test-PathSafe',

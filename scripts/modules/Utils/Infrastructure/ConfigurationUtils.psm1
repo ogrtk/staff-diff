@@ -13,14 +13,21 @@ function Get-DataSyncConfig {
         [switch]$Force
     )
 
-    if ($null -ne $script:DataSyncConfig -and -not $Force) {
+    # キャッシュされた設定があり、Forceが指定されておらず、ConfigPathが指定されていない場合はキャッシュを返す
+    if ($null -ne $script:DataSyncConfig -and -not $Force -and [string]::IsNullOrEmpty($ConfigPath)) {
         return $script:DataSyncConfig
     }
 
     try {
         $projectRoot = Find-ProjectRoot
         if ([string]::IsNullOrEmpty($ConfigPath)) {
-            $configPath = Join-Path $projectRoot "config" "data-sync-config.json"
+            # 環境変数を優先して確認
+            $envConfigPath = $env:DATA_SYNC_CONFIG_PATH
+            if (-not [string]::IsNullOrEmpty($envConfigPath)) {
+                $configPath = $envConfigPath
+            } else {
+                $configPath = Join-Path $projectRoot "config" "data-sync-config.json"
+            }
         }
         else {
             $configPath = $ConfigPath

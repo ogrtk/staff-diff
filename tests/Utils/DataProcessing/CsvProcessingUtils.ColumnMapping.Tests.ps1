@@ -59,6 +59,9 @@ BeforeAll {
     
     # テスト用設定を使用
     $env:DATA_SYNC_CONFIG_PATH = $script:TestConfigPath
+    
+    # 設定キャッシュをリセット
+    Reset-DataSyncConfig
 }
 
 AfterAll {
@@ -76,9 +79,9 @@ Describe "CSV・SQLカラム名マッピング機能テスト" {
         It "CSVからSQLへの正しいマッピングが取得できる" {
             $mapping = Get-CsvToSqlColumnMapping -TableName "test_table"
             
-            # 角括弧を含むカラムはエスケープされる
-            $mapping["staff[name]"] | Should -Be '"staff[name]"'
-            $mapping["department[]"] | Should -Be '"department[]"'
+            # CSVからSQLへのマッピングでは、元のカラム名がそのまま使われる
+            $mapping["staff[name]"] | Should -Be "staff[name]"
+            $mapping["department[]"] | Should -Be "department[]"
             
             # 通常のカラムはそのまま
             $mapping["id"] | Should -Be "id"
@@ -97,9 +100,9 @@ Describe "CSV・SQLカラム名マッピング機能テスト" {
         It "SQLからCSVへの逆引きマッピングが取得できる" {
             $mapping = Get-SqlToCsvColumnMapping -TableName "test_table"
             
-            # エスケープ済みからオリジナルへの逆引き
-            $mapping['"staff[name]"'] | Should -Be "staff[name]"
-            $mapping['"department[]"'] | Should -Be "department[]"
+            # SQLからCSVへの逆引きマッピング
+            $mapping["staff[name]"] | Should -Be "staff[name]"
+            $mapping["department[]"] | Should -Be "department[]"
             
             # 通常のカラムはそのまま
             $mapping["id"] | Should -Be "id"

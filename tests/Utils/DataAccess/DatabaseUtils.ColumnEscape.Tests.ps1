@@ -53,6 +53,9 @@ BeforeAll {
     
     # テスト用設定を使用
     $env:DATA_SYNC_CONFIG_PATH = $script:TestConfigPath
+    
+    # 設定キャッシュをリセット
+    Reset-DataSyncConfig
 }
 
 AfterAll {
@@ -66,29 +69,29 @@ AfterAll {
 }
 
 Describe "SQL識別子エスケープ機能テスト" {
-    Context "Escape-SqlIdentifier関数" {
+    Context "Protect-SqliteIdentifier関数" {
         It "角括弧を含むカラム名が正しくエスケープされる" {
-            $result = Escape-SqlIdentifier -Identifier "name[bracket]"
+            $result = Protect-SqliteIdentifier -Identifier "name[bracket]"
             $result | Should -Be '"name[bracket]"'
         }
         
         It "空の角括弧を含むカラム名が正しくエスケープされる" {
-            $result = Escape-SqlIdentifier -Identifier "value[]"
+            $result = Protect-SqliteIdentifier -Identifier "value[]"
             $result | Should -Be '"value[]"'
         }
         
         It "角括弧を含まないカラム名はそのまま返される" {
-            $result = Escape-SqlIdentifier -Identifier "normal_column"
+            $result = Protect-SqliteIdentifier -Identifier "normal_column"
             $result | Should -Be "normal_column"
         }
         
         It "二重引用符を含むカラム名が正しくエスケープされる" {
-            $result = Escape-SqlIdentifier -Identifier 'column"with"quotes'
+            $result = Protect-SqliteIdentifier -Identifier 'column"with"quotes'
             $result | Should -Be '"column""with""quotes"'
         }
         
         It "角括弧と二重引用符の両方を含むカラム名が正しくエスケープされる" {
-            $result = Escape-SqlIdentifier -Identifier 'column[with]"quotes'
+            $result = Protect-SqliteIdentifier -Identifier 'column[with]"quotes'
             $result | Should -Be '"column[with]""quotes"'
         }
     }
@@ -148,9 +151,9 @@ Describe "実際のSQLite実行テスト" {
             $insertSql = 'INSERT INTO test_table (id, "name[bracket]", "value[]", normal_column) VALUES (1, ''test[value]'', 10.5, ''normal'')'
             Invoke-SqliteCommand -DatabasePath $script:TestDatabasePath -Query $insertSql
             
-            # データ検索
+            # データ検索（CSV形式でオブジェクトとして取得）
             $selectSql = 'SELECT id, "name[bracket]", "value[]", normal_column FROM test_table WHERE id = 1'
-            $result = Invoke-SqliteCommand -DatabasePath $script:TestDatabasePath -Query $selectSql
+            $result = Invoke-SqliteCsvQuery -DatabasePath $script:TestDatabasePath -Query $selectSql
             
             $result | Should -Not -BeNullOrEmpty
             $result[0].id | Should -Be 1

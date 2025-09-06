@@ -89,7 +89,7 @@ function Save-ExcludedDataForKeep {
     
     # 除外データをテーブルに保存（フィルタ条件の逆を使用）
     $csvColumns = Get-CsvColumns -TableName $FilterConfigTableName
-    $escapedColumns = $csvColumns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+    $escapedColumns = $csvColumns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
     $columnsStr = $escapedColumns -join ", "
     
     # フィルタ条件を反転（除外データを抽出）

@@ -85,7 +85,7 @@ function Add-NewRecords {
     
     # 設定ベースで新規レコード挿入クエリを生成（カラムマッピング対応）
     $insertColumns = Get-SyncResultInsertColumns
-    $escapedInsertColumns = $insertColumns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+    $escapedInsertColumns = $insertColumns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
     $insertColumnsString = $escapedInsertColumns -join ", "
     
     $selectClause = New-SyncResultSelectClause -SourceTableName "provided_data" -SourceTableAlias "pd" -SyncAction $SyncActionLabels.ADD.value
@@ -122,7 +122,7 @@ function Add-UpdateRecords {
     
     # 設定ベースで更新レコード挿入クエリを生成（カラムマッピング対応）
     $insertColumns = Get-SyncResultInsertColumns
-    $escapedInsertColumns = $insertColumns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+    $escapedInsertColumns = $insertColumns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
     $insertColumnsString = $escapedInsertColumns -join ", "
     
     $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $SyncActionLabels.UPDATE.value
@@ -166,7 +166,7 @@ function Add-DeleteRecords {
     
     # 設定ベースで削除レコード挿入クエリを生成（カラムマッピング対応）
     $insertColumns = Get-SyncResultInsertColumns
-    $escapedInsertColumns = $insertColumns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+    $escapedInsertColumns = $insertColumns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
     $insertColumnsString = $escapedInsertColumns -join ", "
     
     $selectClause = New-SyncResultSelectClause -SourceTableName "current_data" -SourceTableAlias "cd" -SyncAction $SyncActionLabels.DELETE.value
@@ -215,7 +215,7 @@ function Add-KeepRecords {
     
     # 設定ベースで変更なしレコード挿入クエリを生成（カラムマッピング対応）
     $insertColumns = Get-SyncResultInsertColumns
-    $escapedInsertColumns = $insertColumns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+    $escapedInsertColumns = $insertColumns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
     $insertColumnsString = $escapedInsertColumns -join ", "
     
     $selectClause = New-PriorityBasedSyncResultSelectClause -SyncAction $SyncActionLabels.KEEP.value
@@ -269,7 +269,7 @@ WHERE type='table' AND name='$excludedTableName';
     
     # sync_result用の挿入カラム取得
     $insertColumns = Get-CsvColumns -TableName "sync_result"
-    $escapedInsertColumns = $insertColumns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+    $escapedInsertColumns = $insertColumns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
     $insertColumnsString = $escapedInsertColumns -join ", "
     
     # 除外されたcurrent_dataから直接マッピングしてSELECT句を生成
@@ -284,7 +284,7 @@ WHERE type='table' AND name='$excludedTableName';
         }
         else {
             # その他のカラムは同名でマッピング（エスケープ対応）
-            $escapedColumn = Escape-SqlIdentifier -Identifier $syncResultColumn
+            $escapedColumn = Protect-SqliteIdentifier -Identifier $syncResultColumn
             $selectClauses += "ced.$escapedColumn"
         }
     }

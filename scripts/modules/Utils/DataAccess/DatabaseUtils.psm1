@@ -84,7 +84,7 @@ function New-CreateTableSql {
     # カラム定義の生成
     $columns = @()
     foreach ($column in $tableDefinition.columns) {
-        $escapedColumnName = Escape-SqlIdentifier -Identifier $column.name
+        $escapedColumnName = Protect-SqliteIdentifier -Identifier $column.name
         $columnDef = "$escapedColumnName $($column.type)"
         if (-not [string]::IsNullOrWhiteSpace($column.constraints)) {
             $columnDef += " $($column.constraints)"
@@ -104,14 +104,14 @@ function New-CreateTableSql {
             
             switch ($constraint.type) {
                 "UNIQUE" {
-                    $escapedConstraintColumns = $constraint.columns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+                    $escapedConstraintColumns = $constraint.columns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
                     $columnsStr = $escapedConstraintColumns -join ", "
                     $constraintDef = "CONSTRAINT $($constraint.name) UNIQUE ($columnsStr)"
                     $tableConstraints += $constraintDef
                     Write-SystemLog "UNIQUE制約を追加: $($constraint.name) ($columnsStr)" -Level "Info"
                 }
                 "PRIMARY KEY" {
-                    $escapedConstraintColumns = $constraint.columns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+                    $escapedConstraintColumns = $constraint.columns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
                     $columnsStr = $escapedConstraintColumns -join ", "
                     $constraintDef = "CONSTRAINT $($constraint.name) PRIMARY KEY ($columnsStr)"
                     $tableConstraints += $constraintDef
@@ -119,8 +119,8 @@ function New-CreateTableSql {
                 }
                 "FOREIGN KEY" {
                     if ($constraint.foreign_key) {
-                        $escapedFkColumns = $constraint.columns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
-                        $escapedRefColumns = $constraint.foreign_key.reference_columns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+                        $escapedFkColumns = $constraint.columns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
+                        $escapedRefColumns = $constraint.foreign_key.reference_columns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
                         $fkColumns = $escapedFkColumns -join ", "
                         $refColumns = $escapedRefColumns -join ", "
                         $constraintDef = "CONSTRAINT $($constraint.name) FOREIGN KEY ($fkColumns) REFERENCES $($constraint.foreign_key.reference_table) ($refColumns)"
@@ -176,7 +176,7 @@ function New-SelectSql {
         $Columns = Get-CsvColumns -TableName $TableName
     }
     
-    $escapedColumns = $Columns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+    $escapedColumns = $Columns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
     $columnsStr = $escapedColumns -join ", "
     $sql = "SELECT $columnsStr FROM $TableName"
     
@@ -210,7 +210,7 @@ function New-CreateTempTableSql {
     $columns = @()
     foreach ($column in $tableDefinition.columns) {
         if ($column.csv_include -eq $true) {
-            $escapedColumnName = Escape-SqlIdentifier -Identifier $column.name
+            $escapedColumnName = Protect-SqliteIdentifier -Identifier $column.name
             $columnDef = "$escapedColumnName $($column.type)"
             $columns += $columnDef
         }
@@ -343,7 +343,7 @@ function New-CreateIndexSql {
         }
         
         if ($shouldCreateIndex) {
-            $escapedIndexColumns = $index.columns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+            $escapedIndexColumns = $index.columns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
             $columnsStr = $escapedIndexColumns -join ", "
             $indexSql = "CREATE INDEX IF NOT EXISTS $($index.name) ON $TableName ($columnsStr);"
             $indexSqls += $indexSql
@@ -437,7 +437,7 @@ function New-FilteredInsertSql {
     )
     
     $csvColumns = Get-CsvColumns -TableName $TargetTableName
-    $escapedColumns = $csvColumns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+    $escapedColumns = $csvColumns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
     $columnsStr = $escapedColumns -join ", "
     
     $sql = "INSERT INTO $TargetTableName ($columnsStr)`n"
@@ -499,8 +499,8 @@ function New-JoinCondition {
         $rightTable = if ($RightAlias) { $RightAlias } else { $RightTableName }
         
         # カラム名をエスケープ
-        $escapedLeftColumn = Escape-SqlIdentifier -Identifier $leftColumn
-        $escapedRightColumn = Escape-SqlIdentifier -Identifier $rightColumn
+        $escapedLeftColumn = Protect-SqliteIdentifier -Identifier $leftColumn
+        $escapedRightColumn = Protect-SqliteIdentifier -Identifier $rightColumn
         
         $conditions += "$leftTable.$escapedLeftColumn = $rightTable.$escapedRightColumn"
     }
@@ -572,8 +572,8 @@ function New-ComparisonWhereClause {
         }
         
         # カラム名をエスケープ
-        $escapedTable1Column = Escape-SqlIdentifier -Identifier $table1Column
-        $escapedTable2Column = Escape-SqlIdentifier -Identifier $table2Column
+        $escapedTable1Column = Protect-SqliteIdentifier -Identifier $table1Column
+        $escapedTable2Column = Protect-SqliteIdentifier -Identifier $table2Column
         
         if ($ComparisonType -eq "different") {
             $conditions += "($Table1Alias.$escapedTable1Column != $Table2Alias.$escapedTable2Column OR ($Table1Alias.$escapedTable1Column IS NULL AND $Table2Alias.$escapedTable2Column IS NOT NULL) OR ($Table1Alias.$escapedTable1Column IS NOT NULL AND $Table2Alias.$escapedTable2Column IS NULL))"
@@ -613,13 +613,13 @@ function New-PriorityBasedCaseStatement {
     foreach ($source in $sortedSources) {
         switch ($source.type) {
             "provided_data" {
-                $escapedField = Escape-SqlIdentifier -Identifier $source.field
+                $escapedField = Protect-SqliteIdentifier -Identifier $source.field
                 $fieldRef = "pd.$escapedField"
                 # NULL と空文字をNULLとして扱う
                 $coalesceParts += "NULLIF($fieldRef, '')"
             }
             "current_data" {
-                $escapedField = Escape-SqlIdentifier -Identifier $source.field
+                $escapedField = Protect-SqliteIdentifier -Identifier $source.field
                 $fieldRef = "cd.$escapedField"
                 # NULL と空文字をNULLとして扱う
                 $coalesceParts += "NULLIF($fieldRef, '')"
@@ -701,13 +701,13 @@ function New-GroupByClause {
     # テーブルエイリアスがある場合は各カラムにプレフィックスを追加
     if ($TableAlias) {
         $prefixedColumns = $GroupColumns | ForEach-Object { 
-            $escapedColumn = Escape-SqlIdentifier -Identifier $_
+            $escapedColumn = Protect-SqliteIdentifier -Identifier $_
             "$TableAlias.$escapedColumn" 
         }
         return $prefixedColumns -join ", "
     }
     else {
-        $escapedColumns = $GroupColumns | ForEach-Object { Escape-SqlIdentifier -Identifier $_ }
+        $escapedColumns = $GroupColumns | ForEach-Object { Protect-SqliteIdentifier -Identifier $_ }
         return $escapedColumns -join ", "
     }
 }
@@ -741,7 +741,7 @@ function New-SyncResultSelectClause {
             }
             else {
                 # フォールバック: 同名カラムを使用
-                $escapedSyncResultColumn = Escape-SqlIdentifier -Identifier $syncResultColumn
+                $escapedSyncResultColumn = Protect-SqliteIdentifier -Identifier $syncResultColumn
                 $selectClauses += "$SourceTableAlias.$escapedSyncResultColumn"
             }
         }
@@ -773,7 +773,7 @@ function New-PriorityBasedSyncResultSelectClause {
             }
             else {
                 # フォールバック: provided_dataを優先
-                $escapedSyncResultColumn = Escape-SqlIdentifier -Identifier $syncResultColumn
+                $escapedSyncResultColumn = Protect-SqliteIdentifier -Identifier $syncResultColumn
                 $selectClauses += "COALESCE(pd.$escapedSyncResultColumn, cd.$escapedSyncResultColumn)"
             }
         }

@@ -52,10 +52,48 @@ CREATE TABLE IF NOT EXISTS sync_result (
                 output_history_directory = $script:historyPath
             }
         }
-        Mock Get-TableKeyColumns { return @("syokuin_no") }
-        Mock Get-CsvColumns { return @("syokuin_no", "name", "sync_action") }
+        Mock Get-TableKeyColumns { 
+            param($TableName)
+            if ($TableName -eq "sync_result") {
+                return @("syokuin_no")
+            }
+            return @()
+        }
+        Mock Get-CsvColumns { 
+            param($TableName)
+            if ($TableName -eq "sync_result") {
+                return @("syokuin_no", "name", "sync_action")
+            }
+            return @()
+        }
         Mock New-HistoryFileName { return "test_output_20240101_120000.csv" }
         Mock Copy-Item {}
+        Mock Get-DataSyncConfig {
+            return @{
+                sync_rules = @{
+                    sync_action_labels = @{
+                        mappings = @{
+                            ADD    = @{ value = "1"; enabled = $false }
+                            UPDATE = @{ value = "2"; enabled = $false }
+                            DELETE = @{ value = "3"; enabled = $true }
+                            KEEP   = @{ value = "9"; enabled = $true }
+                        }
+                    }
+                    key_columns = @{
+                        sync_result = @("syokuin_no")
+                    }
+                }
+                tables = @{
+                    sync_result = @{
+                        columns = @(
+                            @{ name = "syokuin_no"; type = "TEXT"; csv_include = $true }
+                            @{ name = "name"; type = "TEXT"; csv_include = $true }
+                            @{ name = "sync_action"; type = "TEXT"; csv_include = $true }
+                        )
+                    }
+                }
+            }
+        }
 
     }
 
@@ -171,9 +209,9 @@ CREATE TABLE IF NOT EXISTS sync_result (
                 # データが存在する場合は最低限の検証
                 $csvContent.Count | Should -BeGreaterOrEqual 0
                 
-                # 有効なアクション（DELETE=3, KEEP=9）のみが含まれることを確認
+                # 有効なアクション（ADD=1, DELETE=3, KEEP=9）のみが含まれることを確認
                 if ($csvContent.sync_action) {
-                    $invalidActions = $csvContent | Where-Object { $_.sync_action -notin @("3", "9") }
+                    $invalidActions = $csvContent | Where-Object { $_.sync_action -notin @("1", "3", "9") }
                     $invalidActions.Count | Should -Be 0
                 }
             } else {
@@ -202,9 +240,9 @@ CREATE TABLE IF NOT EXISTS sync_result (
             $csvContent = Import-Csv $script:integrationOutputPath -ErrorAction SilentlyContinue
             if ($csvContent) {
                 $csvContent.Count | Should -BeGreaterOrEqual 0
-                # 有効なアクション（DELETE=3, KEEP=9）のみが含まれることを確認
+                # 有効なアクション（ADD=1, DELETE=3, KEEP=9）のみが含まれることを確認
                 if ($csvContent.sync_action) {
-                    $invalidActions = $csvContent | Where-Object { $_.sync_action -notin @("3", "9") }
+                    $invalidActions = $csvContent | Where-Object { $_.sync_action -notin @("1", "3", "9") }
                     $invalidActions.Count | Should -Be 0
                 }
             } else {
@@ -232,9 +270,9 @@ CREATE TABLE IF NOT EXISTS sync_result (
             $csvContent = Import-Csv $script:integrationOutputPath -ErrorAction SilentlyContinue
             if ($csvContent) {
                 $csvContent.Count | Should -BeGreaterOrEqual 0
-                # 有効なアクション（DELETE=3, KEEP=9）のみが含まれることを確認
+                # 有効なアクション（ADD=1, DELETE=3, KEEP=9）のみが含まれることを確認
                 if ($csvContent.sync_action) {
-                    $invalidActions = $csvContent | Where-Object { $_.sync_action -notin @("3", "9") }
+                    $invalidActions = $csvContent | Where-Object { $_.sync_action -notin @("1", "3", "9") }
                     $invalidActions.Count | Should -Be 0
                 }
             } else {
@@ -287,6 +325,9 @@ CREATE TABLE IF NOT EXISTS sync_result (
             }
             $testEnv.PopulateSyncResultTable($script:integrationDbPath, $actionCounts, @{})
             
+            # 既存設定をクリアしてからカスタム設定を読み込み
+            Reset-DataSyncConfig
+            
             # 履歴ディレクトリパスを設定に追加
             $historyConfigPath = $testEnv.CreateConfigFile(@{
                     file_paths = @{
@@ -294,7 +335,8 @@ CREATE TABLE IF NOT EXISTS sync_result (
                     }
                 }, "history-config")
             
-            Get-DataSyncConfig -ConfigPath $historyConfigPath | Out-Null
+            $config = Get-DataSyncConfig -ConfigPath $historyConfigPath
+            Write-Host "設定の履歴ディレクトリ: $($config.file_paths.output_history_directory)" -ForegroundColor Yellow
             
             # Act - キャッシュされた履歴保存設定を使用して実行
             Invoke-CsvExport -DatabasePath $script:integrationDbPath -OutputFilePath $script:integrationOutputPath
