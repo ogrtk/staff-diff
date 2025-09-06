@@ -521,7 +521,7 @@
         },
         "UPDATE": {
           "value": "2",
-          "enabled": false,
+          "enabled": true,
           "description": "更新"
         },
         "DELETE": {
